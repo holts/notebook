@@ -15,4 +15,3 @@ if __name__ == '__main__':
 	server = simple_server.make_server("",5000,app)
 	server.serve_forever()
 
-
