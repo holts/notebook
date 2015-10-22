@@ -1,1 +1,1 @@
-web: python server_bluemix.py
+web: python bluemix.py
