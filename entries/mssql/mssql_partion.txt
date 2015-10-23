@@ -1,0 +1,27 @@
+﻿CREATE PARTITION FUNCTION partfun_yearship (char(10))  
+    AS RANGE RIGHT FOR VALUES ('2003','2006','2009','2012')  
+
+CREATE PARTITION SCHEME partsch_yearship  
+    AS PARTITION partfun_yearship  
+    TO ( xinte_data4,xinte_data3,xinte_data2, xinte_data1 , [primary]) 
+
+
+
+
+    --删掉主键  
+    ALTER TABLE Sale DROP constraint PK_Sale  
+    --创建主键，但不设为聚集索引  
+    ALTER TABLE Sale ADD CONSTRAINT PK_Sale PRIMARY KEY NONCLUSTERED  
+    (  
+        [ID] ASC  
+    ) ON [PRIMARY]  
+
+
+    --创建一个新的聚集索引，在该聚集索引中使用分区方案  
+    CREATE CLUSTERED INDEX CT_yearship  ON yearship([reportid])  
+    ON partsch_yearship([reportid]) 
+
+
+    --统计所有分区表中的记录总数    
+    select $PARTITION.partfun_yearship(reportid) as 分区编号,count(reportid) as 记录数 
+       from yearship group by $PARTITION.partfun_yearship(reportid)     

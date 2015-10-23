@@ -1,0 +1,117 @@
+﻿.. Question about P3190
+
+================================================================================
+The Question about P3190
+================================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+--------------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+--------------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2006/04/12 11:27:46 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+--------------------------------------------------------------------------------
+
+To: Sydney-Support@peoplesoft.com
+From: holts@mentholatum.com.cn
+Subject: Question about P3190
+
+Client number: 5331151
+No case number yet
+Software release: World A7.3
+Cumulative updates: 00014
+Contact person: Holts He
+Contact Number: 86-760-6685596-6828
+
+Hi,
+
+Seems that the problem is not about reposting WO. Please find the lot below. Lot status of blank lot number is Q. I see many of these of other item numbers. Some with quantity and without. Do you know why?
+
+.. image:: 4870298.jpg
+
+
+  41202                 Summary Availability         Branch/Plant .   ZZS0760210
+                                                     S/D. . . . . . D           
+ Item Number. . . ME71401072                         U/M. . . . . . PC          
+                  Sunplay Clear&Whitening Lotion                                
+                  SPF30(PA++)35g Bottle              Lot Pot          -         
+   P                                                                            
+ O S       Location           On Hand     Committed    Available   On Receipt   
+   P CPM                                  32000.00      32000.00-               
+     Hard Commit SO+WO(in WMS).                     Qty on PO . .               
+     Soft Commit SO/WO.                   32000.00  Qty on WO . .               
+     Hard Commit to WO (not in WMS).                PO/WO Routing               
+     Future Commit. . .                             Backordered .               
+     Branch/Plant . .    ZZS0760210    Lot Potency.               Lot Status . Q
+     Lot/SN . . . . .                  Lot Grade. .                             
+     Memo Lot 1 . . .                  Memo Lot 2 .                             
+
+   S CPM                       653.00                     653.00                
+     Hard Commit SO+WO(in WMS).                     Qty on PO . .               
+     Soft Commit SO/WO.                             Qty on WO . .               
+     Hard Commit to WO (not in WMS).                PO/WO Routing               
+     Future Commit. . .                             Backordered .               
+     Branch/Plant . .    ZZS0760210    Lot Potency.               Lot Status .  
+     Lot/SN . . . . .  20080101        Lot Grade. .                             
+     Memo Lot 1 . . .  0701            Memo Lot 2 .                             
+
+     Opt: 1=Detail Availability  2=Branch/Plant Information    F24=More Keys    
+
+--------------------------------------------------------------------------------
+To: holts@mentholatum.com.cn
+From: cecilia.chay@oracle.com
+
+Hi Holts,
+
+I have been assigned this case. Will research the issue and keep you posted with updates. Thanks.
+
+--------------------------------------------------------------------------------
+To: cecilia.chay@oracle.com
+From: holts@mentholatum.com.cn
+
+Hi Cecilia,
+
+I have clear lot status, then run P3190, but commited quantity not change.
+
+Regards !
+
+--------------------------------------------------------------------------------
+To: holts@mentholatum.com.cn
+From: cecilia.chay@oracle.com
+
+Hi Holts,
+
+Thanks for the feedback. Is the branch plant for the parent and the component part identical? Kindly provide the screen captured of the branch plant constant (P41001) for the branch plant involved as well as the processing option and data selection for P3190 process for review. Thanks.
+
+Kindly also provide the screen captured of the work order, part list and P41202 prior and after P3190 process for review. Thanks.
+
+--------------------------------------------------------------------------------
+To: cecilia.chay@oracle.com
+From: holts@mentholatum.com.cn
+
+Hi Cecilia,
+
+Please find attach file.
+-
+Step1  release lot status to empty
+Step2 Run P3190
+Step3  Don’t change after
+
+regards !
+
+

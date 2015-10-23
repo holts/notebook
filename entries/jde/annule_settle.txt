@@ -1,0 +1,98 @@
+﻿
+2009/12/30 15:50
+删除比量不为零的M类型BOM记录  
+delete from f3002 where ixtbm='M' and ixbqty<>0     
+
+2009/12/31 13:35
+复制LIV的整批量记录到M类型
+财务年结冻结成本要求复制LIV有批数量的BOM记录到M类型
+insert into f3002 ( ixtbm,ixkit,ixkitl,ixkita,ixmmcu,ixitm,ixlitm,
+    ixaitm,ixcmcu,ixcpnt,ixsbnt,ixprta,ixqnty,ixum,ixbqty,ixuom,
+    ixfvbt,ixefff,ixefft,ixfser,ixtser,ixitc,ixftrc,ixoptk,ixforv,
+    ixcstm,ixcsmp,ixordw,ixforq,ixcoby,ixcoty,ixfrmp,ixthrp,ixfrgd,
+    ixthgd,ixopsq,ixbseq,ixftrp,ixf$rp,ixrscp,ixscrp,ixrewp,ixasip,
+    ixcpyp,ixstpp,ixlovd,ixeco,ixecty,ixecod,ixdsc1,ixlnty,ixpric,
+    ixuncs,ixpctk,ixshno,ixomcu,ixobj,ixsub,ixbrev,ixcmrv,ixrvno,
+    ixuupg,ixurcd,ixurdt,ixurat,ixurrf,ixurab,ixuser,ixpid,
+    ixjobn,ixupmj,ixtday)
+select 'M' as ixtbm,ixkit,ixkitl,ixkita,ixmmcu,ixitm,ixlitm,
+    ixaitm,ixcmcu,ixcpnt,ixsbnt,ixprta,ixqnty,ixum,ixbqty,ixuom,
+    ixfvbt,ixefff,ixefft,ixfser,ixtser,ixitc,ixftrc,ixoptk,ixforv,
+    ixcstm,ixcsmp,ixordw,ixforq,ixcoby,ixcoty,ixfrmp,ixthrp,ixfrgd,
+    ixthgd,ixopsq,ixbseq,ixftrp,ixf$rp,ixrscp,ixscrp,ixrewp,ixasip,
+    ixcpyp,ixstpp,ixlovd,ixeco,ixecty,ixecod,ixdsc1,ixlnty,ixpric,
+    ixuncs,ixpctk,ixshno,ixomcu,ixobj,ixsub,ixbrev,ixcmrv,ixrvno,
+    ixuupg,ixurcd,ixurdt,ixurat,ixurrf,ixurab,ixuser,ixpid,
+
+    ixjobn,ixupmj,ixtday
+   from f3002 where ixtbm='LIV' and ixbqty<>0
+
+
+2009-12-31 13:45
+开始外部计算物料成本
+顺次刷新物料新成本F列
+物料新成本
+之后财务检查核实这两个表，找出错误的记录及正确数据给我修正
+
+
+2010-01-01  16:00
+备份库存，备份BOM
+
+
+2010-01-02 13:02
+用外部计算的物料新成本更新JDE的30成本
+excle包含两个栏itemno,newcost,  其中每个sheet 最大1500个记录
+update F4105 set COUNCS=@parameter102*10000   where COMCU='  ZZS0760210' and COLEDG='30' and COLITM='@parameter101'
+
+如果不用web方式，可上传到mis/h4141,然后更新
+update f4105 set councs= (select pjuncs from mis/h4141 where      
+    colitm=pjlitm )                                           
+ where comcu='  ZZS0760210' and coledg='30'                       
+   and colitm in (select pjlitm from mis/h4141 ) 
+或上传到上4600，然后更新
+update f4105 set 
+  councs=(select r1qtrq from h4600 where colitm=r1litm )
+ where   comcu='  ZZS0760210' and coledg='30' and colitm in     
+   (select r1litm from h4600 )                                     
+
+
+这里最好同步更新f30026
+update F30026 set iexsmc=@parameter102*10000 , iexscr=@parameter102*10000 
+ where iemMCU='  ZZS0760210' and ieLEDG='05' and ieLITM='@parameter101' 
+   and iecost='A1' 
+
+update f30026 set
+ iexsmc=(select r1qtrq from h4600 where ielitm=r1litm),
+ iexscr=(select r1qtrq from h4600 where ielitm=r1litm)              
+  where  iemMCU='  ZZS0760210' and ieLEDG='05'
+    and iecost='XE' and ielitm in
+    (select r1litm from h4600)                          
+
+
+2010-01-02 8:30
+计算生产制造费用
+
+2010-01-02 22:56
+用外部的产成品数据更新JDE的cost components
+excle包含三个栏位，type,cost,itemno
+update f30026 set iexsmc=@parameter101*10000
+ where iemmcu='  ZZS0760210' and ieledg='07' and
+  iecost='@parameter103' and ielitm='@parameter102'
+
+update f30026 set
+ iexsmc= (select pjuncs from mis/h4141 where      
+    ielitm=pjlitm )            
+  where  iemMCU='  ZZS0760210' and ieLEDG='05'
+    and iecost='XE' and ielitm in 
+ (select pjlitm from mis/h4141 )
+
+2010-01-03 7:57
+更新工作中心率（注意workcenter前必须加两个空格）
+delete workcenterrateupdate
+insert workcenterrateupdate(workcenter,b1,c3,c4)
+ SELECT workcenter,b1,c3,c4
+          FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=d:\mis\holts\09新工作中心率.xls', sheet2$)
+ 
+
+

@@ -1,0 +1,2315 @@
+﻿
+2011-12-20
+------------------------------------------------------------------------
+
+userid: cwb
+Description of problem:
+HBS系统中rc单的制单和审核总是同一人, 且是过帐的哪个人
+To resolve:
+检查发现,f0911.gltorg总是显示过帐人, 应该改为f0011.icuser
+select GLKCO,GLDOC,GLDCT,GLDGJ,GLJELN,GLPOST,GLICU,
+GLICUT,GLCO,GLANI,GLAM,GLAID,GLMCU,GLOBJ,GLSUB,
+GLLT,GLPN,GLCTRY,GLFY,GLCRCD,GLCRR,GLAA,GLEXA,
+GLEXR,glsbl as GLR1,GLR2,GLR3,GLAN8,GLVINV, 
+case when gldct='RC' then icuser else gltorg end  as GLTORG,
+GLUSER,GLJOBN ,glupmj as GLDSYJ, 
+  gluser   as glbusr,  'ZZSLCL' as glmusr
+from  F0911 left join f0011 on glicu=icicu and glicut = icicut
+ where   GLLT = 'AA'  AND GLPOST = 'P' AND 
+    GLCO = 90000 AND GLDGJ >= 111100
+     and gldct not in ('IU')
+
+2011-12-19
+------------------------------------------------------------------------
+
+userid: cwb
+Description of problem:
+HBS系统中的,JE,RJ,JX,RC单打印时, 制单和审核是同一人, 正确的应该是不同的人.
+To resolve:
+查DTS, 这几种单的gluser=glbusr, 应该更改gluser=gltorg, 已更改DTS, 对于已过帐的数据用以下命令更正.
+update glpost set user_id=gltorg
+ from glpost  inner join (
+     select gldct, glicu,gldoc,ltrim(str(glicu))+'-'+ltrim(str(gldoc)) as id,
+       gltorg,gluser,glbusr
+        from f0911 where gldct in ('JE','JX','RJ','RC')
+          and gldgj>=111335
+         ) v_f0911 on optfldc=v_f0911.id
+where fiscalyr=2011 and fiscalperd=12 and srcetype in ('JE','JX','RC','RJ')
+    and user_id <> gltorg
+
+update glpjd set user_id=gltorg
+  from glpjd  inner join (
+     select gldct, glicu,gldoc,ltrim(str(glicu))+'-'+ltrim(str(gldoc)) as id,
+       gltorg,gluser,glbusr
+        from f0911 where gldct in ('JE','JX','RJ','RC')
+          and gldgj>=111335
+         ) v_f0911 on optfldc=v_f0911.id
+where fiscalyr=2011 and fiscalperd=12 and srcetype in ('JE','JX','RC','RJ') 
+  and user_id<>gltorg
+
+userid: ckoem(外发加工)
+Description of problem:
+81017270HC 单收货错误, 显示错误 0252 总价格无效  0291 输入值超出容限  3220 货品/计量单位结构无定义
+To resolve:
+查ME72508023为新增代码, 其单位转换系统表中是空的, 在高级仓库增加主单位PC的记录后没有出现3220错误,但其它仍有, 检查F4311发现缺少一些栏位.
+update f4311 set pdpqor=pduorg,pdsqor=pduorg             
+ where pddoco=81017270 and pddcto='HC'                   
+
+
+
+2011-11-28
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+以下加工费代码出错, 没有拿到IM数量．
+To resolve:
+update f41021 set lipqoh=0                                  
+ where liitm=13832 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-1530000   , ilglpt='IN98'   
+ where illitm='ME20621001*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=64227
+
+
+
+2011-11-24
+------------------------------------------------------------------------
+
+userid: ZhengLiHua(郑丽华)
+Description of problem:
+工单90023428  WS  IN45  在预过98时出现以下提示, 3260 IV 差异会计表尚没设置.
+To resolve:
+查AAI是已经设置, 询问用户IN45的只有这张工单不正常, 其它正常, 用以下命令修复.
+update f3102 set igpart='C'                
+ where iglitm='ME90520010'  and igdoco='90023428'          
+     and igcost=''   and igpart='P'        
+
+
+2011-11-03
+------------------------------------------------------------------------
+
+userid: CKCP
+Description of problem:
+仓库新增IU单用于RF端转货位, 单据性质同IT
+To resolve:
+增加AAI
+insert into f4095 (MLANUM,MLCO,MLDCTO,MLDCT,
+  MLGLPT,MLCOST,MLMCU,MLOBJ,MLSUB )
+select MLANUM,MLCO,MLDCTO,'IU' as MLDCT,
+   MLGLPT,MLCOST,MLMCU,MLOBJ,MLSUB 
+ from f4095 where mlco='90000' and mldct='IT'
+
+2011-11-02
+------------------------------------------------------------------------
+
+userid: 
+Description of problem:
+To resolve:
+13004 IQ记录不平, 原因是13004是上传后确认的, 其中有些资料的To loc错误, 导至没有生成记录.
+update f4111 set ilpaid=0,iltrqt=0
+ where ilUKID in (7221769, 7221801,7221818,7221874,
+ 7221885,7221906,7221923,7222173,7222176,7222201,
+  7226338,7226318,7226323,7226500,
+   7221946,7221893,7221895,7226498,7226512)
+ and ildoc=13004 and ildct='IQ'
+
+
+
+2011-11-01
+------------------------------------------------------------------------
+
+userid:  Liuxiaoyu(刘晓瑜)
+Description of problem:
+以下加工费代码只有OV记录, 没有带到IM数量.
+To resolve:
+原来是HJ单上没有工单号,HJ收货窗口收货,导至没有生成IM记录, 手工添加记录.
+
+update f41021 set lipqoh=0                                  
+ where liitm=24642 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-400400 , ilglpt='IN54'   
+ where illitm='ME90601ACS*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=63492
+
+insert into f4111(ilitm,illitm,ilaitm,ilmcu,illocn,illotn,ilplot,
+ ilstun,illdsq,iltrno,ilfrto,illmcx,illots,illotg,ilkit,
+  ilmmcu,ildmct,ildmcs,ilbalu,ilkco,ildoc,ildct,ilsfx,
+   iljeln,ilicu,ildgl,ilglpt,ildcto,ildoco,ilkcoo,illnid,
+  ilnlin,ilipcd,iltrdj,iltrum,ilan8,iltrex,iltref,ilrcd,
+   iltrqt,iluncs,ilpaid,iltday,iluser,ilpid,ilcrdj,ilterm)
+select ilitm,illitm,ilaitm,ilmcu,illocn,illotn,ilplot,
+ ilstun,illdsq,iltrno,ilfrto,illmcx,illots,illotg,ilkit,
+  ilmmcu,ildmct,ildmcs,ilbalu,ilkco,'63492' as ildoc,
+  'IM' as ildct,ilsfx,
+   iljeln,ilicu,ildgl,ilglpt,ildcto,ildoco,ilkcoo,illnid,
+  ilnlin,ilipcd,iltrdj,iltrum,ilan8,iltrex,iltref,ilrcd,
+   -iltrqt,iluncs,-ilpaid,iltday,iluser,ilpid,ilcrdj,ilterm
+  from f4111 where ilukid=7131911
+顺次替换ildoc,ilukid后执行上述命令插入记录。
+
+
+2011-10-09
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+以下加工费代码只有OV记录, 没有带到IM数量.
+To resolve:
+update f41021 set lipqoh=0                                  
+ where liitm=24726 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN45'   
+ where illitm='ME90517311*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24066 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90520015*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24065 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90520016*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24064 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90520017*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24063 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90520018*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24579 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN35'   
+ where illitm='OX92719OBW*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+
+2011-09-27
+------------------------------------------------------------------------
+
+userid: holts
+Description of problem:
+关于F4602的初始化操作
+To resolve:
+delete  from  f4602 where ifitm in ( **kw)
+update f41021 set lirqri=0, lirqro=0 
+  where limcu='  ZZS0760210' and liitm in (**kw)
+rebuild f4602 with **kw
+
+update f4611 set r2ldfs=1, r2ldts=1
+ where r2pstb=340 and r2itm in (**kw)
+   and r2ldfs<> 1 and r2ldfs<>0
+
+
+
+
+2011-09-26
+------------------------------------------------------------------------
+
+userid:  Liuxiaoyu(刘晓瑜)
+Description of problem:
+一些*OP10的PO没有拿到单价, 但仓库已收货,导至匹配时看到的金额是0.
+To resolve:
+update f43121 set praopn=172580 , prarec=172580  ,
+   precst=172580, prprrc=828
+ where prdoco=90003462 and prdcto='HJ'
+  and prlitm='ME70503201S*OP10'
+   and prmatc='1' and prlnid=1000
+update f43121 set praopn=15250  , prarec=15250   ,          
+   precst=15250 , prprrc=558                                
+ where prdoco=90003494 and prdcto='HJ'                      
+  and prlitm='ME70504350S*OP10'                             
+   and prmatc='1' and prlnid=1000                           
+update f43121 set praopn=11986  , prarec=11986   ,
+   precst=11986 , prprrc=558                      
+ where prdoco=90003495 and prdcto='HJ'            
+  and prlitm='ME70504348S*OP10'                   
+   and prmatc='1' and prlnid=1000                 
+update f43121 set praopn=19296  , prarec=19296   ,    
+   precst=19296 , prprrc=558                          
+ where prdoco=90003496 and prdcto='HJ'                
+  and prlitm='ME70504349S*OP10'                       
+   and prmatc='1' and prlnid=1000                     
+update f43121 set praopn=1049   , prarec=1049    ,    
+   precst=1049  , prprrc=558                          
+ where prdoco=90003497 and prdcto='HJ'                
+  and prlitm='ME70504351S*OP10'                       
+   and prmatc='1' and prlnid=1000                     
+update f43121 set praopn=27900  , prarec=27900   ,         
+   precst=27900 , prprrc=2790                              
+ where prdoco=90003498 and prdcto='HJ'                     
+  and prlitm='ME70504322S*OP10'                            
+   and prmatc='1' and prlnid=1000                          
+
+未核付栏位有金额了
+update f4311 set pdarec=172580,  pdaexp=172580,
+  pdprrc=828, pdamc3=828, pdecst=172580
+ where pddoco=90003462 and pddcto='HJ'
+  and pdlitm='ME70503201S*OP10'
+update f4311 set pdarec=15250 ,  pdaexp=15250 ,                 
+  pdprrc=558, pdamc3=558, pdecst=15250                          
+ where pddoco=90003494 and pddcto='HJ'                          
+  and pdlitm='ME70504350S*OP10'                                 
+update f4311 set pdarec=11986 ,  pdaexp=11986 ,          
+  pdprrc=558, pdamc3=558, pdecst=11986                   
+ where pddoco=90003495 and pddcto='HJ'                   
+  and pdlitm='ME70504348S*OP10'                          
+update f4311 set pdarec=19296 ,  pdaexp=19296 ,           
+  pdprrc=558, pdamc3=558, pdecst=19296                    
+ where pddoco=90003496 and pddcto='HJ'                    
+  and pdlitm='ME70504349S*OP10'                           
+update f4311 set pdarec=1049  ,  pdaexp=1049  ,       
+  pdprrc=558, pdamc3=558, pdecst=1049                 
+ where pddoco=90003497 and pddcto='HJ'                
+  and pdlitm='ME70504351S*OP10'                       
+update f4311 set pdarec=27900 ,  pdaexp=27900 ,     
+  pdprrc=2790,pdamc3=2790,pdecst=27900              
+ where pddoco=90003498 and pddcto='HJ'              
+  and pdlitm='ME70504322S*OP10'                     
+
+已收到栏位有金额了
+
+
+2011-09-15
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+已经收货的*OP10代码, 没有生成IM数量.
+To resolve:
+update f41021 set lipqoh=0                                  
+ where liitm=24666 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=300000, ilglpt='IN98'   
+ where illitm='ME20617071S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=49232
+
+2011-09-09
+------------------------------------------------------------------------
+
+userid: CKYL(原料)
+Description of problem:
+11810132 K8盘点单据输入前后，ME40403001账面上的数量没有任何改变
+To resolve:
+update f41021 set lipqoh=613600              
+ where liitm=2177 and limcu='  ZZS0760210'   
+   and lilocn='D1D' and lilotn='20110501'    
+
+
+2011-09-06
+------------------------------------------------------------------------
+
+userid: CKCP(成品) 
+Description of problem:
+90003575HJ单OX92719OBW*OP10主单位错为PC应该是“PK”
+To resolve:
+更改OX92719OBW*OP10的单位设置,同时修正PO
+update f4311 set pduom='PK',pduom1='PK',
+ pduom2='PK',pduom3='PK'
+where pddcto='HJ' and pddoco=90003575
+
+2011-09-05
+------------------------------------------------------------------------
+
+userid: CKYL(原料)
+Description of problem: 
+11861249 IT转帐时出现代码错误ME40609013显示没有数量, 但按F4展开后发现, ME40609135<--ME40502055, 无正数, 只有负数374.4-, 批号也不正确为,20110501<--20110805, 用户反映另一张单也是这样的问题,一做ME40609135就有问题.
+To resolve:
+查数据库发现这两个ITEM在这张单上有 5条记录, 期中ME40609135有一条 数量为0的调整记录, 删除后正常.
+delete   from f4111                                   
+ where ildoc = 11861249 and ildct = 'IT'              
+  and illitm in ('ME40609135')                        
+     and ilukid=6950380                               
+另一张单也是同样
+delete   from f4111                            
+ where ildoc = 11861245 and ildct = 'IT'       
+  and illitm in ('ME40609135')                 
+       and ilukid=6945395                      
+
+
+
+2011-08-31
+------------------------------------------------------------------------
+
+userid: ZouLinHua(邹林华)
+Description of problem:
+关于分类帐和总帐对不上,  不关NK单的事, 应该是IT单错误,   90000524 IT  这张单上数据有误,  我需要手工修正它
+To resolve:
+update f4111 set iltrqt=-600,iluncs=81615,ilpaid=-4897                
+ where ildoc=90000524  and ildct='IT'                                 
+   and illitm='ME91117002'                                            
+     and illotn='0M01001'                                             
+        and ilukid=6865047                                            
+update f4111 set iltrqt= 600,iluncs=81615,ilpaid= 4897      
+ where ildoc=90000524  and ildct='IT'                       
+   and illitm='ME91117002'                                  
+     and illotn='0M01001'                                   
+        and ilukid=6865049                                  
+update f41021 set lipqoh=600                          
+ where liitm=7547 and limcu='  ZBJ0100550'            
+      and lilocn='WAS' and lilotn='0M01001'           
+update f41021 set lipqoh=-600                            
+ where liitm=7547   and limcu='  ZBJ0100250'             
+   and lilotn='0M01001'                                  
+
+
+userid: Yan(周燕香)
+Description of problem:
+由于JDE的库存分类账和库存总账不平衡，与试算平衡表中的库存金额也不一致。经查原因是4张IT单出错，分别是92002810/92002811/92002817/92002826，正常情况下， IT单的数量是一正一负，移转不同库位的单位成本也应该一致，但JDE出现异常，详见附件
+To resolve:
+update f4111 set iltrqt=35900,ilpaid=240020               
+ where ildoc=92002810  and ildct='IT'                     
+   and illitm='ME91417084'                                
+     and ilukid=6780471                                   
+update f4111 set iltrqt=-35900, ilpaid=-240020                         
+ where ildoc=92002810  and ildct='IT'                                  
+   and illitm='ME91417084'                                             
+     and ilukid=6780469                                                
+
+update f4111 set iltrqt=24000, ilpaid=561245             
+ where ildoc=92002817  and ildct='IT'                    
+   and illitm='ME90617261'  and illotn='0I29002'         
+     and ilukid=6818834                                  
+update f4111 set iltrqt=-24000,ilpaid=-561245         
+ where ildoc=92002817  and ildct='IT'                 
+   and illitm='ME90617261'  and illotn='0I29002'      
+     and ilukid=6818832                               
+
+update f4111 set iltrqt=-iltrqt, ilpaid=-ilpaid          
+ where ildoc=92002826  and ildct='IT'                    
+   and illitm='ME90517227'                               
+ and  ilukid=6848546                                     
+update f4111 set iltrqt=-60000, iluncs=83854,ilpaid=-503124        
+ where ildoc=92002826  and ildct='IT'                              
+   and illitm='ME91117034' and illotn='1M01024S' 
+     and ilukid=6851398                                            
+
+update f41021 set lipqoh=-24000                  
+ where liitm=16260  and limcu='  ZGZ0200241'     
+   and lilotn='0I29002'                          
+update f41021 set lipqoh=24000                  
+ where liitm=16260  and limcu='  ZGZ0200240'     
+   and lilotn='0I29002'   
+ 
+update f41021 set lipqoh=0                     
+ where liitm=21520  and limcu='  ZGZ0200241'   
+   and lilotn='1E6201'  and lilocn='OFF'       
+update f41021 set lipqoh=-55200                    
+ where liitm=21856  and limcu='  ZGZ0200540'       
+   and lilotn='1M01024S' and lilocn='PRI'          
+update f41021 set lipqoh=-47900                
+ where liitm=19812  and limcu='  ZGZ0200241'   
+   and lilotn='1I87011'  and lilocn='PRI'      
+update f41021 set lipqoh=35900                             
+ where liitm=19812  and limcu='  ZGZ0200240'               
+   and lilotn='1I87011'  and lilocn='OFF'                  
+
+update f4111 set iltrqt=-iltrqt, ilpaid=-ilpaid          
+ where ildoc=92002811  and ildct='IT'                    
+   and illitm='ME90617275'                               
+ and  ilukid=6783571            
+update f41021 set lipqoh=0                          
+ where liitm=16899  and limcu='  ZGZ0200240'               
+   and lilotn='1J50013'  and lilocn='OFF' 
+update f41021 set lipqoh=0                              
+ where liitm=16899  and limcu='  ZGZ0200241'            
+   and lilotn='1J50013'  and lilocn='PRI'               
+
+2011-08-31
+------------------------------------------------------------------------
+
+userid: WuDianFeng(吴典凤)
+Description of problem:
+增加了科目后我再次做销售更新，科目显示不正确，产成品ZZS0760999.205029科目出现乱码显示不出来科目, 金额也显示不出来.
+To resolve:
+查AAI设置正确, 查205029也正常, 但打印就是乱码,换其它科目正常, 注意到F0901中其描述和其它比较有一个字符的偏移.
+让用户直接过帐, 生成的凭证是正确的.
+
+userid: liaocaihong(廖彩红)
+Description of problem:
+81015227 HE已收货,但还没做匹配, 查订单收货明细,发现已收到有数量,但没有金额,未核付也是只有数量没有金额.
+To resolve:
+update f43121 set praopn=2684029, prarec=2684029,
+  prprrc=5000000,precst=2684029
+ where prdoco=81015227 and prdcto='HE'
+  and prlitm='MEP0501186'
+   and prmatc='1' and prlnid=7000
+未核付栏位有金额了
+update f4311 set pdarec=2684029
+ where pddoco=81015227 and pddcto='HE'
+  and pdlitm='MEP0501186'
+已收到栏位有金额了
+
+2011-08-30
+------------------------------------------------------------------------
+
+userid: liaocaihong(廖彩红)
+Description of problem:
+90130028这个供应商是MAP, 应该是没有税的, 但在做OV匹配时, 在窗口中出现V,ZS17的显示,不能匹配
+To resolve:
+UPDATE F43121 SET PRTX='N'                                             
+ where prdcto='HE' and prdoco in(81015227,81014996,81014770,81012166   
+,81011750,81011273,81010543,90003534,90003537)                         
+   and prtx='Y'                                                        
+UPDATE F43121 SET PRexr1=''                                               
+ where prdcto='HE' and prdoco in(81015227,81014996,81014770,81012166      
+,81011750,81011273,81010543,90003534,90003537)                            
+   and prexr1='V'                                                         
+UPDATE F43121 SET prtxa1=''                                           
+ where prdcto='HE' and prdoco in(81015227,81014996,81014770,81012166  
+,81011750,81011273,81010543,90003534,90003537)                        
+   and prtxa1<>''                                                     
+
+userid: liaocaihong(廖彩红)
+Description of problem:
+90096756 OV单, 通过查询已收货OV窗口,输入选项1查看记录时,显示格式和其它OV单不一样,会显示税额和税区, 而正常 的是显示说明2
+To resolve:
+这个OV记录系统生成时只有贷方科目, 后用P09106手工补了两行, 通过和正常单比对,发现GLALT5不一样, 更正后正常 .
+update f0911 set glalt5=''                                
+ where gldct = 'OV' and gldoc in (90096756)     
+      and glalt5='O'                                      
+
+
+2011-08-29
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+OX22719001*OP10 没有拿到IM反冲数量.
+To resolve:
+update f41021 set lipqoh=0                                  
+ where liitm=13610 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-1040000 , ilglpt='IN98'   
+ where illitm='OX22719001*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=62989
+
+
+2011-08-23
+------------------------------------------------------------------------
+
+userid: liaocaihong(廖彩红)
+Description of problem:
+81014180 HE已收货,但还没做匹配, 查订单收货明细,发现已收到有数量,但没有金额,未核付也是只有数量没有金额.
+To resolve:
+update f43121 set praopn=55352000, prarec=55352000,
+  prprrc=7400000,precst=55352000
+ where prdoco=81014180 and prdcto='HE'
+  and prlitm='MER0602089'
+未核付栏位有金额了
+update f4311 set pdarec=55352000
+ where pddoco=81014180 and pddcto='HE'
+  and pdlitm='MER0602089'
+已收到栏位有金额了
+
+2011-08-11
+------------------------------------------------------------------------
+
+userid: liaocaihong(廖彩红)
+Description of problem:
+在发票匹配窗口, I出 已匹配的90021786PV这张单(RMB), 发现在发票金额栏位有个-0.01,查看明细发现确实有1分钱的差额.
+To resolve:
+update f0411 set rpag=778200     
+ where rpdoc = 90021786 and rpdct='PV'         
+     and rpag=778199 
+更新后, 发票栏位没有数了, 但明细显示仍没变
+            
+
+2011-08-03
+------------------------------------------------------------------------
+
+userid:Liuxiaoyu(刘晓瑜) 
+Description of problem:
+81010472HE, 81010729HE 两张PO的部份物料,已经做过PV,但在匹配窗口仍显示没有匹配.
+To resolve:
+查81010472HE MER0606013 有两条记录,分别是200KG,800KG没匹配, 而在F43121中查81010729HE, 81010638HE刚好多了这些数量, 查F4311则没有这笔收货数
+update f43121 set prdoco=81010472                         
+ where prdoco=81010729   and prdcto='HE'                  
+   and prlitm='MER0606013' and prdoc=90019449             
+update f43121 set prdoco=81010472                      
+ where prdoco=81010638   and prdcto='HE'               
+   and prlitm='MER0606013' and prdoc=90019449          
+update f43121 set pruopn=0,praopn=0,prfap=0             
+ where prdoco=81010472   and prdcto='HE'                
+   and prlitm='MER0606013'   and prmatc='1'             
+81010729HE情况和上述差不多,只不过是不同的Item, 而且分布在三个不同的PO中
+update f43121 set prdoco=81010729                           
+ where prdoco=81010542   and prdcto='HE'                    
+   and prlitm='MER1402021'                                  
+    and prdoc=90019449                                      
+update f43121 set prdoco=81010729                           
+ where prdoco=81010542   and prdcto='HE'                    
+   and prlitm='MER1402007'                                  
+    and prdoc=90019449                                      
+update f43121 set prdoco=81010729               
+ where prdoco=81010638   and prdcto='HE'        
+   and prlitm='MER0606014'                      
+    and prdoc=90019449                          
+update f43121   set pruopn=0,praopn=0,prfap=0           
+ where prdoco=81010729   and prdcto='HE'                
+   and prlitm='MER1402007'   and prmatc='1'             
+ update f43121   set pruopn=0,praopn=0,prfap=0   
+  where prdoco=81010729   and prdcto='HE'        
+    and prlitm='MER0606014'   and prmatc='1'     
+update f43121   set pruopn=0,praopn=0,prfap=0       
+ where prdoco=81010729   and prdcto='HE'            
+   and prlitm='MER1402021'   and prmatc='1'         
+
+
+
+2011-07-28
+------------------------------------------------------------------------
+
+userid: CKYL(原料)
+Description of problem:
+MER0609068 20110606 用户从2515102转22889G到D2C4, IT单号11861187, 发现2515102变成负68400库存,而D2C4变为正的45511G.
+之后用户又新开一个IT单11861188 做D2C4转45511G到2515102, 现在库存是正确的, 但两个地点的分类帐和库存对不上.
+To resolve:
+update f41021 set lipqoh=6840000                   
+  where liitm=11704  and limcu='  ZZS0760210'       
+   and lilotn='20110606' and lilocn='2515102'       
+update f41021 set lipqoh=-4551100                
+ where liitm=11704  and limcu='  ZZS0760210'     
+  and lilotn='20110606' and lilocn='D2C4'        
+之后让用户做个IQ单从2515102转68400GM到D2C4应可以了.
+
+
+2011-07-27
+------------------------------------------------------------------------
+
+userid: ZhongShuiRong(钟水榕)
+Description of problem:
+ME90517235*OP10,ME90517237*OP10,ME90517242*OP10领用数量没有带到数量
+To resolve:
+update f41021 set lipqoh=0                                  
+ where liitm=24173 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90517235*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=21583 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90517242*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24171 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90517237*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24172 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90517236*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=21582 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90517240*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24064 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90520017*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24065 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90520016*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24170 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN41'   
+ where illitm='ME90517238*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24070 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN45'   
+ where illitm='ME90520010*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+
+update f41021 set lipqoh=0                                  
+ where liitm=24073 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN45'   
+ where illitm='ME90517233*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24074 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN45'   
+ where illitm='ME90517232*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24075 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN45'   
+ where illitm='ME90517231*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+update f41021 set lipqoh=0                                  
+ where liitm=24076 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8263600 , ilglpt='IN45'   
+ where illitm='ME90517230*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=57062
+
+以上三个料号,系统自动生成了IM反冲记录, 查F4102,库存类型是X, 行类型是S, 对比不能生成反冲记录的,行类型是X, 修正这些记录为S, 以后不用手工更改, 改了也不行, F4101中也同步更改,观测中.
+update f4101 set imlnty='S'             
+  where  IMSTKT='X'  and imlnty='X'     
+
+OX92719OCP*OP10          	X	X 
+ME20619005S*OP10         	X	X 
+ME90517191*OP10          	X	X 
+ME90517009*OP10          	X	X 
+ME90517010*OP10          	X	X 
+ME90517011*OP10          	X	X 
+ME90517012*OP10          	X	X 
+ME90517013*OP10          	X	X 
+ME90517210*OP10          	X	X 
+ME20625002S*OP10         	X	X 
+ME20625003S*OP10         	X	X 
+ME20625004S*OP10         	X	X 
+ME20625005S*OP10         	X	X 
+ME91417069*OP10          	X	X 
+ME91401SUB*OP10          	X	X 
+ME90622ASW*OP10          	X	X 
+ME90621ACC*OP10          	X	X 
+OX92719OCW*OP10          	X	X 
+ME90618ACC*OP10          	X	X 
+ME91401SUW*OP10          	X	X 
+ME90617026*OP10          	X	X 
+ME90622ACW*OP10          	X	X 
+ME90621AC1*OP10          	X	X 
+ME90621AW0*OP10          	X	X 
+ME91117011*OP10          	X	X 
+ME90601IC5*OP10          	X	X 
+ME90619IC5*OP10          	X	X 
+ME90619OBF*OP10          	X	X 
+ME90617236*OP10          	X	X 
+ME90617157*OP10          	X	X 
+ME90619MC1*OP10          	X	X 
+ME90619MFS*OP10          	X	X 
+ME80601MCW*OP10          	X	X 
+ME91121CB2*OP10          	X	X 
+ME91121CB5*OP10          	X	X 
+ME90617035*OP10          	X	X 
+ME90618AWF*OP10          	X	X 
+ME90618CW1*OP10          	X	X 
+ME91101DSM*OP10          	X	X 
+ME90617085*OP10          	X	X 
+ME90617099*OP10          	X	X 
+ME90618MFS*OP10          	X	X 
+ME91118MC7*OP10          	X	X 
+ME91118MD7*OP10          	X	X 
+ME90618ACW*OP10          	X	X 
+ME90618MC1*OP10          	X	X 
+ME90617217*OP10          	X	X 
+ME90617096*OP10          	X	X 
+ME90601OBF*OP10          	X	X 
+ME90619MC5*OP10          	X	X 
+ME91101CB5*OP10          	X	X 
+ME90618MDS*OP10          	X	X 
+ME90620ACW*OP10          	X	X 
+ME90620MCW*OP10          	X	X 
+ME90617134*OP10          	X	X 
+ME90617135*OP10          	X	X 
+ME90617155*OP10          	X	X 
+ME90617136*OP10          	X	X 
+ME91401SUA*OP10          	X	X 
+OX92717021*OP10          	X	X 
+OX92717021*OP1           	X	X 
+ME20619001*OP10          	X	X 
+ME20619002               	X	X 
+ME20619002*OP10          	X	X 
+ME20619003               	X	X 
+ME20619003*OP10          	X	X 
+ME20619004               	X	X 
+ME20619004*OP10          	X	X 
+ME20619001               	X	X 
+ME90617108*OP10          	X	X 
+ME90617101*OP10          	X	X 
+ME61117010*OP10          	X	X 
+ME60617077*OP10          	X	X 
+ME61117009*OP10          	X	X 
+ME61117004*OP10          	X	X 
+ME61117003*OP10          	X	X 
+ME60617078*OP10          	X	X 
+ME90617112*OP10          	X	X 
+ME61117002*OP10          	X	X 
+ME61117010*OP20          	X	X 
+ME61117010*OP30          	X	X 
+ME90601ACC*OP10          	X	X 
+ME90617174*OP10          	X	X 
+ME90617188*OP10          	X	X 
+ME90617189*OP10          	X	X 
+ME90617186*OP10          	X	X 
+ME90617185*OP10          	X	X 
+ME90617193*OP10          	X	X 
+ME90617192*OP10          	X	X 
+ME90617179*OP10          	X	X 
+ME20601005*OP10          	X	X 
+ME20617069S*OP10         	X	X 
+RO70102008S*OP10         	X	X 
+ME20617065S*OP10         	X	X 
+ME21417012S*OP10         	X	X 
+ME20617024*OP10          	X	X 
+ME90617091*OP10          	X	X 
+ME20617064S*OP10         	X	X 
+ME20617063*OP10          	X	X 
+ME90617090*OP10          	X	X 
+ME20601007*OP10          	X	X 
+ME20601008*OP10          	X	X 
+ME20601006*OP10          	X	X 
+MRD0922S*OP10            	X	X 
+ME20617007*OP10          	X	X 
+ME20601002*OP10          	X	X 
+ME20617008*OP10          	X	X 
+ME20601003*OP10          	X	X 
+ME20617006*OP10          	X	X 
+ME20621001*OP10          	X	X 
+ME20618001*OP10          	X	X 
+ME20625001*OP10          	X	X 
+ME20617016*OP10          	X	X 
+ME20617015*OP10          	X	X 
+ME20617017*OP10          	X	X 
+OX22717001*OP10          	X	X 
+ME20617012*OP10          	X	X 
+ME20617014*OP10          	X	X 
+ME20617011*OP10          	X	X 
+ME20617010*OP10          	X	X 
+ME20617013*OP10          	X	X 
+ME20617009*OP10          	X	X 
+ME91117013*OP10          	X	X 
+ME91117002*OP10          	X	X 
+ME91117014*OP10          	X	X 
+ME20617044S*OP10         	X	X 
+ME20617045S*OP10         	X	X 
+ME20617046S*OP10         	X	X 
+ME20617049S*OP10         	X	X 
+ME20617050S*OP10         	X	X 
+ME20617051S*OP10         	X	X 
+ME20617052S*OP10         	X	X 
+ME20617053S*OP10         	X	X 
+ME20617055S*OP10         	X	X 
+ME20617056S*OP10         	X	X 
+ME20617058S*OP10         	X	X 
+ME20617059S*OP10         	X	X 
+ME20601001*OP10          	X	X 
+ME20601004*OP10          	X	X 
+ME20617054S*OP10         	X	X 
+ME20617047S*OP10         	X	X 
+RO70101011S*OP10         	X	X 
+ME20617048S*OP10         	X	X 
+ME20617027S*OP10         	X	X 
+ME20617029S*OP10         	X	X 
+ME70602044S*OP10         	X	X 
+ME91117010*OP10          	X	X 
+RO70101009S*OP10         	X	X 
+RO70102005S*OP10         	X	X 
+RO70102006S*OP10         	X	X 
+RO70102004S*OP10         	X	X 
+ME92501DSF*OP10          	X	X 
+ME92501DSM*OP10          	X	X 
+ME92501DSN*OP10          	X	X 
+ME20617018*OP10          	X	X 
+ME20617019*OP10          	X	X 
+ME20617020*OP10          	X	X 
+ME20617021*OP10          	X	X 
+ME20617022*OP10          	X	X 
+ME20617023*OP10          	X	X 
+OX22719001*OP10          	X	X 
+ME92517023*OP10          	X	X 
+ME92517024*OP10          	X	X 
+ME92517025*OP10          	X	X 
+OX72701013S*OP10         	X	X 
+OX72701009S*OP10         	X	X 
+RO70101008S*OP10         	X	X 
+
+
+
+userid: ZhangJianPing(张剑平)
+Description of problem:
+IN98 W1 标准成本差异和生产领用物料差异是合在一起进到ZZS0760420.690501,正确应廖是分开,生产领用物料差异进到ZZS0760420.670011
+To resolve:
+更改3280 W1 IN98 其中的A1 由690501 更改为 670011.
+
+
+2011-07-22
+------------------------------------------------------------------------
+
+userid: CKYL(原料)
+Description of problem:
+11861178 IT 单出现两个负数
+To resolve:
+update f4111 set ilpaid=-ilpaid, iltrqt=-iltrqt                       
+ where ildoc =11861178  and ildct ='IT'                               
+    and illitm='ME40607096'                                           
+       and illocn='D3C'                                               
+
+
+userid: Leo(冯斯)
+Description of problem:
+93027775 NA单, 做销售更新时没有生AR记录,同时批表头丢失
+To resolve:
+update f4211 set sdlttr=582,sdnxtr=620        
+   where sddoco=93027775  and sddcto='NA'     
+      and sdlttr=620  and sdnxtr=999
+                       
+将SO退回过帐前状态,同时增加批表头记录,删除下面生成的记录 (F0311实际是空的)
+delete   from f0311                                    
+ where rpdoc=730253    and rpdct='RI'                  
+delete   from f0911                          
+ where glicu=345492 and glicut='I'           
+    and gldoc=730253  and gldct='RI'  
+     and glpost=''  
+     
+另外批号345315也是有问题, 涉及的SO太多
+select glr1 , gldcto   from            
+ f0911  where glicu=345315 and glicut='I'            
+    group by glr1,gldcto    
+update f4211 set sdlttr=582,sdnxtr=620
+ where sdlttr=620 and sdnxtr=999
+  and sddcto='NK' and sddoco=93000959
+update f4211 set sdlttr=582,sdnxtr=620
+ where sdlttr=620 and sdnxtr=999
+  and sddcto='NA' and sddoco in (          
+   93027846,93027888,93027942,93027986,93027988,
+    93027992,93027993,93027999,93028007,93028010,
+   93028027,93028029,93028045,93028052,93028053,
+    93028054,93028058,93028061,93028062,93028071,
+   93028076,93028078,93028079,93028081,93028082,
+    93028088,93028091 )
+select * from f0311 where rpdoc in 
+ ( select gldoc from f0911 where 
+     glicu=345315 and glicut='I' )
+delete  from f0911        
+ where glicu=345315 and glicut='I'    
+  and glpost=''                       
+
+批号345436修复
+update f4211 set sdlttr=582,sdnxtr=620
+ where sdlttr=620 and sdnxtr=999
+  and sddcto='NW' and sddoco in 
+  (93000374,93000375,93000376)
+update f4211 set sdlttr=582,sdnxtr=620
+ where sdlttr=620 and sdnxtr=999
+  and sddcto='NV' and sddoco in 
+ (93001992,93001994,93002014,93002023,93002025,
+  93002026,93002043,93002047,93002076)
+update f4211 set sdlttr=582,sdnxtr=620
+ where sdlttr=620 and sdnxtr=999
+  and sddcto='NA' and sddoco in 
+ (93027450,93027582,93027584,93027642,93027705,
+   93027721,93027728,93027745,93027762,93027859,
+   93027862,93027873,93027881,93027890,93027912,
+  93027914,93027915,93027920,93027921,93027928,
+  93027929,93027931,93027934,93027936,93027941,
+  93027968,93027974,93027977,93027978)
+select * from f0311 where rpdoc in      
+ ( select gldoc from f0911 where        
+     glicu=345436 and glicut='I' )      
+delete  from f0911        
+ where glicu=345436 and glicut='I'    
+  and glpost=''   
+
+修正345375错误
+update f4211 set sdlttr=582,sdnxtr=620
+ where sdlttr=620 and sdnxtr=999
+  and sddcto='NV' and sddoco in 
+ (92001143,92001144)
+update f4211 set sdlttr=582,sdnxtr=620
+ where sdlttr=620 and sdnxtr=999
+  and sddcto='NG' and sddoco in 
+ (92001471,92001472)
+update f4211 set sdlttr=582,sdnxtr=620
+ where sdlttr=620 and sdnxtr=999
+  and sddcto='NH' and sddoco in 
+ (92001745,92001746)
+update f4211 set sdlttr=582,sdnxtr=620
+ where sdlttr=620 and sdnxtr=999
+  and sddcto='NA' and sddoco in 
+ (92032895,92032924,92032925,92032926,92032933,92032934,
+  92033061,92033075,92033076,92033077,92033078,92033282,
+  92033284,92033438,92033440,92033443,92033444,92033758, 
+  92033759,92033760,92033761,92033762,92033763,92033778, 
+  92033788,92033807,92033808,92033876,92033877,92033882,
+  92033883,92033884,92033885,92033886,92033906,92033907,
+  92033916,92033917,92033918,92033957,92033958,92033959,
+  92033960,92033961,92033963,92033964,92033965,92033972,
+  92033973,92033974,92033975,92033977,92033978,92033980,
+  92033983,92034092,92034093,92034094,92034095,92034096,
+  92034097,92034098,92034099,92034100,92034101,92034103,
+  92034106,92034140,92034180,92034216,92034277,92034278,
+  92034279,92034288,92034289,92034290,92034291,92034292,
+  92034293,92034349,92034350,92034351,92034352,92034353,
+  92034356,92034399,92034400,92034401,92034443,92034448,
+  92034495,92034549,92034550,92034554,92034569,92034600,
+  92034601,92034602,92034603,92034604,92034619,92034636,
+  92034640,92034641,92034651,92034652,92034665,92034666,
+  92034667,92034697,92034736,92034742,92034745,92034760,
+  92034761,92034792,92034793)
+
+select * from f0311 where rpdoc in      
+ ( select gldoc from f0911 where        
+     glicu=345375 and glicut='I' ) 
+delete  from f0911        
+ where glicu=345375 and glicut='I'    
+  and glpost=''   
+
+
+
+2011-07-19
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+81010803HE MER0608010 已经收货,并且已做匹配生成PV, 但在匹配窗口,仍可看见记录
+To resolve:
+查这个PO上只有两个记录,且MER0608010 状态为980 999已经取消的订单, 但为何有收货 ?
+查F43121 有三次收货记录, 对应有三次匹配记录,其中有个收货记录的批号为20110102#,但对应的匹配记录批号为20110101,  正是这条收货记录上有OpenQty, 估计是批号错误导至程序从生成的匹配记录反向扣减OV上的OpenQty时没有找到对应记.
+update f43121 set pruptd=pruopn,pruopn=0, 
+  praptd=praopn, praopn=0,
+   prfapt=prfap, prfap=0
+ where prmatc=1 and pruopn=2040
+   and prdoco=81010803 and prdcto='HE'           
+   and prlitm='MER0608010'                     
+  
+
+
+2011-07-18
+------------------------------------------------------------------------
+
+userid: ZhangJianPing(张剑平)
+Description of problem:
+W1 IN98 标准成本差异进帐科目错误
+To resolve:
+标准成本差异进帐科目由3270,3280决定, 直接将其下的IN98 由ZZS0760410.693506 更改为ZZS0760420.690501
+
+2011-07-12
+------------------------------------------------------------------------
+
+userid: CKCP(成品)
+Description of problem:
+没有生成IM反冲记录
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=24037 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-819700  ,ilglpt='IN54'
+ where illitm='ME90617530*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=61347
+update f41021 set lipqoh=0
+ where liitm=25302 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-819700  ,ilglpt='IN55'
+ where illitm='ME90617545*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=61347
+
+2011-07-01
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+IM单没带到数量
+To resolve:
+update f41021 set lipqoh=0                                  
+ where liitm=23977 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-2084300, ilglpt='IN41'   
+ where illitm='ME70503201S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=61015
+
+ 
+ 
+2011-06-30
+------------------------------------------------------------------------
+
+userid: liaocaihong(廖彩红)
+Description of problem:
+90092371 OV , 90092157 OV 两张单的总帐记录不平, 生成的记录是这样
+ZZS0760999.220000   13504.12 MER0602089
+ZZS0760999.220000   13504.12 MER0607052
+ZZS0760999.237010   13504.12- MER0607052
+
+ZZS0760999.220000   12539.54 MER0602089
+ZZS0760999.220000   12539.54 MER0607021
+ZZS0760999.237010   12539.54- MER0607021
+其中MER0607052, MER0607021查分类帐没有对应OV记录
+To resolve:
+查F4311,  81013392HE, 发现MER0602989 有两条RMB记录(17,61两行),有两条JPY记录, 其中RMB的记录是DP平台开的, JPY的是在JDE手工输入的记录.
+另一张 81013068HE, 32行 MER0602989错为RMB.
+update f0911 set glaa=0, glexr='MER0602089'           
+ where gldoc = 90092157  and gldct='OV'               
+     and gljeln=2                                     
+update f0911 set glaa=0, glexr='MER0602089'          
+ where gldoc = 90092371  and gldct='OV'              
+     and gljeln=2                                    
+update f0911 set         glexr='MER0602089'         
+ where gldoc = 90092371  and gldct='OV'             
+     and gljeln=3                                   
+update f0911 set         glexr='MER0602089'       
+ where gldoc = 90092157  and gldct='OV'           
+     and gljeln=3                                 
+
+
+
+2011-06-27
+------------------------------------------------------------------------
+
+userid: CKPL
+Description of problem:
+做K8单时, 库存和做之前一样,没有改变.
+To resolve:
+update f41021 set lipqoh=845000                    
+ where liitm=16346  and limcu='  ZZS0760210'       
+   and lilotn='20110203'   and lilocn='D2C5'       
+         and lipqoh=753200                         
+
+
+
+2011-06-24
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+11861041 IT单, 出现两个负数
+To resolve:
+检查分类帐,D3C库存应为3307TG, 但F41021查得3207.6TG, 差额99.4TG
+update f4111 set iltrqt=-iltrqt, ilpaid=-ilpaid        
+ where ilmcu = '  ZZS0760210'  and ildoc  = 11861041 
+   and illitm='MER0503064' and illocn='D3C'                              
+update f41021 set lipqoh=330700                            
+ where limcu='  ZZS0760210' and lilotn='20110201A#'        
+  and lilocn='D3C' and liitm in                            
+   (select imitm from f4101 where imlitm='MER0503064')     
+
+
+2011-06-22
+------------------------------------------------------------------------
+
+userid: HuGuiBin(胡桂宾)
+Description of problem:
+现JDE有较多Q住的物料，而有较多是之前已经释放使用过，剩余尾数库存的，但目前JDE仍为Q状态，请帮忙查证是否正常.
+To resolve:
+这个是因为上高级仓库管理后, 移转时没有找到原来使用的空记录,系统当新入库处理,自动Hold的, 对于有库存的原料和包材, 做如下修复.
+update f41021 set lilots = (select iolots from f4108            
+     where limcu=iomcu and ioitm=liitm and iolotn=lilotn )       
+  where   LIPQOH<>0 and limcu='  ZZS0760210'                
+    and lilots <> (select  iolots from f4108 where limcu=iomcu   
+  and ioitm=liitm and iolotn=lilotn )                            
+    and liitm in (select imitm from f4101 where imglpt in        
+    ('IN98','IN99'))                                             
+
+
+
+2011-06-21
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜) 
+Description of problem:
+IM记录没带到记录
+To resovle:
+update f41021 set lipqoh=0                                  
+ where liitm=14155 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-19200000, ilglpt='IN98'   
+ where illitm='RO70102008S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=80015882
+update f41021 set lipqoh=0                                  
+ where liitm=21428 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-19200000, ilglpt='IN98'   
+ where illitm='RO70101014S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=80015860
+update f41021 set lipqoh=0                                  
+ where liitm=24137 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-273300, ilglpt='IN98'   
+ where illitm='ME70504350S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=61580
+update f41021 set lipqoh=0                                  
+ where liitm=24147 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-10000, ilglpt='IN98'   
+ where illitm='ME70504322S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=61585
+update f41021 set lipqoh=0                                  
+ where liitm=24149 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-345800 , ilglpt='IN98'   
+ where illitm='ME70504349S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=61583
+update f41021 set lipqoh=0                                  
+ where liitm=24151 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-214800 , ilglpt='IN98'   
+ where illitm='ME70504348S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=61582
+update f41021 set lipqoh=0                                  
+ where liitm=24157 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-18800  , ilglpt='IN98'   
+ where illitm='ME70504351S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=61584
+update f41021 set lipqoh=0                                  
+ where liitm=13609  and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-510000  , ilglpt='IN98'   
+ where illitm='ME20617023*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=61479
+
+
+2011-06-10
+------------------------------------------------------------------------
+
+userid: colinlai
+Description of problem:
+MKB的一些客户资料上载时,有些描述是乱码,用户在区产开的销售单也带出乱码.
+To resovle:
+以80003427为例,查得其客户85400072,修正它看是否正常
+update f0911 set glexa=substring((select wwalp1 from f0111
+ where glan8=wwan8 and wwidln=0),1,30)       
+  where glkco='80000' and gldct='RM' and gldoc in
+  ( '80001343'   ,'80001346','80001345')
+update f0911 set glexa=substring((select wwalp1 from f0111
+  where glan8=wwan8 and wwidln=0 ) ,1,30 )
+  where glkco='80000' and gldct='RI' and gldoc in ('80003434',      
+ '80003433','80003432','80003431','80003430','80003427','80003426', 
+ '80003425','80003423','80003422' )                                 
+update f0911 set glexa=substring((select wwalp1 from f0111
+  where glan8=wwan8 and wwidln=0 ) ,1,30 )
+  where glkco='80000' and gldct='RI' and gldoc in ('80003455',      
+ '80003454','80003453','80003452','80003450','80003441','80003445', 
+ '80003446','80003436' )                                              
+Select * from F0911                                              
+Where GLKCO='80000'   and GLDGJ>111120  and gldgj<111150         
+    and gldct in ('RI','RM')                                     
+
+
+2011-06-08
+------------------------------------------------------------------------
+
+userid: CKCP(成品)
+Description of problem:
+ME91017003 8G7 开退货单90000342NM,在做确认时杀单,检查8G7这个批次,发现效期已过,更改后开单仍杀单.
+To resolve:
+检查上一状态为984 在货运中取消, 检查F4602中的记录,发现8G7主单位是CA,且数量和F41021中不相同.
+查单位结构发现1PL=30CA , 1CA=48PC, PUOM=BX  更改1CA=48BX,重建F4602, 重新开单后可以正常进行.
+
+
+
+
+2011-06-03
+------------------------------------------------------------------------
+
+userid: QM
+Description of problem:
+ME70601240 20110301LXGB做了一张盘盈, 进帐后状态为Q, 但查批记录是释放状态
+To resolve:
+查看分类帐记录,在这笔K8单记录下,有一条IB记录,在测试环境模拟发现,当做的K8记录,如果在F41021中没有记录,系统当新收货处理,会根据F4102中的设置,一收货就Hold, 如果F41021中有对应的空记录, 则系统会去找F4108中的批状态同步, 同时不会生成IB记录.
+
+
+2011-06-01
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Descritpion of problem:
+IM单没有带到数量
+To resolve:
+update f41021 set lipqoh=0                                  
+ where liitm=22893 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=9336000   , ilglpt='IN56'   
+ where illitm='ME20617017S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=51443
+update f41021 set lipqoh=0                                  
+ where liitm=13901 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8520000  , ilglpt='IN98'   
+ where illitm='ME20601006*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=60566
+update f41021 set lipqoh=0                                  
+ where liitm=23643 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-8520000  , ilglpt='IN37'   
+ where illitm='ME20617023S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=60566
+update f41021 set lipqoh=0                                  
+ where liitm=13773 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=1920000  , ilglpt='IN98'   
+ where illitm='RO70101011S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=48305
+update f41021 set lipqoh=0                                  
+ where liitm=18025 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=52200000, ilglpt='IN98'   
+ where illitm='ME20619005*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=47783
+update f41021 set lipqoh=0
+ where liitm=23813 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-7552800  ,ilglpt='IN56'
+ where illitm='ME90617376*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=60857 
+
+2011-05-31
+------------------------------------------------------------------------
+
+userid: bin
+Description of problem:
+有几个外发加工的HJ单，打印时有描述，但没有ItemNumber, 查PO，pdaitm为空，基本资料中f4101d.imaitm也是空的，更正后正常
+To resolve:
+update f4101d set imaitm=imlitm              
+ where imlitm in ('ME90517290*OP10',         
+      'ME90517291*OP10' )                    
+update f4311 set pdaitm=pdlitm                
+ where pdlitm in ('ME90517290*OP10',          
+      'ME90517291*OP10' )                     
+   and pdaitm=''                              
+
+
+userid: colinlai
+Description of problem:
+5817 SD，分次收货，在第二次收货时，用户收了5400PC, 发现错了，然后反冲，收了7008,然后再反冲时，看不到7008的记录．
+To resolve:
+update f4311 set pduopn=700800 ,pdurec=pdurec - 700800      
+    where pddoco=5817 and pddcto='SD'                       
+  and pdlitm='OX92719L11'                                   
+
+update f43121 set prmatc='5'                              
+    where prdoco=5817  and prdcto='SD'   
+ 　　　 and prlitm='OX92719L11'                                 
+   　　　 and prnlin=2 and prmatc='1'                       
+仍不正常,应用户的要求,恢复为原样, 用户将错就错做单,然后自己在总帐中调帐
+
+
+2011-05-30
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+90003307 HJ 分类账处有单位成本，但到匹配画面的时候，没有了金额
+To resolve:
+这个是因为ＰＯ开单时没有单价，用户已收货，再在ＰＯ上补单价．
+update f43121 set precst=65310,praopn=65310
+ where prdoco=90003307  and prdcto='HJ'
+   and prmatc='1'
+
+userid: Leo(冯斯) [mailto:leo@mentholatum.com.cn]
+Description of problem:
+JDE的表F4111（对应mis中的itemledger）中有以下采购单，不知什么原因所有产品代码的总账级都变成一样，全部为上海分公司201105月的采购单，为不影响财务同事月结，请帮忙在JDE系统进行调整, 其中F4111中的单价也不正确．
+91001641  HA
+91001644  HA
+91001648  HA
+91001654  HA
+91001660  HA
+91001661  HA
+91001662  HA
+To resolve:
+update f43121 set prglc = (select PdGLC from f4311
+    where PDDOCO=PRDOCO and PDDCTO=PRDOCO and PDLITM=PRLITM
+      group by pdglc)                                                              where prdoco in (91001641,91001644,91001648,91001654,              
+     91001660,91001661,91001662)                                    
+  and prdcto = 'HA'    
+
+update f4111 set ilglpt = (select pdglc from f4311
+  where ildoco=pddoco and ildcto=pddcto and illitm=pdlitm
+   group by pdglc)
+ where ildoco in  (91001641,91001644,91001648,91001654,              
+     91001660,91001661,91001662)                                    
+  and ildcto = 'HA'   and ildct='OV' 
+然后用用户提供的正确分类帐资料更新分类帐数据，用户再将对应的总帐凭证反冲，重做总帐凭证．
+
+
+2011-05-23
+------------------------------------------------------------------------
+
+userid: CKYL(原料)
+Description of problem:
+补给需求838，提交就没反应，跑不出建议
+To resolve:
+查838，前3行已经产生建议，但在F4611中320，340状态看不到，用SQL查其状态是300
+在用户界面取消建议，重跑
+出现错误的原因是第一次跑时，很慢，用户用4取消了JOB，导至数据不一至。
+重新用手工补货，仍然是跑建议时死循环，可能是数据的原因，因时间较紧，让用户先用IT单转移．
+
+查其中的RO40102045, 其单位结构到MK, 但其主单位是GM, 先更正这个单位
+
+看F4602中　BK->KG->GM->KG->KG, 有个死循环，估计是这个原因
+但改了单位结构后重建F4602仍然有个死循环，删除记录重建，正常了
+
+
+2011-05-19
+------------------------------------------------------------------------
+
+userid: ZhongShuiRong(钟水榕)
+Description of problem:
+ME60617395*OP10 收货后没有生成IM记录
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=23763 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-59000  ,ilglpt='WI55'
+ where illitm='ME60617395*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=60765
+
+
+2011-05-17
+------------------------------------------------------------------------
+
+userid: CKYL(原料)
+Description of problem:
+11860747IT转帐单，当时有俩个人同时用同一个单号导致的，只有代码：ME40502030  有异常出现负数。
+To resolve:
+update f4111 set ilpaid=-ilpaid, iltrqt=-iltrqt
+ where ildoc=11860747 and ildct ='IT'
+  and illitm='ME40502030' and ilukid
+   in (6398362, 6398363)
+
+userid: CKYL(原料)
+Description of problem:
+11860755IT转帐到2601501 ME41402110批号20101101 库存没有增加,IT是两个负数
+To resolve:
+update f4111 set ilpaid=-lipaid,iltrqt=-iltrqt            
+ where ildoc=11860755 and ildct='IT'                      
+  and illitm='ME41402110'                                 
+  and ilukid=   6404102                                   
+update f41021 set lipqoh=981320                        
+ where liitm=21094    and limcu='  ZZS0760210'         
+  and lilocn='D1C'  and lilotn='20101101'              
+
+11860755IT转帐到B106129
+update f4111 set ilpaid=-ilpaid,iltrqt=-iltrqt          
+ where ildoc in (11860747,11860755) and ildct='IT'      
+  and illitm='ME40502030' and illocn='D1C'              
+     and ilpaid<0                                       
+update f4111 set ilpaid=-ilpaid,iltrqt=-iltrqt             
+ where ildoc in (11860747         ) and ildct='IT'         
+  and illitm='ME40502030' and illocn='B106129'             
+     and ilpaid>0                                          
+update f41021 set lipqoh=72000               
+ where liitm=2251 and lilocn='D1C'           
+   and lilotn='20080402'                     
+
+
+
+2011-05-16
+------------------------------------------------------------------------
+
+userid: CKYL(原料)
+Description of problem:
+60037工单，MER0602054 工单记录发放0.07GM, 而分类帐记录发放了65GM
+58780工单，ME42502016 工单记录发放1929.83KG,而分类帐记录发放了965.40KG
+To resolve:
+update f3111 set wmtrqt=6500                             
+ where wmdoco=60037 and wmcpil='MER0602054'              
+update f3111 set wmtrqt=96540                
+  where wmdoco=58780 and wmcpil='ME42502016'  
+
+userid: CKYL(原料)
+Description of problem:
+11860735ITl转帐到D1C ME40502030 批号20080402 库存没有增加
+To resolve:
+ update f4111 set ilpaid=-ilpaid, iltrqt=-iltrqt
+  where ildoc = 11860735  and ildct ='IT'       
+    and illitm='ME40502030'                     
+      and ilukid=6392383                        
+update f41021 set lipqoh=36000                    
+  where liitm = 2251 and limcu='  ZZS0760210'     
+   and lilocn='D1C' and lilotn='20080402'         
+
+
+
+2011-05-13
+------------------------------------------------------------------------
+
+userid: CKBC(包材)
+Description of problem:
+4617和2015两个任务不能做取消．
+To resolve:
+将F4611中的状态由340改为391, 对应F4600记录的状态由220改为200,　重跑建议，访记录状态变为220, 但在F4611中找不到对应记录，查看ME70601421　F4600.R1LDFS=2, 将它更改为1，　重跑建议，正常．
+
+userid: CKBC(包材)
+Description of problem:
+ME70502066规格不正确，改规格后，重建F4602记录，F4611中的记录不能取消．
+To resolve:
+查F4611中的ldfs,ldts取值为2, 改为1后正常．
+
+userid: CKYL(原料)
+Description of problem:
+以下任务员删除不了，请帮忙处理
+To resolve:
+update f4611 set r2pstb=391              
+ where r2ptsk in (4593,4725)             
+       and r2pstb in (320,340)           
+
+
+2011-05-12
+------------------------------------------------------------------------
+
+userid: LaoJie(劳婕)
+Description of problem:
+有两个工单，需要更改物料编码，但在用户界面不能更改，总是提示有人使用。
+To resolve:
+update f3111 set wmcpit=3775,wmcpil='MER0502028',                  
+          wmcpia='MER0502028'                                      
+   where wmdoco=60479   and wmcpil='ME40502028'                    
+update f3111 set wmcpit=3775,wmcpil='MER0502028',     
+          wmcpia='MER0502028'                         
+   where wmdoco=60478   and wmcpil='ME40502028'       
+
+
+userid: SuMengLian(苏梦连)
+Description of problem:
+子件报废多拉出一条数来
+To resolve:
+update f3111 set wmsocn=0                      
+ where wmdoco=90021716 and wmcpil='ME70603067' 
+     and wmsocn=1400  and wmtrqt=-383500       
+
+
+2011-05-10
+------------------------------------------------------------------------
+
+userid: ZhengJinShan(郑锦珊)
+Description of problem:
+OV单出现一些没有数量，有金额的调整记录．
+To resolve:
+查分类帐记录，没有总帐记录对应的行号，在总帐中也没有对应的记录
+update f4111 set ilpaid=0                   
+ where ildoc =90089725 and ildct='OV'       
+   and illitm='ME70306004' and ilpaid=-975  
+update f4111 set ilpaid=0                             
+ where ildoc =90089725 and ildct='OV'                 
+   and illitm='ME70608284' and ilpaid=-94             
+update f4111 set ilpaid=0                     
+ where ildoc =90089719 and ildct='OV'         
+   and illitm='ME70206044' and ilpaid=293     
+update f4111 set ilpaid=0                  
+ where ildoc =90089719 and ildct='OV'      
+   and illitm='ME70604199' and ilpaid=31   
+update f4111 set ilpaid=0                              
+ where ildoc =90089719 and ildct='OV'                  
+   and illitm='ME70604105' and ilpaid=81               
+
+
+
+userid: CKYL(原料)
+Description of problem:
+IT单出现两个负数，IT转账单，转账时未发现异常，账面上有数量可转到车间数量就没有显示在车间地点，账面上数量也就不见了。 
+To resolve:
+update f4111 set ilpaid=-ilpaid, iltrqt=-iltrqt   
+ where ildoc = 11860701  and ildct='IT'           
+   and illitm='ME41408005' and ilukid=6366842     
+
+
+2011-05-09
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+IT单生成的金额有一个调整金额（无数量，无单价），在总帐中是一正一负两条记录,另处一种情型是两个记录都是负数（正常是一正一负）．
+To resolve:
+update f4111 set ilpaid=0                        
+ where ildoc =11860678  and ildct ='IT'          
+  and illitm='MER1402024'  and ilukid=6347138    
+update f4111 set ilpaid=-ilpaid,iltrqt=-iltrqt                 
+ where ildoc=11860540 and ildct ='IT'           
+  and illitm='ME40502119' and ilukid=6254860    
+update f4111 set ilpaid=0                       
+ where ildoc=11860602 and ildct ='IT'           
+  and illitm='ME40606016' and ilukid=6294529   
+update f4111 set ilpaid=-ilpaid, iltrqt=-iltrqt          
+ where ildoc=11860535 and ildct ='IT'                    
+  and illitm='MER0606008' and ilukid=6253600             
+update f4111 set ilpaid=0                     
+ where ildoc=11860514 and ildct ='IT'         
+  and illitm='MER0502112' and ilukid=6238333  
+update f4111 set ilpaid=0                        
+ where ildoc=11860637 and ildct ='IT'            
+  and illitm='ME40609009' and ilukid=6316441     
+update f4111 set ilpaid=0                      
+ where ildoc=11860508 and ildct ='IT'          
+  and illitm='ME40606016' and ilukid=6235129   
+update f4111 set ilpaid=-5460                
+where ildoc=11860478 and ildct ='IT'        
+ and illitm='MER0609091' and ilukid=6214638 
+update f4111 set ilpaid= -ilpaid               
+ where ildoc=11860551 and ildct ='IT'          
+  and illitm='ME40602099' and ilukid=6263261   
+
+
+2011-05-05
+------------------------------------------------------------------------
+
+userid: ZhongShuiRong(钟水榕)
+Description of problem:
+ME90601AUC*OP10外发加工收货后，IM单没有带到数量
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=22393 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1544700  ,ilglpt='IN54'
+ where illitm='ME90601AUC*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=60177
+
+
+2011-05-04
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+IT单分类账数量金额都是负数，总账的数量金额是正数
+To resolve:
+update f4111 set iltrqt=-iltrqt,ilpaid=-ilpaid  
+ where ildoc = 11860545  and ildct ='IT'        
+   and illitm='ME41402103'                      
+    and ilukid in (6259326, 6259675)            
+update f4111 set iltrqt=-iltrqt,ilpaid=-ilpaid              
+ where ildoc = 11860535  and ildct ='IT'                    
+   and illitm='ME41402103'                                  
+    and ilukid in (6253938, 6254520)                        
+update f4111 set iltrqt=-iltrqt,ilpaid=-ilpaid      
+ where ildoc = 11860535  and ildct ='IT'            
+   and illitm='MER0502140'                          
+    and ilukid in (6256187)                         
+update f4111 set iltrqt=-iltrqt,ilpaid=-ilpaid            
+ where ildoc = 11860620  and ildct ='IT'                  
+   and illitm='MER0602086'                                
+    and ilukid in (6303705)                               
+ update f4111 set iltrqt=-iltrqt,ilpaid=-ilpaid         
+  where ildoc = 11860536  and ildct ='IT'               
+    and illitm='ME40502119'                             
+     and ilukid in (6254648)                            
+update f4111 set iltrqt=-iltrqt,ilpaid=-ilpaid          
+ where ildoc = 11860536  and ildct ='IT'                
+   and illitm='ME41202018'                              
+    and ilukid in (6254654)                             
+ update f4111 set iltrqt=-iltrqt,ilpaid=-ilpaid     
+  where ildoc = 11860536  and ildct ='IT'           
+    and illitm='ME40506003'                         
+     and ilukid in (6254665,6254667)                
+
+
+
+
+userid: CKCP(成品)
+Description of problem:
+RO70101015S*OP10外发加工收货后，IM单没有带到数量
+To resolve:
+update f41021 set lipqoh=0                                  
+ where liitm=21430 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-2100000 , ilglpt='IN98'   
+ where illitm='RO70101015S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=80014927
+update f41021 set lipqoh=0                                  
+ where liitm=13709 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-3240000  , ilglpt='IN98'   
+ where illitm='RO70101009S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=80014921
+
+2011-04-29
+------------------------------------------------------------------------
+
+userid: CKYL(原料)
+Description of problem:
+81012331HE单MER2802001已经收货，生成了移转需求，状态已为２２０，但没有看到建　议
+To resolve:
+update f4600 set r1pstb=200        
+ where r1litm='MER2802001'         
+       and r1rqbt=8087             
+然后重跑建议，33查看程序出错，比对数据发现r1ldfs=2, 改为1再跑建议还是不行
+查另一个订单也是订的这个物料但可以生成建议，再细查发现没有单位结构，增加结构，同时在F46011补上规格，再跑建议出来了．
+
+
+userid:　叶芳 
+Description of problem:
+ME40502100 做IT单时出错，D1C出现负数
+To resolve:
+update f41021 set lipqoh=0              
+ where liitm = 4225                     
+   and lilocn = 'D1C'                   
+update f4111 set iltrqt=-iltrqt, ilpaid = - ilpaid               
+  where ildoc  = 11860657  and ildct  = 'IT'                     
+     and illitm='ME40502100' and ilukid=6334378                  
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+有几个退货的OV单，没有数量，但有金额，在总帐中无金额
+To resolve:
+ update f4111 set ilpaid=0                     
+  where ildoc = 90089653 and ildct = 'OV'      
+    and illitm = 'OX72701005' and ilpaid=266              
+     and ilukid=6335666  
+update f4111 set ilpaid=0                    
+ where ildoc = 90089609 and ildct = 'OV'     
+   and illitm = 'ME71402026' and ilpaid=213  
+                      
+userid: 阿珊
+Description of problem:
+333951　批号的总帐OV 90089605记录，都是相同的Itemnumber, 而在分类帐看这些记录是不同的Itemnumber, 从HC 90018470看也是不同的Itemnumber
+To resolve:
+经检查，其计算金额用的是ＰＯ的第一行，全是错误的记录，让用户反冲ＯＶ，重新收货．
+
+
+
+
+
+2011-04-22
+------------------------------------------------------------------------
+
+userid: CKBC(包材)
+Description of problem:
+ME72501046开的IT单11720741转移一个数量，但转移到的储位的总数未加到此数量。而我们实物确实有6504个。但分类账只有1200个。
+To resolve:
+检查库存，发现另一边已扣数
+update f41021 set lipqoh=lipqoh+530400
+ where liitm=11954  and limcu='  ZZS0760210'
+   and lilotn='20110206KKP'  and lipqoh = 120000
+
+userid: XuWenJun(徐文军)
+Description of problem:
+没有生成IM反冲记录
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=23159 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-14496300  ,ilglpt='IN55'
+ where illitm='ME90617523*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59750
+update f41021 set lipqoh=0                                  
+ where liitm=22413 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-4871700 , ilglpt='IN54'   
+ where illitm='ME90622AW0*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=60176
+update f41021 set lipqoh=0
+ where liitm=22512 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN54'
+ where illitm='ME90617417*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=62089
+update f41021 set lipqoh=0
+ where liitm=25366 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
+ where illitm='ME90617447*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=62089
+update f41021 set lipqoh=0
+ where liitm=25365 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
+ where illitm='ME90617448*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=62089
+update f41021 set lipqoh=0
+ where liitm=25303 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
+ where illitm='ME90617550*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=62089
+
+
+2011-04-15
+------------------------------------------------------------------------
+
+userid: CKYL(原料)
+Description of problem:
+在IT转移时，从库位2-6-01-2-01转40GM到D2C5，2-6-01-2-01库位可能已经扣数，但是D2C5没有数量
+To resolve:
+update f41021 set lipqoh=4000  + lipqoh     
+ where liitm = 5849                 
+    and lilocn='D2C5'               
+update f4111 set iltrqt=-iltrqt              
+ where ildoc  = '11860551' and ildct ='IT'   
+    and illitm = 'ME40602099'                
+       and ilukid=6263261                    
+
+
+
+2011-04-13
+------------------------------------------------------------------------
+
+userid: XuWenJun(徐文军)
+Description of problem:
+没有生成IM反冲记录
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=22515 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN52'
+ where illitm='ME90617458*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59616
+update f41021 set lipqoh=0
+ where liitm=22513 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN52'
+ where illitm='ME90617450*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59616
+update f41021 set lipqoh=0
+ where liitm=22392 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-537900  ,ilglpt='IN54'
+ where illitm='ME90601AUF*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59075
+
+2011-04-08
+------------------------------------------------------------------------
+
+userid: ZhongShuiRong(钟水榕)
+Description of problem:
+没有生成IM反冲记录
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=22565 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-377800  ,ilglpt='IN48'
+ where illitm='ME91117038*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59631
+update f41021 set lipqoh=0
+ where liitm=22561 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-377800  ,ilglpt='IN48'
+ where illitm='ME91117034*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59631
+update f41021 set lipqoh=0
+ where liitm=22562 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-377800  ,ilglpt='IN48'
+ where illitm='ME91117037*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59631
+update f41021 set lipqoh=0                                   
+ where liitm=23077 and limcu='  ZZS0760210' and lipqoh<>0    
+update f4111 set iltrqt=-1958500 , ilglpt='IN55' 
+ where illitm='ME90617492*OP10'   and ilglpt=''  
+  and ildct ='IM' and iltrqt=0 and ildoc=45487 
+update f41021 set lipqoh=0                                   
+ where liitm=22466 and limcu='  ZZS0760210' and lipqoh<>0    
+update f4111 set iltrqt=-1958500 , ilglpt='IN54' 
+ where illitm='ME90617219*OP10'   and ilglpt=''  
+  and ildct ='IM' and iltrqt=0 and ildoc=45487 
+
+2011-04-06
+------------------------------------------------------------------------
+
+userid: XuWenJun(徐文军)
+Description of problem:
+没有生成IM反冲记录
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=22802 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-377800  ,ilglpt='IN52'
+ where illitm='ME90617485*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59631
+
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+ME90622CW0*OP10 90087045 OV 缺少IM反冲记录, 对应工单(58638),对应UKID in (6157361)
+To resolve:
+原来是HJ单上没有工单号,HJ收货窗口收货,导至没有生成IM记录, 手工添加记录.
+insert into f4111(ilitm,illitm,ilaitm,ilmcu,illocn,illotn,ilplot,
+ ilstun,illdsq,iltrno,ilfrto,illmcx,illots,illotg,ilkit,
+  ilmmcu,ildmct,ildmcs,ilbalu,ilkco,ildoc,ildct,ilsfx,
+   iljeln,ilicu,ildgl,ilglpt,ildcto,ildoco,ilkcoo,illnid,
+  ilnlin,ilipcd,iltrdj,iltrum,ilan8,iltrex,iltref,ilrcd,
+   iltrqt,iluncs,ilpaid,iltday,iluser,ilpid,ilcrdj,ilterm)
+select ilitm,illitm,ilaitm,ilmcu,illocn,illotn,ilplot,
+ ilstun,illdsq,iltrno,ilfrto,illmcx,illots,illotg,ilkit,
+  ilmmcu,ildmct,ildmcs,ilbalu,ilkco,'58638' as ildoc,
+  'IM' as ildct,ilsfx,
+   iljeln,ilicu,ildgl,ilglpt,ildcto,ildoco,ilkcoo,illnid,
+  ilnlin,ilipcd,iltrdj,iltrum,ilan8,iltrex,iltref,ilrcd,
+   -iltrqt,iluncs,-ilpaid,iltday,iluser,ilpid,ilcrdj,ilterm
+  from f4111 where ilukid=6157361
+顺次替换ildoc,ilukid后执行上述命令插入记录。
+
+
+
+
+
+2011-04-02
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+IT单和总帐不一至
+To resolve:
+update f4111 set  iljeln=15                     
+ where illitm = 'ME41402022' and ildoc =11860422         
+   and ildct ='IT'   and ilukid=6177914
+update f4111 set   iltrqt=-iltrqt,ilpaid=-ilpaid                    
+ where illitm = 'ME41402022' and ildoc =11860422         
+   and ildct ='IT'   and ilukid=6177921 
+update f4111 set ilpaid=0                     
+  where ildoc = 11860464   and ildct = 'IT'   
+    and illitm='ME40609009'                   
+       and ilukid=6207476                     
+update f4111 set ilpaid=0                              
+  where ildoc = 11860330   and ildct = 'IT'            
+    and illitm='ME40503017'  and ilukid=6127690        
+update f4111 set ilpaid=0                           
+  where ildoc = 11860374   and ildct = 'IT'         
+    and illitm='ME40606016' and ilukid=6156907      
+update f4111 set ilpaid=0                          
+  where ildoc = 11860403   and ildct = 'IT'        
+    and illitm='ME40602182' and ilukid=6167606     
+update f4111 set ilpaid=0                         
+  where ildoc = 11860438   and ildct = 'IT'       
+    and illitm='ME40602221' and ilukid=6189012    
+                                                       
+
+
+
+
+2011-04-01
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+加工费收货后，没有生成相应的对冲IM记录。
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=22391 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-537900  ,ilglpt='IN54'
+ where illitm='ME90601AWF*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59075
+update f41021 set lipqoh=0                                  
+ where liitm=18024 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-64000000, ilglpt='IN98'   
+ where illitm='RO70102009S*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=80014656
+
+2011-04-31
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜)
+Description of problem:
+MER0607034 多了一条数据60000GM,金额是：2292元
+To resolve:
+update f4111 set iltrqt=0,ilpaid=0                       
+ where illitm = 'MER0607034' and ildoc =11860394         
+   and ildct ='IT'   and ilukid=6165465   
+               
+以下IT转移单，金额应一正一负冲平的，但现在两个都是正数
+update f4111 set iltrqt=-iltrqt,ilpaid=-ilpaid ,iljeln=13                      
+ where illitm = 'MER0502096' and ildoc =11860372         
+   and ildct ='IT'   and ilukid=6155420
+     and iljeln=14
+
+
+2011-03-30
+------------------------------------------------------------------------
+
+userid: WuDianFeng(吴典凤)
+Description of problem:
+AR记录在过帐到总帐时出现 要求公司内部间　的错误提示，公司90000,93000, 而这张单是分公司开的，算ZS的单
+To resolve:
+检查发现客户资料设置税错设为BJ170,同时分类码也设错，应设为Z/ZS，而不是Z/BJ
+
+由于已做销售更新，相应单据更正修复
+update f0311 set rptxa1='ZS17O'          
+   where rpdoc = 1713737                 
+     and rptxa1='ZS170'
+
+update f4201 set shtxa1='ZS170'        
+ where shdoco='90008270'               
+    and shdcto='NB' 
+update f4211 set sdtxa1='ZS170'
+ where sddoco='90008270'
+    and shdcto='NB'
+                   
+注意"ZS17O"不是"ZS170"                  
+
+
+
+2011-03-28
+------------------------------------------------------------------------
+
+userid: ZhongShuiRong(钟水榕)
+Description of problem:
+一些加工费收货后，没有生成反冲记
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=22514 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN52'
+ where illitm='ME90617457*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59616
+update f41021 set lipqoh=0
+ where liitm=22564 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1534400  ,ilglpt='IN52'
+ where illitm='ME90617451*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59355
+update f41021 set lipqoh=0                                  
+ where liitm=22421 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-1147600   , ilglpt='IN54'   
+ where illitm='ME90618WFW*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=90021044
+update f41021 set lipqoh=0                                  
+ where liitm=22415 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-767300   , ilglpt='IN54'   
+ where illitm='ME90620006*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=59354
+update f41021 set lipqoh=0                                  
+ where liitm=22418 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-1055700   , ilglpt='IN54'   
+ where illitm='ME90620003*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=59347
+update f41021 set lipqoh=0                                  
+ where liitm=22417 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-766200   , ilglpt='IN54'   
+ where illitm='ME90620004*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=59348
+update f41021 set lipqoh=0                                  
+ where liitm=22416 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-528300   , ilglpt='IN54'   
+ where illitm='ME90620005*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=59353
+
+update f41021 set lipqoh=0                                  
+ where liitm=22420 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-776600   , ilglpt='IN54'   
+ where illitm='ME90620001*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=59351
+
+2011-02-26
+------------------------------------------------------------------------
+
+userid: ZhongShuiRong(钟水榕)
+Description of problem:
+一些加工费收货后，没有生成反冲记录
+To resolve:
+
+update f41021 set lipqoh=0                                  
+ where liitm=22616 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-735400   , ilglpt='IN63'   
+ where illitm='ME91417095*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=58901
+update f41021 set lipqoh=0                                  
+ where liitm=22615 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-735400   , ilglpt='IN63'   
+ where illitm='ME91417094*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=58902     
+
+update f41021 set lipqoh=0
+ where liitm=22457 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1599000  ,ilglpt='IN52'
+ where illitm='ME90617368*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58925 
+update f41021 set lipqoh=0
+ where liitm=22456 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2518700  ,ilglpt='IN52'
+ where illitm='ME90617369*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59100
+update f41021 set lipqoh=0
+ where liitm=22522 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2518700  ,ilglpt='IN52'
+ where illitm='ME90617429*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59336
+update f41021 set lipqoh=0
+ where liitm=22605 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1144500  ,ilglpt='IN48'
+ where illitm='ME91117035*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59343
+update f41021 set lipqoh=0
+ where liitm=22563 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1143400  ,ilglpt='IN48'
+ where illitm='ME91117036*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59332
+
+update f41021 set lipqoh=0
+ where liitm=22641 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1534400  ,ilglpt='IN52'
+ where illitm='ME90617348*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59101
+update f41021 set lipqoh=0
+ where liitm=22463 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1599000  ,ilglpt='IN54'
+ where illitm='ME90617297*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59335 
+update f41021 set lipqoh=0
+ where liitm=22414 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1287900  ,ilglpt='IN54'
+ where illitm='ME90620014*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59081
+update f41021 set lipqoh=0
+ where liitm=22459 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1721500  ,ilglpt='IN52'
+ where illitm='ME90617329*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58807
+update f41021 set lipqoh=0
+ where liitm=22394 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1721500  ,ilglpt='IN54'
+ where illitm='ME90601AMW*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59078
+update f41021 set lipqoh=0
+ where liitm=22412 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-765500  ,ilglpt='IN54'
+ where illitm='ME90617343*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59079
+update f41021 set lipqoh=0                                  
+ where liitm=22396 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-311300 , ilglpt='IN54'   
+ where illitm='ME90601AC1*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=59068
+update f41021 set lipqoh=0                                  
+ where liitm=22397 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-311300 , ilglpt='IN52'   
+ where illitm='ME80601ACW*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=59067
+update f41021 set lipqoh=0                                  
+ where liitm=22419 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-547600 , ilglpt='IN54'   
+ where illitm='ME90620002*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=59076
+ 
+
+2011-02-15
+------------------------------------------------------------------------
+
+userid: ZhongShuiRong(钟水榕)
+Description of problem:
+一些加工费收货后，没有生成反冲记录
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=13833 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1710000 , ilglpt='IN98'
+ where illitm='ME20618001*OP10'   and ilglpt=''
+   and ildct ='IM' and iltrqt=0 and ildoc=58628
+update f41021 set lipqoh=0
+ where liitm=18128 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1700000 , ilglpt='IN98'
+ where illitm='ME20618002*OP10'   and ilglpt=''
+   and ildct ='IM' and iltrqt=0 and ildoc=60628
+update f41021 set lipqoh=0
+ where liitm=22457 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1599000  ,ilglpt='IN52'
+ where illitm='ME90617368*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58925 
+update f41021 set lipqoh=0
+ where liitm=22460 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1721500  ,ilglpt='IN52'
+ where illitm='ME90617327*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58807
+update f41021 set lipqoh=0
+ where liitm=22462 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1524000  ,ilglpt='IN54'
+ where illitm='ME90617301*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58871
+update f41021 set lipqoh=0
+ where liitm=22458 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1292500  ,ilglpt='IN54'
+ where illitm='ME90617342*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58872
+
+
+
+2011-02-08
+------------------------------------------------------------------------
+
+userid: colin
+Description of problem:
+HK的一个SD单，已经做sales update,记录重复，经用户检查AP，AR，GL正常。
+To resolve:
+insert into f4211 (SDKCOO,SDDOCO,SDDCTO,SDLNID,SDSFXO,  
+SDMCU, SDCO,SDOKCO,SDOORN,SDOCTO,SDOGNO,SDRKCO,SDRORN, 
+SDRCTO,SDRLLN,SDDMCT,SDDMCS,SDBALU,SDAN8,SDSHAN,SDPA8,  
+SDDRQJ,SDTRDJ,SDPDDJ,SDOPDJ,SDADDJ,SDIVD,  
+SDCNDJ, SDDGL, SDRSDJ, SDPEFJ, SDPPDJ, SDPSDJ,SDVR01, 
+SDVR02, SDITM , SDLITM, SDAITM, SDLOCN,SDLOTN, SDFRGD, 
+SDTHGD, SDFRMP ,SDTHRP, SDEXDP,SDDSC1, SDDSC2, SDLNTY, 
+SDNXTR, SDLTTR,SDEMCU, SDRLIT, SDKTLN, SDCPNT,SDRKIT, SDKTP , 
+SDSRP1, SDSRP2,SDSRP3, SDSRP4, SDSRP5, SDPRP1 ,SDPRP2 ,SDPRP3 , 
+SDPRP4 ,SDPRP5 ,SDUOM  ,SDUORG ,SDSOQS, SDSOBK, SDSOCN, SDSONE,  
+SDUOPN, SDQTYT, SDQRLV, SDCOMM,SDOTQY, SDUPRC, SDAEXP, SDAOPN, 
+SDPROV, SDTPC , SDAPUM, SDLPRC,SDUNCS, SDECST, SDCSTO, SDTCST, 
+SDINMG, SDPTC , SDRYIN, SDDTBS,SDTRDC, SDFUN2, SDASN , SDPRGR, 
+SDCLVL, SDDSPR, SDDSFT, SDFAPP,SDCADC, SDKCO , SDDOC , SDDCT ,  
+SDODOC, SDODCT, SDOKC , SDPSN ,SDDELN, SDPRMO, SDDFTN,SDTAX1,  
+SDTXA1,SDEXR1, SDATXT,SDPRIO,SDRESL,SDBACK, SDSBAL,SDAPTS, 
+SDLOB ,SDEUSE, SDDTYS,SDCDCD,SDNTR ,SDVEND, SDANBY,SDCARS, 
+
+SDMOT ,SDCOT , SDROUT,SDSTOP,SDZON ,SDCNID, SDFRTH,SDAFT ,   
+SDFUF1,SDFRTC, SDFRAT,SDRATT,SDSHCM, SDSHCN,
+SDSERN, SDUOM1,SDPQOR, SDUOM2,SDSQOR, SDUOM4,SDITWT, SDWTUM,   
+SDITVL, SDVLUM,SDRPRC, SDORPR,SDORP , SDCMGP,SDCMGL,   
+SDGLC ,SDCTRY, SDFY ,SDSTTS, SDSO01,SDSO02, SDSO03 ,SDSO04, 
+SDSO05,SDSO06,SDSO07,SDSO08,SDSO09 ,SDSO10,SDSO11,SDSO12 , 
+SDSO13 ,SDSO14 ,SDSO15 ,SDSLSM ,SDSLCM ,SDSLM2 , SDSLC2,   
+SDACOM, SDCMCG, SDRCD, SDGRWT,SDGWUM, SDANI, SDAID, SDOMCU ,  
+ SDOBJ  ,SDSUB   , SDLT,SDSBL,SDSBLT  ,SDLCOD  , 
+SDUPC1  ,SDUPC2  ,SDUPC3,SDSWMS,SDUNCD ,SDCRMD , 
+ SDCRCD , SDCRR  ,SDFPRC, SDFUP,SDFEA, SDFUC  , 
+ SDFEC  , SDURCD ,SDURDT ,SDURAT,SDURAB , SDURRF ,  
+ SDTORG , SDUSER ,SDPID,SDJOBN ,SDUPMJ , SDTDAY  )
+
+select SDKCOO,SDDOCO,SDDCTO,3000 as SDLNID,SDSFXO,  
+SDMCU, SDCO,SDOKCO,SDOORN,SDOCTO,SDOGNO,SDRKCO,SDRORN, 
+SDRCTO,SDRLLN,SDDMCT,SDDMCS,SDBALU,SDAN8,SDSHAN,SDPA8,  
+
+SDDRQJ,SDTRDJ,SDPDDJ,SDOPDJ,SDADDJ,SDIVD,  
+SDCNDJ, SDDGL, SDRSDJ, SDPEFJ, SDPPDJ, SDPSDJ,SDVR01, 
+SDVR02, SDITM , SDLITM, SDAITM, SDLOCN,SDLOTN, SDFRGD, 
+SDTHGD, SDFRMP ,SDTHRP, SDEXDP,SDDSC1, SDDSC2, SDLNTY, 
+SDNXTR, SDLTTR,SDEMCU, SDRLIT, SDKTLN, SDCPNT,SDRKIT, SDKTP , 
+SDSRP1, SDSRP2,SDSRP3, SDSRP4, SDSRP5, SDPRP1 ,SDPRP2 ,SDPRP3 , 
+SDPRP4 ,SDPRP5 ,SDUOM  ,SDUORG ,SDSOQS, SDSOBK, SDSOCN, SDSONE,  
+SDUOPN, SDQTYT, SDQRLV, SDCOMM,SDOTQY, SDUPRC, SDAEXP, SDAOPN, 
+SDPROV, SDTPC , SDAPUM, SDLPRC,SDUNCS, SDECST, SDCSTO, SDTCST, 
+SDINMG, SDPTC , SDRYIN, SDDTBS,SDTRDC, SDFUN2, SDASN , SDPRGR, 
+SDCLVL, SDDSPR, SDDSFT, SDFAPP,SDCADC, SDKCO , SDDOC , SDDCT ,  
+SDODOC, SDODCT, SDOKC , SDPSN ,SDDELN, SDPRMO, SDDFTN,SDTAX1,  
+SDTXA1,SDEXR1, SDATXT,SDPRIO,SDRESL,SDBACK, SDSBAL,SDAPTS, 
+SDLOB ,SDEUSE, SDDTYS,SDCDCD,SDNTR ,SDVEND, SDANBY,SDCARS, 
+SDMOT ,SDCOT , SDROUT,SDSTOP,SDZON ,SDCNID, SDFRTH,SDAFT ,   
+SDFUF1,SDFRTC, SDFRAT,SDRATT,SDSHCM, SDSHCN,
+SDSERN, SDUOM1,SDPQOR, SDUOM2,SDSQOR, SDUOM4,SDITWT, SDWTUM,  
+ 
+SDITVL, SDVLUM,SDRPRC, SDORPR,SDORP , SDCMGP,SDCMGL,   
+SDGLC ,SDCTRY, SDFY ,SDSTTS, SDSO01,SDSO02, SDSO03 ,SDSO04, 
+SDSO05,SDSO06,SDSO07,SDSO08,SDSO09 ,SDSO10,SDSO11,SDSO12 , 
+SDSO13 ,SDSO14 ,SDSO15 ,SDSLSM ,SDSLCM ,SDSLM2 , SDSLC2,   
+SDACOM, SDCMCG, SDRCD, SDGRWT,SDGWUM, SDANI, SDAID, SDOMCU ,  
+ SDOBJ  ,SDSUB   , SDLT,SDSBL,SDSBLT  ,SDLCOD  , 
+SDUPC1  ,SDUPC2  ,SDUPC3,SDSWMS,SDUNCD ,SDCRMD , 
+ SDCRCD , SDCRR  ,SDFPRC, SDFUP,SDFEA, SDFUC  , 
+ SDFEC  , SDURCD ,SDURDT ,SDURAT,SDURAB , SDURRF ,  
+ SDTORG , SDUSER ,SDPID,SDJOBN ,SDUPMJ , SDTDAY
+from f4211 where  sddoco='5599' and sddcto='SD'
+  and sdlnid='1100'
+
+update f4211 set sdlnid='4000', sdlttr='980'
+ where sddoco='5599' and sddcto='SD'  
+     and sdlnid='1000'                                              
+
+update f4211 set sdlnid='1000' where sddoco='5599' and sddcto='SD' 
+     and sdlnid='3000'                                               
+
+update f4211 set sddrlln=1000 ,sdivd=111032,sddgl=111039,           
+ sdkco='00006',sddoc='125874',sddct='RI', sduorg=475200, sdsoqs=475200,
+  sdqtyt=475200, sdlotn='NA', sdnxtr='999', sdlttr='620',
+    sddsc1='MENTHOLATUM DEEP COLD', sdtpc='',sdaexp=4729808,sdecst=3234069,   
+  sdfy=10,sdpqor=475200, sdsqor=39600 ,sdfea=712800, sdfec=487365,                  sduser='AGNES2',sdpid='P42565'  
+ where sddoco='5599' and sddcto='SD' and sdlnid='1000'              
+
+2011-01-26
+------------------------------------------------------------------------
+
+userid: CKCP(成品) [CKCP@mentholatum.com.cn]
+Description of problem:
+没有生成IM记录,存货帐不对。
+To resolve:
+也是外发加工收货后，IM单没带到数量
+
+update f41021 set lipqoh=0
+ where liitm=13900 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-525600  ,ilglpt='IN98'
+ where illitm='ME20601008*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58340 
+update f41021 set lipqoh=0
+ where liitm=13836 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2600000  ,ilglpt='IN98'
+ where illitm='ME20617015*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58341 
+update f41021 set lipqoh=0
+ where liitm=22447 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-525600  ,ilglpt='IN54'
+ where illitm='ME90617300*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58794 
+update f41021 set lipqoh=0
+ where liitm=22445 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-579600  ,ilglpt='IN54'
+ where illitm='ME90618AFW*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58701
+update f41021 set lipqoh=0
+ where liitm=22418 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1071000  ,ilglpt='IN54'
+ where illitm='ME90620003*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58702
+update f41021 set lipqoh=0
+ where liitm=22416 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1031400  ,ilglpt='IN54'
+ where illitm='ME90620005*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58706
+update f41021 set lipqoh=0
+ where liitm=22415 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-747800  ,ilglpt='IN54'
+ where illitm='ME90620006*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58711
+update f41021 set lipqoh=0
+ where liitm=22446 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-290400   ,ilglpt='IN54'
+ where illitm='ME90617299*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58788
+
+
+2011-01-19
+========================================================================
+userid: CKYL(原料)
+Description of problem:
+MER0602021 IT单在反冲时，出现总价格无效的提示
+To resolve:
+查F4111表发现11860081IT单，其中负数记录的单价是0.046和正数的是0.0461，它们的金额却是相等的。
+update f4111 set iluncs=461  
+ where ildoc = 11860081      
+   and ildct ='IT'           
+    and illitm='MER0602021'  
+     and ilukid=5995384      
+
+
+
+2011-01-18
+========================================================================
+userid: CKBC(包材)
+Description of problem:
+81010823HC OX72701015 收货反冲后收货窗查不到记录。
+To resolve:
+查F43121有类型为4的记录
+
+修正采购记录后，让用户重新收货。                      
+update f4311 set pduopn=pduorg, pdaopn=pdaexp,
+   pdarec=0, pdurec=0
+ where pddoco=81010823  and pddcto='HC'                      
+   and pdlitm='OX72701015 and pdlnid=1000                                           
+
+2011-01-17
+========================================================================
+userid: ZhongShuiRong(钟水榕)
+Description of problem:
+ME90617137*OP10, ME90617330*OP10, ME90617331*OP10 没有生成IM记录
+To resolve:
+update f41021 set lipqoh=0
+ where liitm=22269 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1903500  ,ilglpt='IN52'
+ where illitm='ME90617137*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58467
+update f41021 set lipqoh=0
+ where liitm=22270 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1287500  ,ilglpt='IN52'
+ where illitm='ME90617330*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58470
+update f41021 set lipqoh=0
+ where liitm=22271 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1537600  ,ilglpt='IN52'
+ where illitm='ME90617331*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=58471
+
+
+
+2011-01-05
+========================================================================
+userid: CKBC(包材)
+Description of problem:
+81009473HC  RO70108005 收货后在分类帐查不到记录。
+To resolve:
+查分类帐没有记录，F43121有收货记录，先将这些收货记录移走
+update f43121 set prmatc='5'                 
+ where prdoco=81009473  and prdcto='HC'      
+    and prlitm='RO70108005'                  
+      and prdoc=90082400                     
+        and prmatc='1' 
+
+修正采购记录后，让用户重新收货。                      
+update f4311 set pduopn=pdurec+pduopn, pdaopn=pdarec+pdaopn  ,
+   pdarec=0, pdurec=0
+ where pddoco=81009473  and pddcto='HC'                      
+   and pdlnid=1000                                           
+update f4311 set pduopn=pduopn+700, pdaopn=pdaopn+221368,  
+ pdurec=pdurec-700, pdarec=pdarec-221368                   
+where pddoco=81009473  and pddcto='HC'                     
+  and pdlnid=2000                                          
+
+
+2011-01-05
+========================================================================
+userid: 阿辉
+Description of problem:
+81011018HC ME70605307在收货时正常，反冲后，在P4312看不到记录，但在订单查询中可以看到这些未收记录，分类帐也是正确的。
+To resolve:
+查F43121, 发现记录存在，但prmatc='4'
+update f43121 set prmatc='1'               
+ where prdoco=81011018  and prdcto='HC'    
+    and prlitm='ME70605307'                
+      and prmatc='4'                       
+update f43121 set prmatc='1'             
+ where prdoco=81010864  and prdcto='HC'  
+    and prlitm='ME71403064'              
+     and prmatc='4'                      
+做了以上操作，用户还是看不到，反而在已收货看到，用户又做了一次反冲，晕
+先将数量取反重做一次反冲冲平刚才的错误操作。
+让用户请采购部在PO上删除原来的记录，重新输入记录收货。
+
+关于反冲不正常的原因不明，由于高级仓库没启用，先在仓库分支工厂常数第二页要求包含文本的WMS清空，看以后的单是否正常？
+
+
+2011-01-05
+========================================================================
+userid: 阿超
+Description of problem:
+所有的HC单，打印时税率不会计算，这些供应商原来是可以计算的。
+To resolve:
+检查税率ZS17，发现F4008中有人有效期栏位，检查发现已过期，在G0021-->22.   税率和税区 新增一条记录，一切正常。
+

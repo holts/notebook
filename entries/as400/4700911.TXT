@@ -1,0 +1,896 @@
+﻿.. The D1 costs being doubled
+
+================================================================================
+The D1 costs being doubled
+================================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+--------------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+--------------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2006/04/12 11:27:46 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+--------------------------------------------------------------------------------
+
+To: Sydney-Support@peoplesoft.com
+From: holts@mentholatum.com.cn
+Subject: JDE error
+
+Client number: 5331151
+No case number yet
+Software release: World A7.3
+Cumulative updates: 00014
+Contact person: Holts He
+Contact Number: 86-760-6685596-6828
+
+Hi,
+
+When performed the simulated cost rollup program (p30820) to calculate the cost, why the cost component D1 is double ? ask for your help.
+
+--------------------------------------------------------------------------------
+
+From: PeopleSoft-CRM@PeopleSoft.com
+
+PeopleSoft has received your request and case 4700911 has been created on your behalf.
+
+You should expect to be contacted by PeopleSoft shortly. If you have not received a respones within one business day, please contact the support center by phone or use our web site.
+
+--------------------------------------------------------------------------------
+
+From: jeff.meese@oracle.com
+
+Regarding your issue with P30820 ans the D1 costs being doubled.
+
+Take a look at the following SAR and let me know if it resolves your issue.
+
+SAR 7339752 Single lvl roll D* cost double
+http://maintenance.peoplesoft.com/SAR/Sars/07339000/07339752.asp
+
+Code change is attached as well.
+
+
+Purpose: 	Program was modified so that when outside operation exists on the sub-assembly, and when running Simulate on the end product, system will calculate the D and other cost correctly.
+ 
+Release: 	A73       
+
+Object Name: 	P30820    
+Object Type: 	RPG      
+Specil Inst.   Apply this sar only when you previously applied sar 5586514. 
+
+Subroutine: 	MainLine      
+
+0129.00      F*        10/03/03   FH5644358   SAR #6841839 A2 NOT INCLUDE X                         
+0130.00      F*        11/15/03   FH5644358   SAR #6907455 A2 NOT ROLL UP W/ X                      
+0131.00      F*        11/21/03   FH5644358   SAR #6920502 MULTI BATCH BILLS                        
+0132.00      F*        01/14/04   FH5644358   SAR #06981081 ITEM LENGTH 24                          
+0132.01      F*        08/13/04   FH5644358   SAR #07258813 PHANTOM A2 NOT POP                      
+0132.02      F*        08/26/04   FH5644358   SAR #06964046 COMPILE ONLY                      
+0132.03      F*        09/20/04   FH5644358   SAR #07339752 D DOULBED W/OUTSIDE              Insert 
+0133.00      F*                                                                                     
+0134.00      F*****************************************************************                     
+0135.00      F*                                                                                     
+0136.00      FF0001   IF  E           K        DISK                                                 
+0137.00      FF00191  IF  E           K        DISK                                                 
+
+Subroutine: 	S030          
+
+3308.00      CSR         S030      BEGSR                                                            
+3309.00      C*          ----      -----                                                            
+3310.00      C*                                                                                     
+3311.00      C*    Retrieve routing at Branch level.                                                
+3312.00      C*                                                                                     
+3312.01      CSR                   MOVE IMORDW    $WK01   1                                  Insert 
+3313.00      CSR                   MOVELIMITM     IRKIT                                             
+3314.00      CSR                   MOVE $$MCU     IRMMCU                                            
+3315.00      CSR                   MOVEL'M  '     IRTRT                                             
+3316.00      CSR         $$ACQ     MULT #@BQTY    IRBQTY                                            
+3317.00      CSR         IRKY0B    SETLLI3003B                 9998                                 
+
+3452.00      C*                                                                                     
+3453.00 E3   CSR                   ENDIF                                                            
+3454.00 E2   CSR                   ENDDO                           3003  END                        
+3455.00 E1   CSR                   ENDIF                                                            
+3456.00      CSR                   MOVELIRKIT     IMITM                                             
+3456.01      CSR                   MOVE $WK01     IMORDW                                     Insert 
+3457.00      C*----------------------------------------------------------------                     
+3458.00      C*                                                                                     
+3459.00      CSR         END030    ENDSR                                                            
+3460.00      C*****************************************************************                     
+3461.00      C*                                                                                     
+
+--------------------------------------------------------------------------------
+
+From: holts@menthonlatum.com.cn
+
+I can't find code at my source (p30820)
+3456.00  CSR  MOVELIRKIT IMITM
+
+So, May I enhance program ?
+
+--------------------------------------------------------------------------------
+
+From: jeff.meese@oracle.com
+
+It looks like this code change has the code you are missing. Take a look at the code Change and let me know if you have questions.
+
+Purpose: 	Program was modified so that it will roll up the cost to all upper level parents correctly regarding the A2 cost, D cost, X cost and outside operation.
+ 
+Release: 	A73  and  A81     
+
+Object Name: 	P30820    
+Object Type: 	RPG   
+Special Instr. Please apply sar 6841839 before applying this one.    
+
+                          CODE CHANGES IN A73
+Subroutine: 	MainLine      
+
+0125.00      F*        06/17/03   FH5644358   SAR #6694648 A2 NET ADDED>TOTAL                       
+0126.00      F*        07/14/03   FH5644358   SAR #6703276 X COST W/ PROC4='*'                      
+0127.00      F*        07/28/03   FH5644358   SAR #6762903 X COST W/ PROC4<>'*'                     
+0128.00      F*        07/28/03   FH5644358   SAR #6767608 INFLATE OP X COST                        
+0129.00      F*        10/03/03   FH5644358   SAR #6841839 A2 NOT INCLUDE X                         
+0130.00      F*        11/15/03   FH5644358   SAR #6907455 A2 NOT ROLL UP W/ X               Insert 
+0131.00      F*                                                                                     
+0132.00      F*****************************************************************                     
+0133.00      F*                                                                                     
+0134.00      FF0001   IF  E           K        DISK                                                 
+0135.00      FF00191  IF  E           K        DISK                                                 
+
+Break in code
+
+0244.00      C*                                                                                     
+0245.00 B1   C           *INLR     DOWEQ'0'                                                         
+0246.00      C*                                                                                     
+0247.00      C*    Read master file input.                                                          
+0248.00      C*                                                                                     
+0232.00      C                     READ I4101                  9991                          Delete 
+0233.00      C*                                                                              Delete 
+0234.00      C*    Read master file again for Xx costs.                                      Delete 
+0235.00      C*                                                                              Delete 
+0236.00 B2   C           *IN91     IFEQ '1'                                                  Delete 
+0237.00      C                     CLOSEF4101                  99                            Delete 
+0238.00      C                     OPEN F4101                  99                            Delete 
+0239.00      C                     SETOF                       91                            Delete 
+0240.00 B3   C           *INLR     DOWEQ'0'                                                  Delete 
+
+0249.00      C                     READ I4101                  99LR                                 
+0250.00      C*                                                                                     
+0241.02 DBN  C                     MOVE IMCDCD    $$CDCD 12                                  Delete 
+0241.03 B4   C           $$CDCD    IFEQ '*'                                                  Delete 
+0241.04      C           $$CDCD    OREQ *BLANKS                                              Delete 
+0241.05      C                     DO   $C        $B      20                                 Delete 
+0241.06      C                     MOVE @BP,$B    $$MCU  12                                  Delete 
+0241.10      C*                                                                              Delete 
+0242.00      C           *INLR     IFEQ '0'                                                  Delete 
+0243.00      C                     EXSR S030                                                 Delete 
+0244.00      C*                    ---- ----                                                 Delete 
+0245.00      C                     ENDIF                                                     Delete 
+0245.01      C*                                                                              Delete 
+0245.02      C                     ENDDO                           DO @BP,                   Delete 
+0245.03 X4   C                     ELSE                                                      Delete 
+0245.04      C           *INLR     IFEQ '0'                                                  Delete 
+0245.05      C                     EXSR S030                                                 Delete 
+0245.06      C*                    ---- ----                                                 Delete 
+0245.07      C                     ENDIF                                                     Delete 
+0245.08 E4   C                     END                                                       Delete 
+0246.00 E3   C                     ENDDO                                                     Delete 
+0247.00 E2   C                     ENDIF                                                     Delete 
+0248.00      C*                                                                              Delete 
+
+0251.00      C*    If LR on, end program.                                                           
+0252.00      C*                                                                                     
+0253.00      C           *INLR     CABEQ'1'       EOJ                                               
+0254.00      C*                    -----          ---                                               
+0255.00      C*                                                                                     
+
+Subroutine: 	S005          
+
+0430.00      CSR                   Z-ADD*ZERO     $ISTDP  70                   
+0431.00      CSR                   MOVE *BLANKS   $IOT1Y  1                    
+0432.00 B1   CSR         *IN85     IFEQ '0'                                    
+0433.00      C*                                                                
+0434.00      C*    Save potency for the "item" read from T4101.                
+0435.00      C*                                                                
+0436.00      CSR                   Z-ADDIBSTDP    $ISTDP                       
+0437.00      CSR                   MOVE IBOT1Y    $IOT1Y                       
+0438.00      CSR         IBACQ     DIV  #@ACQ     $$ACQ  299H                  
+0439.00 E1   CSR                   ENDIF                                       
+0440.00      C*                                                                
+0441.00      C*    Check if the item has an outside operation exist, if it                   Insert
+0442.00      C*    does, find the cost for *OP item, and roll up into D cost                 Insert
+0443.00      C*    (add on cost only) of the item that defines the outside op.               Insert
+0444.00      C*                                                                              Insert
+0445.00      CSR                   EXSR S030                                                 Insert 
+0446.00      C*                    ---- ----                                                 Insert
+0447.00      C*                                                                
+0448.00      C*----------------------------------------------------------------
+0449.00      C*                                                                
+0450.00      C*    Determine if item is purchased or manufactured.             
+0451.00      C*                                                                
+0452.00      CSR                   MOVE '0'       *IN82                        
+0453.00      CSR                   CLEARI0005U                                 
+0454.00      CSR                   MOVE *BLANK    $PROC1                                                                                                      
+
+                                          
+
+Subroutine: 	S006          
+
+1310.00      C*-------------------------------------------------------------
+1311.00      C*                                                             
+1312.00      C*    All Items that are effected by this item must be updated 
+1313.00      C*    to include cost rollup totals.                           
+1314.00      C*                                                             
+1315.00      CSR                   MOVE *ZEROS    $$AMT  299                                        
+1316.00      CSR                   MOVE 01        $X      20                                        
+1317.00      C*                                                                                     
+1318.00 B1   CSR         $X        DOWLE35                                                          
+1319.00      CSR         @CT,$X    ANDNE*BLANKS                                                     
+1320.00      CSR         $$FLG1    OREQ '1'                                                  Delete 
+1321.00      CSR         $X        ANDLE35                                                   Delete 
+1322.00      C*                                                                                     
+1323.00      CSR                   MOVE IXKIT     IEITM                                             
+1324.00      CSR                   MOVE IXMMCU    IEMMCU                                            
+1325.00      CSR                   MOVE *BLANKS   IELOCN                                            
+1326.00      CSR                   MOVE *BLANKS   IELOTN                                            
+1327.00      CSR                   MOVE $MODE     IELEDG                                            
+1328.00 B2   CSR         $$FLG1    IFEQ '1'                                                  Delete 
+1329.00      CSR                   MOVEL$ECOST    IECOST                                     Delete 
+1330.00 X2   CSR                   ELSE                                                      Delete 
+1331.00      CSR                   MOVE @CT,$X    IECOST                                            
+1332.00 E2   CSR                   ENDIF                                                     Delete 
+1333.0	C*                 
+                                                                    
+1333.10      C*    Skip Xx or Dx Costs, which are added in S030.                             Delete 
+1334.00      C*                                                                              Delete       
+1334.10 DBN1 CSR                   MOVELIECOST    $SCOST  1                                  Delete 
+1334.20 B2   CSR         $SCOST    IFNE 'X'                                                  Delete 
+1334.30      CSR         $SCOST    ANDNE'D'                                                  Delete 
+1334.40      CSR         $$FLG1    OREQ '1'                                                  Delete 
+1334.50      C*                                                                              Delete 
+1335.00      C*    Items are either updated or created on the fly in the                            
+1336.00      C*    cost rollup file.                                                                
+1337.00      C*                                                                                     
+1338.00      CSR         IEKY01    CHAINI30026               83                                     
+1339.00      C*----------------------------------------------------------------                     
+1340.00      C*                                           
+1341.00      C*    Clear fields if cost type not found.   
+1342.00      C*                                           
+1343.00 B3   CSR         *IN83     CASEQ'1'       S001    
+1344.00      C*                    -----          ----    
+1345.00 E3   CSR                   ENDCS                                                            
+1346.00      C*----------------------------------------------------------------                     
+1347.00      C*                                                                                     
+1348.00      C*   Get Material cost by mutiplying Std Cost by Quantity                              
+1349.00      C*                                                                                     
+1350.00 B3   CSR         $$FLG1    IFEQ '1'                                                  Delete 
+1351.00      CSR         $WXSCR    DIV  #@XSCR    $$CA                                       Delete 
+1352.00 X3   CSR                   ELSE                                                      Delete 
+1353.00      CSR         @CA,$X    DIV  #@XSCR    $$CA   299H                                       
+1354.00 E3   CSR                   ENDIF                                                     Delete 
+1355.00 B3   CSR         IECOST    IFNE 'B2'                        SETUP COST                      
+1356.00      CSR         $$CA      MULT $$QNTY    $$QTY  299H                                       
+1357.00 X3   CSR                   ELSE                                                             
+1358.00      CSR                   Z-ADD$$CA      $$QTY  299H                                       
+1359.00 E3   CSR                   ENDIF                                                            
+
+Break in code
+
+1434.00 X3   CSR                   ELSE                                                             
+1435.00      CSR                   WRITEI30026                 99                                   
+1436.00      C*                    -----------                                                      
+1437.00 E3   CSR                   ENDIF                                                            
+1438.00      C*                                                                                     
+1438.10 E2   CSR                   ENDIF                                                     Delete 
+1439.00      C*----------------------------------------------------------------                     
+1440.00      C*                                                                                     
+1441.00      C*    Update Cost Component records for Co/By-Products.                                
+1442.00      C*                                                                                     
+1443.00 B2   CSR         $CBFLG    IFEQ 'Y'                                                         
+
+Break in code
+
+1449.00      CSR                   MOVE $$ITM     IEITM            Move Back IT                     
+1450.00      CSR                   MOVE $$MMCU    IEMMCU           Move Back BR                     
+1451.00 E2   CSR                   ENDIF                                                            
+1452.00      C*                                                                                     
+1453.00      C*----------------------------------------------------------------                     
+1454.00 B2   CSR         $$FLG1    IFEQ '1'                                                  Delete 
+1455.00      CSR                   ADD  35        $X                                         Delete 
+1456.00 X2   CSR                   ELSE                                                      Delete  
+1457.00      CSR                   ADD  1         $X                                                
+1458.00 E2   CSR                   ENDIF                                                     Delete 
+1459.00 E1   CSR                   ENDDO                                                            
+1460.00      C*                                                                                     
+1461.00      C*----------------------------------------------------------------                     
+1462.00      C*----------------------------------------------------------------                     
+1463.00      C*                                                                                     
+
+Break in code
+
+1502.00 E2   CSR                   ENDIF                                                            
+1503.00      C*                                                                                     
+1504.00      C*    Update Simulated Manufactured Amount for A2                                      
+1505.00      C*                                                                                     
+1506.00      CSR                   ADD  $WRK15    IEXSMC                                            
+1507.01      CSR         $$FLG1    IFEQ '1'                                                  Delete 
+1508.02      CSR         $WRK15    DIV  #@XSMC    $WK299           Format 29.9               Delete 
+1509.03      CSR         $WK299    MULT #@XSCR    $WRK15    H      Format 15.0               Delete 
+1510.04      CSR                   ADD  $WRK15    IEXSCR                                     Delete 
+1511.05      CSR                   END                                                       Delete 
+1512.00      C*                                                                                     
+1513.00      C*    Either update or create a new cost rollup record.                                
+1514.00      C*                                                                                     
+1515.00      CSR                   MOVELIXKITA    IEAITM                                            
+1516.00      CSR                   MOVELIXKITL    IELITM                                            
+
+Subroutine: 	S030          
+
+3422.00      CSR         $WXSCR    DIV  #@XSMC    $XS299 299H                                       
+3423.00      CSR                   DIV  $$CPYP    $XS299                                            
+3424.00      CSR         $XS299    MULT #@XSMC    $WXSCR    H                                       
+3425.00      CSR                   END                                                              
+3426.00      C*                                                                                     
+3427.00 DBN2 CSR                   MOVELIRCOST    $ECOST  3                                         
+3428.00 DBN24CSR                   MOVELDS3026    $S3026                                            
+3429.00      CSR                   MOVE IRKIT     IEITM                                             
+3430.01      CSR                   MOVEL'1'       $$FLG2  1        Net Added                 Delete 
+3431.00      CSR                   EXSR S030A                                                       
+3432.00      C*                    ---- -----                                                       
+3433.01      CSR                   MOVEL*BLANK    $$FLG2                                     Delete 
+3434.00 DBN24CSR                   MOVEL$S3026    DS3026                                            
+3435.00      C*                                                                                     
+3436.00 E8   CSR                   ENDIF                                                            
+3437.00 E7   CSR                   ENDIF                                                            
+3438.00 E6   CSR                   ENDDO                           30026 END                        
+3439.00 E5   CSR                   ENDIF                                                            
+3440.00 E4   CSR                   ENDIF                                                            
+3441.00      C*                                                                                     
+3442.00 E3   CSR                   ENDIF                                                            
+3443.00 E2   CSR                   ENDDO                           3003  END                        
+3444.00 E1   CSR                   ENDIF                                                            
+3444.10      CSR                   MOVELIRKIT     IMITM                                      Insert
+3445.00      C*----------------------------------------------------------------                     
+3446.00      C*                                                                                     
+3449.00      C*    Find all the Bills that this item is used in as a component               Delete 
+3450.00      C*    so the costs of this item can be rolled up into the parent.               Delete 
+3451.00      C*                                                                              Delete 
+3452.00      C*                                                                              Delete 
+3453.00      CSR                   MOVEL'M  '     IXTBM                                      Delete 
+3454.00      CSR                   MOVE $$MCU     IXCMCU                                     Delete 
+3455.00      CSR                   MOVE IRKIT     IXITM                                      Delete 
+3456.00      CSR         IXKYB1    SETLLI3002B                 9997                          Delete 
+3457.00 B1   CSR         *IN97     IFEQ '1'                                                  Delete 
+3458.00      CSR                   SETOF                       97                            Delete 
+3459.00 B2   CSR         *IN97     DOWEQ'0'                                                  Delete 
+3460.00      CSR         IXKYB1    READEI3002B                 9997                          Delete 
+3461.00      C*                                                                              Delete 
+3461.01      C*    Only continue if a BOM record is found.                                   Delete 
+3461.02      C*                                                                              Delete 
+3464.00 B3   CSR         *IN97     IFEQ '0'                                                  Delete 
+3465.00      C*                                                                              Delete 
+3465.01      C*    Continue only when the parent is a 'M' item                               Delete 
+3465.02      C*                                                                              Delete 
+3465.03      CSR                   MOVE IXKIT     IBITM                                      Delete 
+3465.04      CSR                   MOVE IXMMCU    IBMCU                                      Delete 
+3465.05      C*                                                                              Delete 
+3465.06      CSR                   MOVEL'CHAIN'   @@OPER                                     Delete 
+3465.07      CSR                   MOVEL'IBKY01  '@@KLST                                     Delete 
+3465.08      CSR                   Z-ADD2         @@KNUM                                     Delete 
+3465.09      CSR                   MOVEL'A71'     @@FMT                                      Delete 
+3465.10      CSR                   MOVE 'N'       @@LOCK                                     Delete 
+3465.11      CSR                   CALL 'XF4102 '                                            Delete 
+3465.12      C*                    ---- ---------                                            Delete 
+3465.13      CSR                   PARM           PS@@1                                      Delete 
+3465.14      CSR                   PARM           I4102                                      Delete 
+3465.15      C*                                                                              Delete 
+3465.16      CSR                   MOVE 'P'       $TYPE                                      Delete 
+3465.18      C*                                                                              Delete 
+3465.19 B4   CSR         @@IOR     IFEQ *BLANKS                                              Delete 
+3465.20      CSR                   CLEARI0005U                                               Delete 
+3465.21      CSR                   MOVELS@STKT    #USY                                       Delete 
+3465.22      CSR                   MOVE R@STKT    #URT                                       Delete 
+3465.23      CSR                   MOVE *BLANKS   #UKY                                       Delete 
+3465.24      CSR                   MOVE IBSTKT    #UKY                                       Delete 
+3465.25      CSR                   CALL 'X0005 '               81                            Delete 
+3465.26      C*                    ---- --------                                             Delete 
+3465.27      CSR                   PARM           I0005U                                     Delete 
+3465.28      CSR                   MOVE #UERR     *IN82                                      Delete 
+3465.29      C*                                                                              Delete 
+3465.30 B5   CSR         *IN82     IFEQ '0'                                                  Delete 
+3465.31 DBN1 CSR                   MOVEL#UDL02    $TYPE            Type = M or P             Delete 
+3465.33 E5   CSR                   ENDIF                                                     Delete 
+3465.34 E4   CSR                   ENDIF                            @@IOR                    Delete 
+3465.35      C*                                                                              Delete 
+3466.00 B4   CSR         $$EFF     IFGE IXEFFF                     Within Date               Delete 
+3467.00      CSR         $$EFF     ANDLEIXEFFT                        Range                  Delete 
+3468.00      CSR         IXTBM     ANDEQ'M  '                      Mfg. Bill                 Delete 
+3469.00      CSR         IXSBNT    ANDEQ*ZEROS                     Not Substitute            Delete 
+3470.00      CSR         IXCOBY    ANDNE'I  '                      Not Intermed.             Delete 
+3470.01      CSR         $TYPE     ANDEQ'M  '                      'M' TYPE ITEM             Delete 
+3471.00      C*                                                                              Delete 
+3472.00      C*    Check if parent item was included in cost simulation run.                 Delete 
+3473.00      C*                                                                              Delete 
+3474.00      CSR                   MOVE IXKIT     IMITM                                      Delete 
+3475.00      CSR         IMITM     CHAINI4101A              N8399                            Delete 
+3476.00 B5   CSR         *IN83     IFEQ '0'                                                  Delete 
+3477.00      C*                                                                              Delete 
+3478.00      C*    Roll Up Xx or Dx costs for children to the parent.                        Delete 
+3479.00      C*                                                                              Delete 
+3480.00      CSR                   MOVE IRKIT     IEITM                                      Delete 
+3481.00      CSR                   MOVE $$MCU     IEMMCU                                     Delete 
+3482.00      CSR                   MOVE *BLANKS   IELOCN                                     Delete 
+3483.00      CSR                   MOVE *BLANKS   IELOTN                                     Delete 
+3484.00      CSR                   MOVE $MODE     IELEDG                                     Delete 
+3485.00      CSR         IEKY02    SETLLI30026A                9996                          Delete 
+3486.00 B6   CSR         *IN96     IFEQ '1'                                                  Delete 
+3487.00      CSR                   SETOF                         96                          Delete 
+3488.00      C*                                                                              Delete 
+3489.00 B7   CSR         *IN96     DOWEQ'0'                                                  Delete 
+3490.00      C*R         IEKY02    READEI30026A                9996                          Delete 
+3490.01      CSR         IEKY02    READEI30026A             N  9996                          Delete 
+3491.00 B8   CSR         *IN96     IFEQ '0'                                                  Delete 
+3492.00 DBN1 CSR                   MOVELIECOST    $SCOST  1                                  Delete 
+3493.00 B9   CSR         $SCOST    IFEQ 'X'                                                  Delete 
+3493.01      CSR         $SCOST    OREQ 'D'                                                  Delete 
+3494.00      CSR                   Z-ADDIEXSCR    $SXSCR 150                                 Delete 
+3495.00      CSR                   Z-ADD*ZERO     $WXSCR 150                                 Delete 
+3496.00      C*R                   MOVELIECOST    $ECOST  2                                  Delete 
+3496.01 DBN2 CSR                   MOVELIECOST    $ECOST  3                                  Delete 
+3497.00 DBN24CSR                   MOVELDS3026    $S3026                                     Delete 
+3498.00      CSR                   MOVE IMITM     IEITM                                      Delete 
+3499.00      CSR                   EXSR S030A                                                Delete 
+3500.00      C*                    ---- -----                                                Delete 
+3501.00      C*                                                                              Delete 
+3502.00      C*    Update Total Cost information.                                            Delete 
+3503.00      C*                                                                              Delete 
+3504.00      CSR                   MOVEL'1'       $$FLG1  1                                  Delete 
+3505.00      CSR                   Z-ADD$SXSCR    $WXSCR 150                                 Delete 
+3506.00      CSR                   MOVE IMORDW    $WK01   1                                  Delete 
+3507.00      C*                                                                              Delete 
+3508.00      CSR                   EXSR S006                                                 Delete 
+3509.00      C*                    ---- ----                                                 Delete 
+3510.00      CSR                   MOVE $WK01     IMORDW                                     Delete 
+3511.00      CSR                   MOVEL*BLANK    $$FLG1                                     Delete 
+3512.00 DBN24CSR                   MOVEL$S3026    DS3026                                     Delete 
+3513.00      C*                                                                              Delete 
+3515.00 E9   CSR                   ENDIF                                                     Delete 
+3516.00 E8   CSR                   ENDIF                                                     Delete 
+3517.00 E7   CSR                   ENDDO                           30026 END                 Delete 
+3518.00 E6   CSR                   ENDIF                                                     Delete 
+3519.00 E5   CSR                   ENDIF                                                     Delete 
+3520.00      C*                                                                              Delete 
+3521.00 E4   CSR                   ENDIF                                                     Delete 
+3522.00 E3   CSR                   ENDIF                                                     Delete 
+3523.00 E2   CSR                   ENDDO                           3003  END                 Delete 
+3524.00 E1   CSR                   ENDIF                                                     Delete 
+3525.00      C*----------------------------------------------------------------              Delete 
+3526.00      C*                                                                              Delete 
+3447.00      CSR         END030    ENDSR                                                            
+3448.00      C*****************************************************************                     
+3449.00      C*                                                                                     
+3450.00      C*    SUBROUTINE S030A - Add Xx (Optional Add-on) amount for                           
+3451.00      C*                       Outside Operation to Xx amount for Parent.                    
+
+Subroutine: 	S030A         
+
+3501.00      CSR                   MOVE $MODE     IELEDG                                            
+3502.00      CSR                   MOVEL$ECOST    IECOST                                            
+3503.00      C*                                                                                     
+3504.00      CSR         IEKY01    CHAINI30026               9299                                   
+3505.00 B1   CSR         *IN92     IFEQ '0'                                                         
+3506.01 B2   CSR         $$FLG2    IFEQ '1'                                                  Delete 
+3507.00      CSR                   ADD  $WXSCR    IEXSMC                                            
+3508.03 E2   CSR                   ENDIF                                                     Delete 
+3509.00      CSR                   ADD  $WXSCR    IEXSCR                                     Delete 
+3510.00      CSR                   MOVE ##JOBN    IEJOBN                                            
+3511.00      CSR                   MOVE ##PROG    IEPID                                             
+3512.00      CSR                   MOVE ##USER    IEUSER                                            
+3513.00      CSR                   MOVE $$UPMJ    IEUPMJ                                            
+3514.00      CSR                   MOVEL##ETM     IETDAY                                            
+3515.00      CSR                   UPDATI30026                 99                                   
+3516.00      C*                    -----------                                                      
+3517.00      C*                                                                                     
+3518.00 X1   CSR                   ELSE                                                             
+3519.00      C*                                                                                     
+3520.00      CSR                   MOVE IMAITM    IEAITM                                            
+3521.00      CSR                   MOVE IMLITM    IELITM                                            
+3522.01 B2   CSR         $$FLG2    IFEQ '1'                                                  Delete 
+3523.00      CSR                   ADD  $WXSCR    IEXSMC                                            
+3524.03 X2   CSR                   ELSE                                                      Delete 
+3525.00      CSR                   Z-ADD*ZERO     IEXSMC                                     Delete 
+3526.01 E2   CSR                   ENDIF                                                     Delete 
+3527.00      CSR                   Z-ADD$WXSCR    IEXSCR                                     Delete  
+3528.00      CSR                   MOVE *ZERO     IESTDC                                            
+3529.00      CSR                   MOVE *ZERO     IECSL                                             
+3530.00      CSR                   MOVE *BLANK    IESCTC                                            
+3531.00      CSR                   MOVE *ZERO     IESTFC                                            
+3532.00      CSR                   MOVE *BLANK    IERATS              
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                     
+                      CODE CHANGES FOR A81       
+ 
+
+Subroutine: 	MainLine      
+
+0107.18      F*        03/04/03   FH5644358   SAR #6413885 SET UP COST MULITPLIED                   
+0107.20      F*        06/17/03   FH5644358   SAR #6694648 A2 NET ADDED>TOTAL                       
+0107.21      F*        07/14/03   FH5644358   SAR #6703276 X COST W/ DS SET ALL                     
+0107.22      F*        07/28/03   FH5644358   SAR #6767608 INFLATE OP X COST                        
+0107.23      F*        10/03/03   FH5644358   SAR #6841839 A2 NOT INCLUDE X                         
+0107.24      F*        11/15/03   FH5644358   SAR #6907455 A2 NOT ROLL UP W/ X               Insert 
+0108.00      F*                                                                                     
+0109.00      F*****************************************************************                     
+0110.00      F*                                                                                     
+0111.00      FF0001   IF  E           K        DISK                                                 
+0112.00      FF00191  IF  E           K        DISK                                                 
+
+Break in code
+
+0212.00      C*                                                                                     
+0213.00      C           *INLR     DOWEQ'0'                                                         
+0214.00      C*                                                                                     
+0215.00      C*    Read master file input.                                                          
+0216.00      C*                                                                                     
+0217.00      C                     READ I4102                  9991                          Delete 
+0217.01      C*                                                                              Delete 
+0217.02      C*    Read master file again for Xx costs.                                      Delete 
+0217.03      C*                                                                              Delete 
+0217.04      C           *IN91     IFEQ '1'                                                  Delete 
+0217.05      C                     CLOSEF4102                  99                            Delete 
+0217.06      C                     OPEN F4102                  99                            Delete 
+0217.07      C                     SETOF                       91                            Delete 
+0217.08      C           *INLR     DOWEQ'0'                                                  Delete 
+0217.09      C                     READ I4102                  99LR                                 
+0217.10      C                     MOVE IBMCU     $$MCU                                      Delete 
+0217.11      C           *INLR     IFEQ '0'                                                  Delete 
+0217.12      C                     EXSR S030                                                 Delete 
+0217.13      C*                    ---- ----                                                 Delete 
+0217.14      C                     ENDIF                                                     Delete 
+0217.15      C                     ENDDO                                                     Delete 
+0217.16      C                     ENDIF                                                     Delete 
+0218.00      C*                                                                                     
+0219.00      C*    If LR on, end program.                                                           
+0220.00      C*                                                                                     
+0221.00      C           *INLR     CABEQ'1'       EOJ                                               
+0222.00      C*                    -----          ---                                               
+
+
+Subroutine: 	S005          
+
+0358.00      C*    Save potency for the "item" read from T4102.                
+0359.00      C*                                                                
+0360.00      CSR                   Z-ADDIBSTDP    $ISTDP                       
+0361.00      CSR                   MOVE IBOT1Y    $IOT1Y                       
+0362.00      CSR         IBACQ     DIV  #@ACQ     $$ACQ  299H                  
+0363.00      C*                                                                
+0364.00      C*    Check if the item has an outside operation exist, if it                   Insert
+0365.00      C*    does, find the cost for *OP item, and roll up into D cost                 Insert
+0366.00      C*    (add on cost only) of the item that defines the outside op.               Insert
+0367.00      C*                                                                              Insert
+0368.00      CSR                   EXSR S030                                                 Insert
+0369.00      C*                    ---- ----                                                 Insert
+0370.00      C*---------------------------------------------------------------
+0371.00      C*                                                               
+0372.00      C*    Determine if item is purchased or manufactured.            
+0373.00      C*                                                               
+0374.00      CSR                   MOVE '0'       *IN82                       
+0375.00      CSR                   CLEARI0005U                                
+0376.00      CSR                   MOVE *BLANK    $PROC1                      
+0377.00      CSR                   MOVE 'P'       $TYPE                       
+0378.00      CSR                   MOVE IBSTKT    $$STKT  1                   
+0379.00      C*                                                                                                                                              
+
+
+Subroutine: 	S006          
+
+1185.00      CSR                   MOVE *ZEROS    $$AMT  299                                        
+1186.00      CSR                   MOVE 01        $X      20                                        
+1187.00      C*                                                                                     
+1188.00      CSR         $X        DOWLE35                                                          
+1189.00      CSR         @CT,$X    ANDNE*BLANKS                                                     
+1189.01      CSR         $$FLG1    OREQ '1'                                                  Delete 
+1189.02      CSR         $X        ANDLE35                                                   Delete 
+1190.00      C*                                                                                     
+1191.00      CSR                   MOVE IXKIT     IEITM                                             
+1192.00      CSR                   MOVE IXMMCU    IEMMCU                                            
+1193.00      CSR                   MOVE *BLANKS   IELOCN                                            
+1194.00      CSR                   MOVE *BLANKS   IELOTN                                            
+1195.00      CSR                   MOVE $MODE     IELEDG                                            
+1195.01      CSR         $$FLG1    IFEQ '1'                                                  Delete 
+1195.02      CSR                   MOVEL$ECOST    IECOST                                     Delete 
+1195.03      CSR                   ELSE                                                      Delete 
+1196.00      CSR                   MOVE @CT,$X    IECOST                                            
+1196.01      CSR                   ENDIF                                                     Delete 
+1196.02      C*                                                                                     
+1196.04      C*    Skip Xx or Dx Costs, which are added in S030.                                    
+1196.05      C*                                                                                     
+1196.06 DBN  CSR                   MOVELIECOST    $SCOST  1                                  Delete 
+1196.07      CSR         $SCOST    IFNE 'X'                                                  Delete 
+1196.08      CSR         $SCOST    ANDNE'D'                                                  Delete 
+1196.09      CSR         $$FLG1    OREQ '1'                                                  Delete 
+1197.00      C*                                                                                     
+1198.00      C*    Items are either updated or created on the fly in the                            
+1199.00      C*    cost rollup file.                                                                
+1200.00      C*                                                                                     
+1201.00      CSR         IEKY01    CHAINI30026               83                                     
+
+
+Break in code
+
+1208.00      CSR                   END                                                              
+1209.00      C*----------------------------------------------------------------                     
+1210.00      C*                                                                                     
+1211.00      C*   Get Material cost by mutiplying Std Cost by Quantity                              
+1212.00      C*                                                                                     
+1212.01      CSR         $$FLG1    IFEQ '1'                                                  Delete 
+1212.02      CSR         $WXSCR    DIV  #@XSCR    $$CA                                       Delete 
+1212.03      CSR                   ELSE                                                      Delete 
+1213.00      CSR         @CA,$X    DIV  #@XSCR    $$CA   299H                                       
+1213.01      CSR                   ENDIF                                                     Delete 
+1213.02      CSR         IECOST    IFNE 'B2'                        SETUP COST                      
+1214.00      CSR         $$CA      MULT $$QNTY    $$QTY  299H                                       
+1214.01      CSR                   ELSE                                                             
+1214.02      CSR                   Z-ADD$$CA      $$QTY  299H                                       
+1214.03      CSR                   END                                                              
+
+Break in code
+
+1293.00      CSR                   ELSE                                                             
+1294.00      CSR                   WRITEI30026                 99                                   
+1295.00      C*                    -----------                                                      
+1296.00      CSR                   END                                                              
+1296.01      C*                                                                                     
+1296.02      CSR                   ENDIF                                                     Delete 
+1297.00      C*----------------------------------------------------------------                     
+1298.00      C*                                                                                     
+1299.00      C*    Update Cost Component records for Co/By-Products.                                
+1300.00      C*                                                                                     
+1301.00      CSR         $CBFLG    IFEQ 'Y'                                                         
+
+Break in code
+
+1307.00      CSR                   MOVE $$ITM     IEITM            Move Back IT                     
+1308.00      CSR                   MOVE $$MMCU    IEMMCU           Move Back BR                     
+1309.00      CSR                   END                                                              
+1310.00      C*                                                                                     
+1311.00      C*----------------------------------------------------------------                     
+1311.01      CSR         $$FLG1    IFEQ '1'                                                  Delete 
+1311.02      CSR                   ADD  35        $X                                         Delete 
+1311.03      CSR                   ELSE                                                      Delete 
+1312.00      CSR                   ADD  1         $X                                                
+1312.01      CSR                   ENDIF                                                     Delete 
+1313.00      CSR                   END                                                              
+1314.00      C*                                                                                     
+1315.00      C*----------------------------------------------------------------                     
+1316.00      C*----------------------------------------------------------------                     
+1317.00      C*                                                                                     
+
+Break in code
+
+1355.00      CSR                   END                                                              
+1356.00      C*                                                                                     
+1357.00      C*    Update Simulated Manufactured Amount for A2                                      
+1358.00      C*                                                                                     
+1359.00      CSR                   ADD  $WRK15    IEXSMC                                            
+1359.01      CSR         $$FLG1    IFEQ '1'                                                  Delete 
+1359.02      CSR         $WRK15    DIV  #@XSMC    $WK299           Format 29.9               Delete 
+1359.03      CSR         $WK299    MULT #@XSCR    $WRK15    H      Format 15.0               Delete 
+1359.04      CSR                   ADD  $WRK15    IEXSCR                                     Delete 
+1359.05      CSR                   END                                                       Delete 
+1360.00      C*                                                                                     
+1361.00      C*    Either update or create a new cost rollup record.                                
+1362.00      C*                                                                                     
+1363.00      CSR                   MOVELIXKITA    IEAITM                                            
+1364.00      CSR                   MOVELIXKITL    IELITM                                            
+
+Subroutine: 	S030          
+
+3190.36      C*                                                                                     
+3190.37 DBN2 C*R                   MOVELIECOST    $ECOST  2                                         
+3190.38 DBN2 CSR                   MOVELIRCOST    $ECOST  3                                         
+3190.39 DBN24CSR                   MOVELDS3026    $S3026                                            
+3190.40      CSR                   MOVE IRKIT     IEITM                                             
+3190.41      CSR                   MOVEL'1'       $$FLG2  1        Net Added                 Delete 
+3190.42      CSR                   EXSR S030A                                                       
+3190.43      C*                    ---- -----                                                       
+3190.44      CSR                   MOVEL*BLANK    $$FLG2                                     Delete 
+3190.45 DBN24CSR                   MOVEL$S3026    DS3026                                            
+3190.46      CSR                   ENDIF                                                            
+3190.47      CSR                   ENDIF                                                            
+3190.48      CSR                   ENDDO                           30026 END                        
+3190.49      CSR                   ENDIF                                                            
+3190.50      CSR                   ENDIF                                                            
+3190.51      C*                                                                                     
+3190.52      CSR                   ENDIF                                                            
+3190.53      CSR                   ENDDO                           3003  END                        
+3190.54      CSR                   ENDIF                                                            
+3190.55      CSR                   MOVELIRKIT     IBITM                                     Insert
+3190.56      C*----------------------------------------------------------------                     
+3191.82      C*                                                                                     
+3190.57      C*    Find all the Bills that this item is used in as a component               Delete 
+3190.58      C*    so the costs of this item can be rolled up into the parent.               Delete 
+3190.59      C*                                                                              Delete 
+3190.60      CSR                   MOVEL'M  '     IXTBM                                      Delete 
+3190.61      CSR                   MOVE $$MCU     IXCMCU                                     Delete 
+3190.62      CSR                   MOVE IRKIT     IXITM                                      Delete 
+3190.63      CSR         IXKYB1    SETLLI3002B                 9997                          Delete 
+3190.64      CSR         *IN97     IFEQ '1'                                                  Delete 
+3190.65      CSR                   SETOF                       97                            Delete 
+3190.66      CSR         *IN97     DOWEQ'0'                                                  Delete 
+3190.67      CSR         IXKYB1    READEI3002B                 9997                          Delete 
+3190.68      C*                                                                              Delete 
+3190.69      C*    Only continue if a BOM record is found.                                   Delete 
+3190.70      C*                                                                              Delete 
+3190.71      CSR         *IN97     IFEQ '0'                                                  Delete 
+3190.97      C*                                                                              Delete 
+3190.98      CSR         $$EFF     IFGE IXEFFF                     Within Date               Delete 
+3190.99      CSR         $$EFF     ANDLEIXEFFT                        Range                  Delete 
+3191.00      CSR         IXTBM     ANDEQ'M  '                      Mfg. Bill                 Delete 
+3191.01      CSR         IXSBNT    ANDEQ*ZEROS                     Not Substitute            Delete 
+3191.02      CSR         IXCOBY    ANDNE'I  '                      Not Intermed.             Delete 
+3191.04      C*                                                                              Delete 
+3191.05      C*    Check if parent item was included in cost simulation run.                 Delete 
+3191.06      C*                                                                              Delete 
+3191.07      CSR                   MOVE IXMMCU    IBMCU                                      Delete 
+3191.08      CSR                   MOVE IXKIT     IBITM                                      Delete 
+3191.09      CSR         IBKY0A    CHAINI4102A              N8399                            Delete 
+3191.10      CSR         *IN83     IFEQ '0'                                                  Delete 
+3191.11      C*                                                                              Delete 
+3191.12      C*    Continue only when the parent is a 'M' item                               Delete 
+3191.13      C*                                                                              Delete 
+3191.15      CSR                   CLEARI0005U                                               Delete 
+3191.16      CSR                   MOVE 'P'       $TYPE                                      Delete 
+3191.17      CSR                   MOVELS@STKT    #USY                                       Delete 
+3191.18      CSR                   MOVE R@STKT    #URT                                       Delete 
+3191.19      CSR                   MOVE *BLANKS   #UKY                                       Delete 
+3191.20      CSR                   MOVE IBSTKT    #UKY                                       Delete 
+3191.21      CSR                   CALL 'X0005 '               81                            Delete 
+3191.22      C*                    ---- --------                                             Delete 
+3191.23      CSR                   PARM           I0005U                                     Delete 
+3191.24      CSR                   MOVE #UERR     *IN82                                      Delete 
+3191.25      C*                                                                              Delete 
+3191.26      CSR         *IN82     IFEQ '0'                                                  Delete 
+3191.27 DBN1 CSR                   MOVEL#UDL02    $TYPE            Type = M or P             Delete 
+3191.29      CSR                   END                                                       Delete 
+3191.30      C*                                                                              Delete 
+3191.31      CSR         $TYPE     IFEQ 'M'                                                  Delete 
+3191.32      C*                                                                              Delete 
+3191.33      C*    Roll Up Xx or Dx costs for children to the parent.                        Delete 
+3191.34      C*                                                                              Delete 
+3191.35      CSR                   MOVE IRKIT     IEITM                                      Delete 
+3191.36      CSR                   MOVE $$MCU     IEMMCU                                     Delete 
+3191.37      CSR                   MOVE *BLANKS   IELOCN                                     Delete 
+3191.38      CSR                   MOVE *BLANKS   IELOTN                                     Delete 
+3191.39      CSR                   MOVE $MODE     IELEDG                                     Delete 
+3191.40      CSR         IEKY02    SETLLI30026A                9996                          Delete 
+3191.41      CSR         *IN96     IFEQ '1'                                                  Delete 
+3191.42      CSR                   SETOF                         96                          Delete 
+3191.43      C*                                                                              Delete 
+3191.44      CSR         *IN96     DOWEQ'0'                                                  Delete 
+3191.45      CSR         IEKY02    READEI30026A             N  9996                          Delete 
+3191.46      CSR         *IN96     IFEQ '0'                                                  Delete 
+3191.47 DBN1 CSR                   MOVELIECOST    $SCOST  1                                  Delete 
+3191.48      CSR         $SCOST    IFEQ 'X'                                                  Delete 
+3191.49      CSR         $SCOST    OREQ 'D'                                                  Delete 
+3191.50      CSR                   Z-ADDIEXSCR    $SXSCR 150                                 Delete 
+3191.51      CSR                   Z-ADD*ZERO     $WXSCR 150                                 Delete 
+3191.52 DBN2 C*R                   MOVELIECOST    $ECOST  2                                  Delete 
+3191.53 DBN2 CSR                   MOVELIECOST    $ECOST  3                                  Delete 
+3191.54 DBN24CSR                   MOVELDS3026    $S3026                                     Delete 
+3191.55      CSR                   MOVE IBITM     IEITM                                      Delete 
+3191.56      CSR                   EXSR S030A                                                Delete 
+3191.57      C*                    ---- -----                                                Delete 
+3191.58      C*                                                                              Delete 
+3191.59      C*    Update Total Cost information.                                            Delete 
+3191.60      C*                                                                              Delete 
+3191.61      CSR                   MOVEL'1'       $$FLG1  1                                  Delete 
+3191.62      CSR                   Z-ADD$SXSCR    $WXSCR 150                                 Delete 
+3191.63      CSR                   MOVE IMORDW    $WK01   1                                  Delete 
+3191.64      C*                                                                              Delete 
+3191.65      CSR                   EXSR S006                                                 Delete 
+3191.66      C*                    ---- ----                                                 Delete 
+3191.67      CSR                   MOVE $WK01     IMORDW                                     Delete 
+3191.68      CSR                   MOVEL*BLANK    $$FLG1                                     Delete 
+3191.69 DBN24CSR                   MOVEL$S3026    DS3026                                     Delete 
+3191.70      CSR                   ENDIF                                                     Delete 
+3191.71      CSR                   ENDIF                                                     Delete 
+3191.72      CSR                   ENDDO                           30026 END                 Delete 
+3191.73      CSR                   ENDIF                                                     Delete 
+3191.74      CSR                   ENDIF                           $TYPE                     Delete 
+3191.75      CSR                   ENDIF                           4102 END                  Delete 
+3191.76      C*                                                                              Delete 
+3191.77      CSR                   ENDIF                                                     Delete 
+3191.78      CSR                   ENDIF                                                     Delete 
+3191.79      CSR                   ENDDO                           3002 END                  Delete 
+3191.80      CSR                   ENDIF                                                     Delete 
+3191.81      C*                                                                              Delete 
+3191.82      C*                                                                              Delete 
+3191.83      CSR         END030    ENDSR                                                            
+3191.84      C*****************************************************************                     
+3191.85      C*                                                                                     
+3191.86      C*    SUBROUTINE S030A - Add Xx (Optional Add-on) amount for                           
+3191.87      C*                       Outside Operation to Xx amount for Parent.                    
+
+
+
+Subroutine: 	S030A         
+
+3192.36      CSR                   MOVE $MODE     IELEDG                                            
+3192.37      CSR                   MOVEL$ECOST    IECOST                                            
+3192.38      C*                                                                                     
+3192.39      CSR         IEKY01    CHAINI30026               9299                                   
+3192.40      CSR         *IN92     IFEQ '0'                                                         
+3192.41      CSR         $$FLG2    IFEQ '1'                                                  Delete 
+3192.42      CSR                   ADD  $WXSCR    IEXSMC                                            
+3192.43      CSR                   ENDIF                                                     Delete 
+3192.44      CSR                   ADD  $WXSCR    IEXSCR                                     Delete  
+3192.45      CSR                   MOVE ##JOBN    IEJOBN                                            
+3192.46      CSR                   MOVE ##PROG    IEPID                                             
+3192.47      CSR                   MOVE ##USER    IEUSER                                            
+3192.48      CSR                   MOVE $$UPMJ    IEUPMJ                                            
+3192.49      CSR                   MOVEL##ETM     IETDAY                                            
+3192.64      CSR                   PARM           DS4101                                            
+3192.65      CSR                   PARM           DSINVC                                            
+3192.66      C*                                                                                     
+3192.67      CSR                   MOVE IMAITM    IEAITM                                            
+3192.68      CSR                   MOVE IMLITM    IELITM                                            
+3192.69      CSR         $$FLG2    IFEQ '1'                                                  Delete 
+3192.70      CSR                   ADD  $WXSCR    IEXSMC                                            
+3192.71      CSR                   ELSE                                                      Delete 
+3192.72      CSR                   Z-ADD*ZERO     IEXSMC                                     Delete 
+3192.73      CSR                   ENDIF                                                     Delete 
+3192.74      CSR                   Z-ADD$WXSCR    IEXSCR                                     Delete  
+3192.75      CSR                   MOVE *ZERO     IESTDC                                            
+3192.76      CSR                   MOVE *ZERO     IECSL                                             
+3192.77      CSR                   MOVE *BLANK    IESCTC                                            
+3192.78      CSR                   MOVE *ZERO     IESTFC                                            
+3192.79      CSR                   MOVE *BLANK    IERATS          
+                              
+

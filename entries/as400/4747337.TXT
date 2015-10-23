@@ -1,0 +1,378 @@
+﻿.. P31116 Receive error 4081 Scrap Quantity Exceeds Issued Quantity 
+
+================================================================================
+The scrap quantity exceeds issued quantity (P31116)
+================================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+--------------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+--------------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2006/04/12 11:27:46 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+--------------------------------------------------------------------------------
+
+To: Sydney-Support@peoplesoft.com
+From: holts@mentholatum.com.cn
+Subject: JDE error
+
+Client number: 5331151
+No case number yet
+Software release: World A7.3
+Cumulative updates: 00014
+Contact person: Holts He
+Contact Number: 86-760-6685596-6828
+
+Hi,
+
+When we using  P31116,  I sure  the issued quantity  great than  scrap quantity , 
+why error:   Scrap Quantity Exceeds Issued Quantity.
+
+Ask for your help and advice .
+
+--------------------------------------------------------------------------------
+To: holts@mentholatum.com.cn
+From: eileen.kang@oracle.com
+
+Hi holts,
+
+I have your case assigned to me.
+
+I found a similar reported SAR 6216064 scrap comp twice on BOM error (http://www.peoplesoft.com/psp/portprd/CUSTOMER/CRM/c/CALLCENTER.RC_CASE_MAP.GBL?page=RC_CASE_NOTE&BUSINESS_UNIT=GBLSC&CASE_ID=4747337). Below is the scenario, hence I am not sure if they are related to your reported problem, could you please verify if the below SAR describes your issue, otherwise, I will require some screen prints to work in .
+
+Desccription of SAR 6216064 problem:
+Receive error 4081 Scrap Quantity Exceeds Issued Quantity when an item is calls out the same component number at the same operation number but with different line numbers. When trying to scrap all of the same components & all lines have been issued, it will let you scrap 1 but get error if trying to scrap another line that is the same component & same operation.
+
+1. Create a BOM with two same components. Only the LINE NUMBER is different.
+2. Create a WO for qty of 5, attach the P/L 3. Issue the WO.
+4. Goto #15/G3111, inquire on the component item or work order depending on the processing option #1. Tested this with both BLANK and 1.
+5. You will see two component lines displayed. Scrap the first line, system accepts.
+6. Scrap the second line, system does not accept, and highlight with error 4801, Scrap Quantity Exceeds Issued Quantity
+
+--------------------------------------------------------------------------------
+To: eileen.kang@oracle.com
+From: holts@mentholatum.com.cn
+
+Hi eileen,
+
+Sorry, my name is holts, bucause I have not userid & password, I cann't get sar 6116064, could you send to me sar 6216064, I am try to repair this error.
+--------------------------------------------------------------------------------
+To: holts@mentholatum.com.cn
+From: eileen.kang@oracle.com
+
+Hi Holts,
+
+Attached is a copy of the code change SAR 6216064.
+Please update me if the error is still occuring after the SAR.
+
+I have attached the code changes we discussed. Please note that these are considered Untested Quick Fixes.
+The code has been pulled from an active development environment and may contain errors.
+
+We strongly suggest that you install the code change into an alternate environment or separate custom library and test the changes. Then add the mod library to the top of your library list. if you run into any unforeseen problems, you can quickly remove the mod library and revert to the original program.
+
+Should you have any questions, please call me.
+--------------------------------------------------------------------------------
+To: eileen.kang@oracle.com
+From: holts@mentholatum.com.cn
+
+Hi eileen,
+
+Thank you very much, I will try it at next week.
+
+Purpose:	Program was modified so that it will allow to do scrap  for two part list lines with the same component and same operation sequence but different line numbers.
+
+
+Release:	A73 and A81
+	
+Object Name:  F3111LS & V31116 & P31116 
+Object Type:  RPG
+Special Instructions: Make sure after V31116 has changed, P31116 needs to recompile.	
+
+CODE CHANGE DETAILS 
+
+The SVR for adding a new logical F3111LS
+
+
+9801                       Software Versions Repository                        
+                                                                               
+
+Action Code. . .  A                                                            
+Member ID. . . .  F3111LS                                                      
+Description. . .  LF - Doc No, Op No, Req Date, Branch, Loc, Lot, Item, LineNo 
+Function Code. .  LF    Logical Files                                          
+Function Use . .  230    Transaction Files                                     
+System Code. . .  40    Inventory/OP Base                                      
+Reporting System  31    Shop Floor Control                                     
+Base Member Name  F3111                    File Prefix. . .  WM                
+Maint/RSTDSP . .      Omit Option. . .     Generation Sev .                    
+Copy Data (Y/N).  N   Optional File. .  N  Common File. . .  N                 
+                                                                               
+O  Source     Object     Source       SAR    Version    S D    User      Date  
+P  Library    Library    File        Number    ID       C P     ID     Modified
+   PGFSRC73   PGFDTA73   JDESRC      6216064 A73        2   FH5644358  10/10/02
+                                                                               
+                                                                                                                                                      
+                                                                               
+                       
+
+
+
+
+
+
+
+                                                 
+
+Add new logical F3111LS:
+
+
+        *************** Beginning of data *************************************
+0001.00      A**************************************************************** 
+0002.00      A*    (JDE) File Design Aid                                     * 
+0003.00      A*                                                              * 
+0004.00      A*    Created By : FH5644358                                    * 
+0005.00      A*    Date       : 10/10/02                                     * 
+0006.00      A*    Time       : 105036                                       * 
+0007.00      A*                                                              * 
+0008.00      A*    File       : LF - Doco, Op, Req Date, Br, Aisl, Bin, Lot, It
+0009.00      A**************************************************************** 
+0010.00      A          R I3111                     PFILE(F3111     )          
+0011.00      A                                      TEXT('LF - Doco, Op, Req Da
+0012.00      A                                      Br, Aisl, Bin, Lot, Item ')
+0013.00      A          K WMDOCO                                               
+0014.00      A          K WMOPSQ                                               
+0015.00      A          K WMDRQJ                                               ADD
+0016.00      A          K WMCMCU                                               
+0017.00      A          K WMLOCN    
+0018.00      A          K WMLOTN    
+0019.00      A          K WMCPIT    
+0020.00      A          K WMCPNT                                                                                   
+
+
+
+Program V31116:
+
+0039.00      A                                      PRINT(QSYSPRT   )         
+0040.00      A                                      DSPSIZ(*DS3)              
+0041.00      A          R V31116T                   SFL                       
+0042.00      A  32                                  SFLNXTCHG                 
+0043.00      A            SHDOCO         8A  H      TEXT('W.O. Number         
+0044.00      A            SHOPSQ         5A  H      TEXT('Operations seq.     
+0045.00      A            SHDRQJ         8A  H      TEXT('Date Requested      
+0046.00      A            SHLOCN        20A  H      TEXT('Location            
+0047.00      A            SHLOTN        15A  H      TEXT('Lot                 
+0048.00      A            SHCPIT         8A  H      TEXT('Item Number - Short 
+0048.01      A            SHCPNT         4A  H      TEXT('Line Number          ADD
+0049.00      A            SHSRCE         1A  H      TEXT('Lot control         
+0050.00      A            SFSELC         1A  B 10  2TEXT('Selection Exits     
+0051.00      A  42                                                            
+0052.00      AO 37                                  DSPATR(HI)                
+0053.00      A  42                                  DSPATR(RI)                
+0054.00      A N42                                  DSPATR(UL)                
+                                                                              
+break in code
+
+0252.00      A          R V31116S                   SFL                        
+0253.00      A  32                                  SFLNXTCHG                  
+0254.00      A            SHDOCO         8A  H      TEXT('W.O. Number          
+0255.00      A            SHOPSQ         5A  H      TEXT('Operations seq.      
+0256.00      A            SHDRQJ         8A  H      TEXT('Date Requested       
+0257.00      A            SHLOCN        20A  H      TEXT('Location             
+0258.00      A            SHLOTN        15A  H      TEXT('Lot                  
+0259.00      A            SHCPIT         8A  H      TEXT('Item Number - Short  
+0259.01      A            SHCPNT         4A  H      TEXT('Line Number          ADD
+0260.00      A            SHSRCE         1A  H      TEXT('Lot control          
+0261.00      A            SFUITM        26A  O 11  2TEXT('Item Number - Unknown
+0262.00      A                                      Entered              ')    
+
+
+
+Program P31116:
+
+
+
+0048.00      FF0001   IF  E           K        DISK                          
+0049.00      FF4801   IF  E           K        DISK                          
+0050.00      FF3111LG IF  E           K        DISK                          
+0051.00      F            I3111                             KRENAMEI3111G    
+0052.00      FF3111LD UF  E           K        DISK                          DELETE
+0053.00      F            I3111                             KRENAMEI3111D    
+
+0053.01      FF3111LS UF  E           K        DISK                          ADD
+0053.02      F            I3111                             KRENAMEI3111S    
+0054.00      FF3111LF IF  E           K        DISK                          
+0055.00      F            I3111                             KRENAMEI3111F    
+0056.00      FV31116  CF  E                    WORKSTN      KINFDS SRVFDS      
+0057.00      F                                        I1    KSFILE V31116S     
+0058.00      F                                        I1    KSFILE V31116T     
+0059.00      F*****************************************************************
+0060.00      F*                                                                                                                                             
+
+
+Subroutine S001:
+
+0801.00      C*    SUBROUTINE S001 - Clear Fields                              
+0802.00      C*    ------------------------------                              
+0803.00      C*                                                                
+0804.00      C*    Processing:  1.  Reset all video screen and data file fields
+0805.00      C*                     for next transaction.                      
+0806.00      C*                 2.  Clear action code only if requested.       
+0807.00      C*                                                                
+0808.00      CSR         S001      BEGSR                                       
+0809.00      C*          ----      -----                                       
+0810.00      CSR         *NOKEY    CLEARI3111D                                DELETE 
+
+0810.01      CSR         *NOKEY    CLEARI3111S                                ADD 
+0811.00      CSR                   MOVE *BLANK    ####MD                       
+0812.00      CSR                   MOVE *BLANK    ###CFL                       
+0813.00      CSR                   MOVE *BLANK    ###CRC                       
+0814.00      CSR                   Z-ADD*ZERO     ###RNO                       
+0815.00      CSR                   Z-ADD*ZERO     ##RCOL                    
+
+Subroutine S004:
+
+1847.00      CSR                   MOVE *BLANK    SF#QNT                       
+1848.00      C*--------------------------------------------------------------- 
+1849.00      C*                                                                
+1850.00      C*    Move to output - Hidden Fields.                             
+1851.00      C*                                                                
+1852.00      CSR                   MOVE WMDOCO    SHDOCO                       
+1853.00      CSR                   MOVE WMOPSQ    SHOPSQ                       
+1854.00      CSR                   MOVE WMDRQJ    SHDRQJ                       
+1854.01      CSR                   MOVE WMCPNT    SHCPNT                       ADD
+1855.00      CSR                   MOVE IBSRCE    SHSRCE                       
+1856.00      C*----------------------------------------------------------------
+1857.00      C*                                                                
+1858.00      C*    Move to output - Common Fields.                             
+1859.00      C*                                                                
+1860.00      CSR                   EXSR S004C                                  
+                                                                               
+   
+Subroutine S004A:
+
+2133.00      C*    Move to output - Scrapped Quantity                          
+2134.00      C*                                                                
+2135.00      CSR                   MOVE *BLANK    S2#QNT                       
+2136.00      C*--------------------------------------------------------------- 
+2137.00      C*                                                                
+2138.00      C*    Move to output - Hidden Fields.                             
+2139.00      C*                                                                
+2140.00      CSR                   MOVE WMOPSQ    SHOPSQ                       
+2141.00      CSR                   MOVE WMDRQJ    SHDRQJ                       
+2142.00      CSR                   MOVE WMCPIT    SHCPIT                       
+2142.01      CSR                   MOVE WMCPNT    SHCPNT                        ADD
+2143.00      C*--------------------------------------------------------------- 
+2144.00      C*                                                                
+2145.00      C*    Move to output - Common Fields.                             
+2146.00      C*                                                                
+2147.00      CSR                   EXSR S004C                                  
+2148.00      C*                    ---- -----                                  
+
+      
+                                                    
+Subroutine S005:
+
+
+
+2360.00      C*    Set Work Order Parts list key.                             
+2361.00      C*                                                               
+2362.00      CSR                   MOVE SHDOCO    WMDOCO                      
+2363.00      CSR                   MOVE SHOPSQ    WMOPSQ                      
+2364.00      CSR                   MOVE SHDRQJ    WMDRQJ                      
+2365.00      CSR                   MOVE SFMCU     WMCMCU                      
+2366.00      CSR                   MOVE SHLOCN    WMLOCN                      
+2367.00      CSR                   MOVELSHLOTN    WMLOTN                      
+2368.00      CSR                   MOVE SHCPIT    WMCPIT                      
+2368.01      CSR                   MOVE SHCPNT    WMCPNT                      ADD
+
+2369.00      CSR         WMKY0D    CHAINI3111D               94               DELETE
+
+2369.01      CSR         WMKY0S    CHAINI3111S               94                ADD
+2370.00      C*---------------------------------------------------------------
+2371.00      C*                                                               
+2372.00      C*    Scrub and edit - Scrap Quantity.                           
+2373.00      C*                                                               
+       
+
+Break in code
+
+2553.00      C*    Load update specific fields.                              
+2554.00      C*                                                              
+2555.00      CSR         *IN93     IFEQ '0'                                  
+2556.00      CSR                   MOVEL##USER    WMUSER           User      
+2557.00      CSR                   MOVEL##PROG    WMPID            Program ID
+2558.00      CSR                   MOVEL##JOBN    WMJOBN           Job Number
+2559.00      CSR                   MOVEL$$UPMJ    WMUPMJ           Date      
+2560.00      CSR                   MOVEL$$TDAY    WMTDAY           Time      
+2561.00      CSR                   UPDATI3111D                 99              DELETE
+
+2561.01      CSR                   UPDATI3111S                 99              ADD
+2562.00      CSR                   END                                       
+2563.00      C*                                                              
+2564.00      C*    Write Cardex record.                                      
+2565.00      C*                                                              
+2566.00      C*R                   EXSR S005A                                
+         
+
+Subroutine S999:
+
+
+
+3498.00      CSR                   MOVEL@OP,5     $$OP5   2        Inv Iss Doc 
+3499.00      C*                                                                
+3500.00      CSR         $$OP5     IFEQ *BLANKS                                
+3501.00      CSR                   MOVEL'IM'      $$OP5                        
+3502.00      CSR                   END                                         
+3503.00      C*----------------------------------------------------------------
+3504.00      C*                                                                
+3505.00      C*    Key list for - LF - Doc No, Op No, Req Date, Branch, Locatio
+3506.00      C*                                                                
+3507.00      CSR         WMKY0D    KLIST                                       DELETE
+
+3507.01      CSR         WMKY0S    KLIST                                       ADD
+3508.00      CSR                   KFLD           WMDOCO                       
+3509.00      CSR                   KFLD           WMOPSQ                       
+3510.00      CSR                   KFLD           WMDRQJ                       
+3511.00      CSR                   KFLD           WMCMCU                       
+3512.00      CSR                   KFLD           WMLOCN                       
+3513.00      CSR                   KFLD           WMLOTN                  
+3514.00      CSR                   KFLD           WMCPIT                  
+3514.01      CSR                   KFLD           WMCPNT                   ADD
+3515.00      C*-----------------------------------------------------------
+3516.00      C*                                                           
+3517.00      C*    Key list for - LF - Item, Branch,                      
+3518.00      C*                                                           
+3519.00      CSR         WMKY0G    KLIST                                  
+3520.00      CSR                   KFLD           WMCOBY                  
+3521.00      CSR                   KFLD           WMCPIT                  
+3522.00      CSR                   KFLD           WMCMCU                  
+3523.00      CSR                   KFLD           WMDRQJ                                                                                                                                                                                                                                                                
+
+
+
+
+--------------------------------------------------------------------------------
+To: eileen.kang@oracle.com
+From: holts@mentholatum.com.cn
+
+Hi eileen,
+
+That's ok, please close this case, thank you very much.
+
+
+

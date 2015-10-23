@@ -1,0 +1,101 @@
+﻿.. 这是一个关于使用Substanced进行web应用的开发例子
+
+========================================================================
+Substanced Website 开发
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/05/20 10:27:46 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+建立开发环境
+========================================================================
+ 
+virtualenv  --no-site-packages  c:/mcl
+
+cd c:/mcl
+
+scripts/activate
+
+easy_install substnaced
+
+详见 install_substanced.txt
+
+建立自己的应用
+========================================================================
+
+- List the templates availible for generating a project
+
+  $ bin/pcreate --list-templates
+
+- At that point, you should be able to create new Substance D projects by
+  using ``pcreate``::
+
+  pcreate -s substanced aerp
+  或
+  pcreate --template=substanced aerp
+
+- Check the initially generated code into a local Git repository
+
+    $ cd c:/mcl/aerp
+    $ git init .
+    $ cat > .gitignore
+    *.pyc
+    __pycache__
+    *.egg-info
+    *.fs*
+    blobs
+    tmp
+    *.*~
+    ^D
+    $ git add .
+    $ git commit -m "Initially-generated project."
+
+- And install that project using ``setup.py develop`` into the
+  virtualenv::
+
+  $ cd c:/mcl/aerp
+  $ ../bin/python setup.py develop
+
+- Verify that myintranet is importable from our checkout
+
+    $ cd ../..
+    $ bin/python
+    ...
+    >>> import aerp
+    >>> print(aerp.__file__)
+
+- Run the resulting project via ``../bin/pserve development.ini``.
+
+- Grep the generated, random password from the config file
+
+    $ cd c:/mcl/aerp 
+    $ grep passwword development.ini
+
+- View the default splash page at http://localhost:6543/.
+
+    Log into the SubstanceD management interface at: http://localhost:6543/manage.
+
+    进入系统后,更改admin密码为admin
+
+
+
+
+
+

@@ -1,0 +1,39 @@
+﻿select '  ZZS0760210' as CBMCU, 90130297 as CBAN8, imitm as CBITM, itemno as CBLITM,
+  itemno as CBAITM, 'ZS-HJ' as CBCATN,	'' as CBDMCT,0 as CBDMCS,'' as CBKCOO,
+  	0 as CBDOCO, '' as CBDCTO, 0 as CBLNID, 'RMB' as CBCRCD, UPPER(unit) as CBUOM,
+  	ceiling(price*10000) as CBPRRC, 0 as CBUORG, dbo.hf_date(fromdate) as CBEFTJ,
+  	 dbo.hf_date(todate) as  CBEXDJ, 'ZZSZJS1' as CBUSER,
+  	 'P41061' as CBPID, 'UPDATA' as	CBJOBN,
+  	  113120 as CBUPMJ, 091300 as CBTDAY
+ 
+   FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\update.xls', sheet3$)
+     left join f4101 on itemno=imlitm
+   order by itemno,fromdate
+
+
+update mis/h41061 set cbitm=(select imitm
+  from f4101 where cblitm=imlitm)
+ where cblitm in (select imlitm from f4101)
+    
+delete   from mis/h41061                       
+   where cblitm not in                         
+      (select imlitm from f4101)    
+
+更新生效记录为无效
+update f41061 set cbexdj=113365
+where cbexdj>113365 and cban8=90130297
+  and cblitm in (select cblitm from mis/h41061)
+
+
+insert into f41061 (CBMCU,CBAN8,CBITM,CBLITM,CBAITM,
+ CBCATN,CBDMCT,CBDMCS,CBKCOO,CBDOCO,CBDCTO,CBLNID,CBCRCD,
+ CBUOM,CBPRRC,CBUORG,CBEFTJ,CBEXDJ,CBUSER,CBPID,
+ CBJOBN,CBUPMJ,CBTDAY)
+select
+CBMCU,CBAN8,CBITM,CBLITM,CBAITM,
+ CBCATN,CBDMCT,CBDMCS,CBKCOO,CBDOCO,CBDCTO,CBLNID,CBCRCD,
+ CBUOM,CBPRRC,CBUORG,CBEFTJ,CBEXDJ,CBUSER,CBPID,
+ CBJOBN,CBUPMJ,CBTDAY
+ from mis/h41061 
+

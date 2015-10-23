@@ -1,0 +1,157 @@
+﻿
+ 1.   举出一个经典的学生课程例子，共有学生、课程与学生课程三张表。
+
+ create table  student
+(
+    student_id int primary key,
+    student_name nvarchar(50) not null
+)
+insert student(student_id,student_name)
+values(1	,'张三')
+insert student(student_id,student_name)
+values(2	,'李四')
+insert student(student_id,student_name)
+values(3	,'王五')	
+ 
+
+create table  course
+(
+    course_id int primary key,
+    course_name nvarchar(50) not null
+)
+insert course(course_id,course_name)
+values(1	,'语言')
+insert course(course_id,course_name)
+values(2	,'数学')
+insert course(course_id,course_name)
+values(3 	,'英语')
+
+
+create table  student_course
+(
+    student_id int not null,
+    course_id int not null,
+    primary key(student_id,course_id)
+)
+insert student_course(student_id,course_id)
+values(1	,2)
+insert student_course(student_id,course_id)
+values(1	,3)
+insert student_course(student_id,course_id)
+values(2 	,1)
+insert student_course(student_id,course_id)
+values(2 	,3)
+insert student_course(student_id,course_id)
+values(3,	3)
+
+
+
+2.提出问题
+
+ 写一条SQL语句，查询显示出下列结果：
+     
+student_name 	course_name
+张三    	数学，英语
+李四	        语言，英语
+王五    	英语
+
+ 
+3 . 简单介绍 FOR XML PATH
+
+     
+      FOR XML PATH 语句能够把查询的数据生成XML数据，举个例子，针对student表，以前SQL语句的查询结果为：
+
+       
+
+ 
+select str(student_id) + ',' + student_name from student for xml path('student')
+
+     查询结果：
+<student>         1,张三</student>
+<student>         2,李四</student>
+<student>         3,王五</student>
+
+
+       student已成为一个xml文件中的结点了，再看看FOR XML PATH('')的效果，针对上述SQL作出修改，
+
+ 
+select str(student_id) + ',' + student_name from student for xml path('')
+
+      查询结果：
+
+ 
+1,张三 2,李四 3,王五
+
+
+       看得出来，这个参数自动把我们的查询结果串接在一起了，这下子，要做字符串拼接就很简单了！
+
+ 
+
+    
+    4. 解答问题
+           要查询想要的结果，我们首先用一般的SQL语句，连接三个表之后的结果为：
+
+ 
+
+   
+select a.student_name,b.course_name from student_course c,student a,course b where 
+            c.student_id=a.student_id and c.course_id=b.course_id
+
+
+       查询结果：
+
+
+student_name 	course_name
+张三
+	数学
+张三
+	英语
+李四
+	语文
+李四
+	英语
+王五
+	英语
+
+      我们把这个查询结果看作为一个临时表，与自身进行一次连接，再得用FOR XML PATH('')参数来对课程course_name列进行拼接，再得用子查询功能。这样就得到一个每一个学生的所选的所有课程，由于上表会存在同一学生的多条记录，所以需要对最后的结果按学生进行分组，先看看查询语句：
+
+        
+select student_name,
+   (select course_name+',' from 
+     (
+        select student_name,course_name from 
+         (
+            select a.student_name,b.course_name from stud_course c,student a,course b where c.student_id=a.student_id and c.course_id=b.course_id
+         ) as a
+     ) as b where c.student_name=b.student_name for xml path('')
+   ) as course_name
+    from 
+    (
+        select a.student_name,b.course_name from student_course c,student a,course b where c.student_id=a.student_id and c.course_id=b.course_id
+    ) as c  group by student_name
+
+
+     查询结果：
+
+
+student_name 	course_name
+张三	数学，英语,
+李四	语言，英语,
+王五	英语,
+
+    
+
+     还有个小问题， course_name后面多出一个,号，最后做一次裁剪，假设上面的SQL语句作为一个子查询 subquery
+
+ 
+select student_name,left(course_name,len(course_name)-1) from (........) as subquery
+
+   这样，就可以得出最终的结果！可以看得出来FOR XML PATH('') 参数非常强大！
+
+  
+
+ PS:有很多人把这个叫行转列，我个人并不这么认为，虽然这和行转列有点像，但是这更像是字符串拼接！就把它这么叫好了!
+ 
+
+
+

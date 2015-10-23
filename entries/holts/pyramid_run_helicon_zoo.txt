@@ -1,0 +1,12 @@
+﻿Running Python WSGI application on Microsoft IIS
+
+打开WebPI, 在选项窗的自定义源栏加入http://www.helicontech.com/zoo/feed/，关闭后在主窗品可以看到新出现的Zoo, 所有Helicom的产品构件都集归在这个标题下。
+
+在Helicom的构件库中选Packages, 安装Python Hosting Package, 成功安装后显示安装了Helicom zoo moudle, python2.7, PIL, python base packages,mysql drive for python, Twisted, Python Hosting Package 以及一堆关于IIS的DLL及配置构件，之后Python应用就可以象普通的应用运行在IIS下。
+
+Helicom也提供一些模板，简化应用的开发，根据需要，我们选择安装Python project ，成功安装后显示安装了python project,web deploy3.5,helicom zoo module for iis express 8.0  同时已装好网站，可用IE打开 http://localhost:47459/。
+
+网站的管理可以通过Helicom manage管理，可以disable一些不用的组件, 也可以在这里配置ZooPythonProject. 开发及和布署底层用WebMatmix管理，更爽的是下引入了Git管理源代码。
+
+
+

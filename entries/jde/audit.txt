@@ -1,0 +1,35 @@
+﻿
+菜单清单
+
+select  mzhsky, max(mzmni||mzseln), max(mtmntx)  
+ from f00821  left join f0083 on mzmni=mtmni and mzseln=mtseln
+  where mzuser like 'ZZS%'  and mzhsky<>''   
+    and mtlngp='CS'                            
+  group by mzhsky   order by max(mzmni||mzseln)
+
+
+select  mzhsky,   max(mtmntx)  
+ from 
+   ( SELECT mzmni,mzseln,mzhsky FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+       'Excel 8.0;Database=D:\holts\f00821.xls', f00821$)
+          where mzuser like 'ZZS%' and mzhsky<>'' ) f00821  
+  left join 
+   ( SELECT mtmni,mtseln,mtmntx FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\f0083.xls', f0083$)
+        where mtlngp='CS' ) f0083   on mzmni=mtmni and mzseln=mtseln
+   group by mzhsky   
+
+数定字典
+
+
+select f9200.frdtai, f9201.frclas, f9201.frdtat, f9201.frdtas, f9201.frdtad  
+ from 
+ ( SELECT * FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+       'Excel 8.0;Database=D:\holts\f9200.xls', f9200$)
+      where frgg='D' ) f9200
+   left join (   SELECT * FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+                  'Excel 8.0;Database=D:\holts\f9201.xls', f9201$)
+                )  f9201  on f9200.frdtai=f9201.frdtai
+
+
+

@@ -1,0 +1,20 @@
+﻿ 
+insert into f41021 (liitm,limcu,lilocn,lilotn,lipbin,
+ liglpt,lilots, lilrcj, lipqoh,
+ liuser, lipid,lijobn,liupmj,litday)
+select liitm,limcu,lilocn, '' as lilotn, 'P' as lipbin,
+ liglpt,lilots, lilrcj, 0 as  lipqoh,
+ liuser, lipid,lijobn,liupmj,litday
+from f41021 where 
+limcu ='  ZSH0210231'  and lipbin='X'      
+ and lilotn<>''                            
+  
+
+select liitm,limcu,   '4107104' as lilocn,           
+   '20120707KL' as lilotn,'X' as lipbin,             
+ liglpt,  '' as  lilots, lilrcj,    600      as lipqoh,    
+ liuser, lipid,lijobn,liupmj,litday                  
+from f41021 where limcu ='  ZZS0760210'              
+  and lipbin='P'   and lilotn= ''                    
+  and liitm in (select imitm from f4101 where imlitm 
+       = 'ME70609045')                                                            

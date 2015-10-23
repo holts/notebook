@@ -1,0 +1,96 @@
+﻿.. 在Windows 2008 sp2 下搭建pyramid运行环境
+
+========================================================================
+pyramid run on modwsgi
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2014/03/12 15:44:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+安装Apache
+========================================================================
+
+由于我们的服务器安装的是Window 2008 sp2 64位操作系统，需要下载64位的apache，从https://www.apachelounge.com/download/win64 找到最新的 apache 2.4.7  win64 for vc10 
+
+其包中包含 IPv6 and Crypto enabled, apr-1.5.0 apr-util-1.5.3 apr-iconv-1.2.1 openssl-1.0.1e zlib-1.2.8 pcre-8.33 libxml2-2.9.1 lua-5.1.5 expat-2.1.0
+
+由于其依赖VC10，Be sure you have installed the Visual C++ 2010 SP1 Redistributable Package x64.  Download and install, if you not have it already, from:
+
+  http://www.microsoft.com/download/en/details.aspx?id=13523
+
+
+Unzip the Apache24 folder to c:/work/Apache24 (that is the ServerRoot in the config).
+
+Default folder for your your webpages is DocumentRoot "c:/work/Apache24/htdocs", When you unzip to an other location, change ServerRoot in the httpd.conf, and change in httpd.conf the Documenroot, Directories, ScriptAlias, also when you use the extra folder config file(s) change to your location there. 
+
+Start apache in a DOS box:
+
+>httpd.exe
+
+Install as a service:
+
+>httpd.exe -k install
+
+ApacheMonitor:
+
+Double click ApacheMonitor.exe, or put it in your Startup folder.
+
+安装modwsgi
+========================================================================
+
+从http://www.lfd.uci.edu/~gohlke/pythonlibs/#mod_wsgi 下载 mod_wsgi-3.5.ap24.win-amd64-py2.7
+
+解压后，将mod_wsgi.so复制到c:\work\apache2.4\modules目录下，在httpd.conf中增加一行：
+
+LoadModule wsgi_module modules/mod_wsgi.so
+
+安装python
+========================================================================
+
+从官网下载 python 2.7.6 am64，默认安装就可以了，然后下载ez_setup.py，将这个文件复制到python2.7安装目录，将Python安装路径设置环境变量path中， 打开windows命令窗口cmd，运行以下命令：
+
+C:\>holts\ython27\python ez_setup.py
+
+C:\>holts\python27\scripts\easy_install virtuallenv
+
+VirtualEnv用于在一台机器上创建多个独立的python运行环境，VirtualEnvWrapper为前者提供了一些便利的命令行上的封装。
+
+使用 VirtualEnv 的理由：
+
+隔离项目之间的第三方包依赖，如A项目依赖django1.2.5，B项目依赖django1.3。
+
+为部署应用提供方便，把开发环境的虚拟环境打包到生产环境即可,不需要在服务器上再折腾一翻。“
+
+
+安装 pyramid 
+========================================================================
+
+C:\>  c:\holts\python27\Scripts\virtualenv  --no-site-packages c:\holts\aerp
+
+就会在C盘根目录下生成一个新的目录: c:\holts\aerp
+
+c:\> cd c:\holts\aerp
+c:\holts\aerp> Scripts\activate
+
+(aerp) c:\holts\aerp>  easy_install pyramid
+
+
+
+

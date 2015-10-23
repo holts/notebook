@@ -1,0 +1,159 @@
+﻿
+2014-2-28
+========================================================================
+
+以下是数据获取过程
+
+从JDE下载数据
+------------------------------------------------------------------------
+
+select GLKCO,GLDOC,GLDCT,GLDGJ,GLJELN,GLPOST,GLICU,
+GLICUT,GLCO,GLANI,GLAM,GLAID,GLMCU,GLOBJ,GLSUB,
+GLLT,GLPN,GLCTRY,GLFY,GLCRCD,GLCRR,GLAA,GLEXA,
+GLEXR,glsbl as GLR1,GLR2,GLR3,GLAN8,GLVINV, 
+case when gldct in ('RC','PN')
+  then icuser else gltorg end  as GLTORG,
+GLUSER,GLJOBN ,glupmj as GLDSYJ, 
+  gluser   as glbusr,  'CHRISCHUNG' as glmusr
+from  F0911 left join f0011 on glicu=icicu and glicut = icicut
+ where   GLLT = 'AA'  AND GLPOST = 'P' AND 
+    GLCO = 90000 AND GLDGJ >= 113300
+     and gldct not in ('IQ')
+关联到批控制表，如果单据类型是付款(RC),则用批控制表的用户替换凭证中的最初用户，过帐用户就是最后操作凭证的用户．
+
+/*
+更新审核用户名(暂不使用)
+------------------------------------------------------------------------
+update f0911 set glbusr = isnull(descchs, gluser)
+    from f0911  left join cslistd  on  lid='1' and optionid=gluser
+ where gldct not in ('JE','JX','JI','RJ','RC')
+对于非总帐或销售单产生的凭证，审核人从HBS中查直属主管替换． 
+ */
+
+更改制单人 
+------------------------------------------------------------------------
+update f0911 set gluser=case when gltorg='' then  'AUTO'  
+  when  gldct in  ('OV','K7','K8','KF','KJ','I3','I4','I5','I6','I7','I8','I9','IN','IU','IT','IG')  then  'AUTO'  
+    else   gltorg  end  
+ where gldct not in ('JE','JX','JI', 'RJ','RC')
+对于非总帐、工单、销售单产生的凭证，操作者用凭证上的最初用户替换．
+
+
+
+
+2014-1-1
+========================================================================
+
+使用GZ开发的打印程序，数据库放在GZ， 原HBS停用
+
+
+
+2013-6-14
+========================================================================
+系统导入一些批号，提示过帐不平，经查是ＧＬＪＥＤ中少了些记录，这此少的记录的科目在ＨＢＳ中没有建立，ＧＬａｍｆｏ是映射表，ｇｌａｍｆ是中方科目表，其中ｇｌａｍｆ中少了些记录，以下是出错的批号例子。
+select sum(transdb),sum(transcr), optfldc
+  from gljed where batchnbr=209637
+     and optfldc in ('472946-81305185','472946-81305206','472946-81305201','472946-81305187'  )                         
+   group by optfldc 
+   
+select * from f0911 
+ where gldoc in ('81305185','81305206','81305201','81305187')
+
+用以下命令取缺中方科目的记录
+select * from glamfo where acctidin not in (select acctid from glamf)
+
+让用户补齐后，删除不平的批次，让用户重新导数
+delete gljeh
+delete gljed
+
+
+过帐出现错误提示解决方法
+========================================================================
+请先使用预过账，提示过账错误；再通过查看“报表”->过账错误，可以查看错误原因。
+（或查看表GLPPER，记录了错误原因）
+
+大多是借贷不平, 可以这样检查具体不平的单
+
+select sum(transdb),sum(transcr), optfldc
+  from gljed where batchnbr=204995 
+   group by optfldc 
+
+
+检查Accid是否建立交叉参考
+========================================================================
+select ref_no6 from gljed where batchnbr=204995
+  and ref_no6 not in (select acctid from glamfo )
+group by ref_no6 order by ref_no6
+
+
+
+
+HBS年结
+========================================================================
+
+insert csfsc(fscyear,periods,qtr4perd,active1,bgndate1,bgndate2,bgndate3,
+ bgndate4,bgndate5,bgndate6,bgndate7,bgndate8,bgndate9,bgndate10,bgndate11,bgndate12,
+ enddate1,enddate2,enddate3,enddate4,enddate5,enddate6,
+ enddate7,enddate8,enddate9,enddate10,enddate11,enddate12,
+ statusadj,statuscls, status1,status2,status3,status4,status13,
+ status5,status6,status7,status8,status9,status10,status11,status12 )
+ select 2013,periods,qtr4perd,active1,bgndate1,bgndate2,bgndate3,
+ bgndate4,bgndate5,bgndate6,bgndate7,bgndate8,bgndate9,bgndate10,bgndate11,bgndate12,
+ enddate1,enddate2,enddate3,enddate4,enddate5,enddate6,
+ enddate7,enddate8,enddate9,enddate10,enddate11,enddate12,0,0,
+ 0,0,0,0,0,0,0,0,0,0,0,0,0 
+  from csfsc where fscyear=2012
+
+然后在SQL中更改日期为 2013年的区间
+
+========================================================================
+
+
+
+select yrclslst from gl01
+
+ 
+
+select distinct batchid from gljeh where fscsyr=2011
+order by batchid
+--145236~145241,145494~146337
+select distinct batchid from gljeh where fscsyr=2012
+order by batchid
+--145242~145493
+
+
+
+
+
+
+
+select * from gljeh where batchid in(145321)
+SELECT *  FROM  GLJED where batchnbr in ( 145321)
+select * from  glbctl where batchid in( 145235,146321)
+
+select * from f0911 where   gldoc=81113058
+select * from gljed where optfldc='371430-81113058'
+
+select * from glpost where   srcetype='IU' and optfldc='371430-81113058'
+
+select batchid, fscsyr,fscsperd,ref_no4
+--update gljeh set fscsyr=substring(ref_no4,1,4) ,
+--    fscsperd=substring(ref_no4,5,2) 
+  from gljeh inner join gljed on batchid=batchnbr
+ where fscsyr<>substring(ref_no4,1,4) 
+   and fscsperd<>substring(ref_no4,5,2) 
+  order by batchid
+ 
+
+select * from glpost  where jehdesc >= '81113059' and jehdesc <= '81113090'
+
+select * from f0911 where gldoc = '81113059' and gldct='JE'
+select * from gljed where optfldc='371482-81113059'
+
+--select * from csfsc    
+select acsegval01,acsegval02, acsegval03 from glamf
+
+update gljeh set fscsyr=2011, fscsperd=12
+ select * from gljeh where batchid=145235
+
+select * from f0911 where glicu in (372928,372936,372945,373052)

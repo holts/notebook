@@ -1,0 +1,49 @@
+﻿
+insert into f47141 (syedst, syeder, syekco, symcu, syedoc, 
+   syedct, sytpur, syan8, syshan )                  
+  values('865', 'R', '90000', '  ZZS0760210', '20120301',
+'HA',  '00',  90130288, 90000000 )
+
+
+insert into f47142 (szedst, szeder, szekco, szmcu, szedoc, 
+   szedct,  szan8, szshan ,szedln, szitm, szlitm,
+    szaitm, szuorg  )
+  values('865', 'R', '90000', '  ZZS0760210', '20120301',
+    'HA',   90130288, 90000000, 1000, 4144, 'ROR0102018',
+'ROR0102018', 200000  )
+ 
+
+
+
+
+
+ 
+
+insert into f47141(syekco,syedoc,syedct,sytpur,
+  symcu,syan8, syedst,syeder)
+ values('90000', '20120301', 'HA', '00', '  ZZS0760210',
+ 90130288, '865', 'R' )
+
+insert into f47142(szekco,szedoc,szedct,szedln,szchgc,
+ szmcu,szan8,szedst,szeder, szlitm,   szuorg)
+values('90000','20120301','HA',1000, 'AI', '  ZZS0760210',
+  90130288, '865', 'R', 'ROR0102018', 200000)
+
+
+insert into f98301 (DEPID,DEVERS,DETY,DESQN,DEOPT#,DEDWTY,
+ DEFILN,DEPFX,DEMID,DEFMAT,DELGF,DEJEX,DEEXCL,DEOUTM,DEUSER,
+ DEVCD,DEVED,DEPTSP,DEPTIN,DEHJBQ,DETXT1,DEKOPT,DEFLDN,DEDTAS,
+ DEDTAT,DECDEC,DEEC,DEDFLD,DERJST,DEAO,DESVL,DEVALR,DESTY,
+ DEMCRG,DEAALL,DESAD,DETXTO,DELTOT,DEPAGE,DETYT,DEOQSO,DEOQOP,
+ DEOQOO,DEOQOU,DEOQOD)
+
+select DEPID,DEVERS,DETY,DESQN,DEOPT#,DEDWTY,
+ DEFILN,DEPFX,DEMID,DEFMAT,DELGF,DEJEX,DEEXCL,DEOUTM,DEUSER,
+ DEVCD,DEVED,DEPTSP,DEPTIN,DEHJBQ,DETXT1,DEKOPT,DEFLDN,DEDTAS,
+ DEDTAT,DECDEC,DEEC,DEDFLD,DERJST,DEAO,DESVL,DEVALR,DESTY,
+ DEMCRG,DEAALL,DESAD,DETXTO,DELTOT,DEPAGE,DETYT,DEOQSO,DEOQOP,
+ DEOQOO,DEOQOU,DEOQOD
+from temp/f98301
+
+
+

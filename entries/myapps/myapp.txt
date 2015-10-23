@@ -1,0 +1,461 @@
+﻿
+更改已付金额
+------------------------------------------------------------------------
+
+ select * from TLK_REQUEST_ACCOUNTS 
+ --update TLK_REQUEST_ACCOUNTS set ITEM_PROJECT_PAIDS=57000, ITEM_PROJECT_PAIDL='伍万柒仟元整'
+ where ITEM_APP_ID='FK2015001291'
+ 
+增加审批记录
+------------------------------------------------------------------------
+
+insert TLK_AUDITLIST(
+parent,lastmodified,formname,author, created, formid, istmp,versions,applicationid, stateint,statelabel,auditornames, lastmodifier,domainid,auditorlist,
+item_role,item_signer,item_isagree,item_signdate, item_status, id)
+select parent,lastmodified,formname,author, created, formid, istmp,versions,applicationid,
+ stateint,statelabel,auditornames, lastmodifier,domainid,auditorlist,
+'部门会签' as item_role,'11e3-8661-97a5c599-b8f0-3114050a92f1' as item_signer,
+  '' as item_isagree,'2015-04-01' as item_signdate, '部门会签中' item_status,
+   '11e4-d78f-2c1f95bb-be42-6d2bcaded72a' as id
+  from TLK_AUDITLIST where ID='11e4-d78f-2c1f95bb-be42-6d2bcaded727'
+
+
+
+检查是否已做过付款申请
+select tlk_request_accounts.ITEM_APP_ID, tlk_payment_request.ITEM_APP_id,
+　 TLK_PAID_DETAILs.ITEM_APPLICATIONNO 
+  from TLK_SHOPPING_DETAIL 
+   left join tlk_shopping_lists on tlk_shopping_detail.parent=tlk_shopping_lists.ID 
+   left join TLK_PAID_DETAILS on tlk_shopping_detail.ID=tlk_paid_details.item_did 
+   left join TLK_PAYMENT_REQUEST on tlk_paid_details.PARENT=tlk_payment_request.ID 
+   left join tlk_request_accounts on tlk_paid_details.PARENT=tlk_request_accounts.ID 
+  where tlk_shopping_lists.ITEM_APPLICATIONNO='GW2014003952'
+
+更改ＲＭＢ金额
+ update TLK_BUDGET_DETAILS set ITEM_RMB=ITEM_UNPAID_MONEY 
+   where ITEM_APPLICATIONNO='GC2014000265'
+
+检查是否付过款
+------------------------------------------------------------------------
+
+select * from  TLK_PAID_DETAILS  
+  where ITEM_KEYID in 
+   ( select id from TLK_SHOPPING_DETAIL where PARENT in 
+  (select ID from TLK_SHOPPING_LISTS where ITEM_APPLICATIONNO='GW2014003711'))
+
+
+
+
+加项目号
+update TLK_PRODUCTRESLIST set ITEM_PROJECTNO='PD2014026'
+  where ITEM_APPLICATIONNO='SB2014000066'
+
+在付款申请上增加总监名
+------------------------------------------------------------------------
+
+其它付款，无总监名，
+
+以下加 莫总监
+update tlk_no_subject_apply set item_supername ='11e3-2323-3d926a65-a787-f90fd9b2f6cc'  where ITEM_APP_ID in ('NFK2015001407','NFK2015000023')
+update  TLK_REQUEST_ACCOUNTS  set item_supername ='11e3-2323-3d926a65-a787-f90fd9b2f6cc'
+  where ITEM_APP_ID='FK2015000030'
+  
+
+以下加 扬总监
+update tlk_no_subject_apply set item_supername ='11e3-2324-bc6495dd-a787-f90fd9b2f6cc' 
+ where ITEM_APP_ID in ('NFK2015000355')
+update  TLK_REQUEST_ACCOUNTS  set item_supername ='11e3-2324-bc6495dd-a787-f90fd9b2f6cc'
+  where ITEM_APP_ID='FK2015000355'
+
+
+加王总监
+update tlk_no_subject_apply set item_supername ='11e3-2322-1b118577-a787-f90fd9b2f6cc'
+  where ITEM_APP_ID in ('NFK2015000061')
+update  TLK_REQUEST_ACCOUNTS  set item_supername ='11e3-2322-1b118577-a787-f90fd9b2f6cc'
+  where ITEM_APP_ID='FK2015000117'
+
+加主管
+------------------------------------------------------------------------
+
+聂晶
+select *  reconcile.dbo.TLK_NO_SUBJECT_APPLY set statelabel = '会计部确认中' ,
+   ITEM_SUPERVISOR='11e2-c811-6a2e6250-97c7-cb10a3b3581c',
+    ITEM_SUPERVISOR_DATE='2015-11-1'
+ where ITEM_APP_ID in ('NFK2015000926')
+
+钟经理
+update reconcile.dbo.TLK_NO_SUBJECT_APPLY  
+set ITEM_SUPERVISOR='11e3-2326-80c859b3-a787-f90fd9b2f6cc',
+   ITEM_SUPERVISOR_DATE='2015-2-28'
+ where ITEM_APP_ID in ('NFK2015000471')
+
+加LianFan
+update reconcile.dbo.TLK_NO_SUBJECT_APPLY set 
+   ITEM_SUPERVISOR='11e3-2323-8af33907-a787-f90fd9b2f6cc',
+    ITEM_SUPERVISOR_DATE='2015-03-24'
+ where ITEM_APP_ID in ('NFK2015000750' )
+update reconcile.dbo.TLK_request_accounts set 
+   ITEM_SUPERVISOR='11e3-2323-8af33907-a787-f90fd9b2f6cc',
+    ITEM_SUPERVISOR_DATE='2015-06-19'
+ where ITEM_APP_ID in ('FK2015000668' )
+
+加吴华彦
+
+ update reconcile.dbo.TLK_request_accounts set 
+   ITEM_SUPERVISOR='11e2-1668-e8b8a189-9f9e-e36bd023789d',
+    ITEM_SUPERVISOR_DATE='2015-03-7'
+ where ITEM_APP_ID in ('FK2015000275' )
+ 
+update reconcile.dbo.TLK_NO_SUBJECT_APPLY set 
+   ITEM_SUPERVISOR='11e2-1668-e8b8a189-9f9e-e36bd023789d',
+    ITEM_SUPERVISOR_DATE='2015-03-07'
+ where ITEM_APP_ID in ('NFK2015000290' )
+
+加 靳俊梅
+update reconcile.dbo.TLK_NO_SUBJECT_APPLY set 
+   ITEM_SUPERVISOR='11e3-39e8-b0fd4116-a923-91e085370a8c',
+    ITEM_SUPERVISOR_DATE='2015-09-05'
+ where ITEM_APP_ID in ('NFK2015001895' )
+
+
+导入出错
+
+select * from tlk_request_accounts where ITEM_APP_ID='FK2013000302'
+
+select * from tlk_paid_details where parent='11e3-4ffe-0e658b32-9ce1-2710b5c8a752'
+
+更改购物清单采购部门
+------------------------------------------------------------------------
+
+更改为行政部
+update TLK_SHOPPING_LISTS set ITEM_PURCHASE='11e2-bdd8-b83b0f3e-9df3-6f381f91527a' where ITEM_APPLICATIONNO='GW2015000338'
+update TLK_PROJECT_APPLY set ITEM_PURCHASE='11e2-bdd8-b83b0f3e-9df3-6f381f91527a' where ITEM_APPLICATIONNO='GC2015000055'
+update TLK_PRODUCTRESLIST set ITEM_PURCHASE='11e2-bdd8-b83b0f3e-9df3-6f381f91527a' where ITEM_APPLICATIONNO='SB2015000084'
+  
+
+更改为IT部
+update TLK_SHOPPING_LISTS set ITEM_PURCHASE='11e2-127e-bbec4986-8cc2-8f9267117d58' where ITEM_APPLICATIONNO='GW2015000712'
+
+更改为工程部
+update TLK_PROJECT_APPLY set ITEM_PURCHASE='11e2-7fc5-5a5bb35d-a8fb-3369133e885a' 
+   where ITEM_APPLICATIONNO='GC2015000116'
+  
+
+
+更改购物清单中的剩余没付款数量
+------------------------------------------------------------------------
+
+
+update TLK_SHOPPING_DETAIL  set item_unpaid_money = ITEM_SUMOFMONEY ,
+     item_unpaid_amount = ITEM_AMOUNT 
+  where ID not in (select item_id from tlk_paid_details  )
+   and  parent in
+    (select id from TLK_SHOPPING_LISTS  where ITEM_APPLICATIONNO='GW20130001130')
+    
+update tlk_BUDGET_DETAILS  set item_unpaid_money = ITEM_SUMOFMONEY  
+  where ID  not in (select item_id from tlk_paid_details  )
+   and  parent in
+    (select id from TLK_PROJECT_APPLY  where ITEM_APPLICATIONNO='GC2014000096')
+    
+
+
+在付款名细上加上部门
+------------------------------------------------------------------------
+
+根据付款明系关联到购物清单，根据清单上的部门更新费用归属部门（转帐）
+update tlk_paid_details set item_department = 
+     (  select item_dept from TLK_SHOPPING_DETAIL where  ID=ITEM_ID )
+  where parent= (  select id from tlk_request_accounts
+                    where ITEM_APP_ID='FK2013000302' ) 
+根据付款明系关联到购物清单，根据清单上的部门更新费用归属部门（现金）
+update tlk_paid_details set item_department = 
+     (  select item_dept from TLK_SHOPPING_DETAIL where  ID=ITEM_ID )
+  where parent= (  select id from TLK_PAYMENT_REQUEST 
+                    where ITEM_APP_ID='XJ2013000349' ) 
+
+
+如果系统建单时已带入部门，不用做这步，或用以下命令更安全些
+
+select * from tlk_paid_details
+  inner join TLK_REQUEST_ACCOUNTS on  tlk_paid_details.PARENT=tlk_request_accounts.id 
+  left join TLK_SHOPPING_DETAIL on TLK_PAID_DETAILS.ITEM_ID = TLK_SHOPPING_DETAIL.ID 
+  where item_app_id='FK2013000358'
+
+update tlk_paid_details set tlk_paid_details.item_department = tlk_shopping_detail.item_dept
+   from tlk_paid_details
+  inner join TLK_REQUEST_ACCOUNTS on  tlk_paid_details.PARENT=tlk_request_accounts.id 
+  left join TLK_SHOPPING_DETAIL on TLK_PAID_DETAILS.ITEM_ID = TLK_SHOPPING_DETAIL.ID 
+  where isnull(tlk_paid_details.item_department,'')=''  and item_app_id='FK2013000358'
+
+
+
+办公用品导入
+------------------------------------------------------------------------
+
+从已对好的原始文件整理为标准格式, 需要在用户外部对好的单加上部门，如果depid拿不到，多半是部门名称和系统中的不一至，更改正确为止，同时还会加上找到Keyid
+
+
+select Grp, Contents, Qty, Price, Qty*Price As Amt, Depid, DepDesc, depart ,isnull(Item_keyid ,'') as Keyid
+  from 
+   (
+    SELECT isnull(申请内容,'') as contents, isnull(质管部,0) as Qty , isnull(规格,'') as Spec, 
+        isnull(单价,0) as Price,isnull(用途,'') as Grp , '质检部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(质管部,0)>0
+  
+    union all
+    SELECT isnull(申请内容,''), isnull(AM,0) , isnull(规格,'') as Spec, isnull(单价,0), isnull(用途 ,''),  '行政部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(AM,0)>0
+  
+    union all 
+    SELECT 申请内容,isnull(NPC,0) ,  规格 as Spec,单价,用途 , '新产品部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(NPC,0)>0
+   
+    union all
+    SELECT isnull(申请内容,''),isnull(FD,0) , isnull(规格,'') as Spec, isnull(单价,0), isnull(用途,''), '会计部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(FD,0)>0
+
+    union all
+    SELECT isnull(申请内容,''),isnull(CPD,0) , isnull(规格,'') as Spec, isnull(单价,0),isnull(用途,'') , '化妆品生产部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(CPD,0)>0
+  
+    union all
+    SELECT isnull(申请内容,''),isnull(实验室,0) ,  isnull(规格,'') as Spec,isnull(单价,0),isnull(用途,'') , '实验室' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(实验室,0)>0
+    
+    union all 
+    SELECT isnull(申请内容,''),isnull(前台,0) , isnull(规格,'') as Spec, isnull(单价,0),isnull(用途,'') , '复印室' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(前台,0)>0
+  
+    union all
+    SELECT isnull(申请内容,''),isnull(软膏车间,0) , isnull(规格,'') as Spec, isnull(单价,0),isnull(用途,'') , '软膏车间' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(软膏车间,0)>0
+
+    union all
+    SELECT isnull(申请内容,''),isnull(贴膏车间,0) ,  isnull(规格,'') as Spec,isnull(单价,0),isnull(用途 ,''), '贴膏剂车间' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(贴膏车间,0)>0
+  
+    union all
+    SELECT isnull(申请内容,''),isnull(眼药水车间,0) ,  isnull(规格,'') as Spec,isnull(单价,0),isnull(用途,'') , '眼药水车间' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(眼药水车间,0)>0
+    
+    union all 
+    SELECT isnull(申请内容,''), isnull(RA,0) , isnull(规格,'') as Spec, isnull(单价,0),isnull(用途,'') , '法规部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(RA,0)>0
+  
+    union all
+    SELECT isnull(申请内容,''),isnull(SA,0) , isnull(规格,'') as Spec, isnull(单价,0), isnull(用途 ,''), '环安项目部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(SA,0)>0
+	 		
+    union all
+    SELECT isnull(申请内容,''),isnull(仓库,0) ,  isnull(规格,'') as Spec,isnull(单价,0),isnull(用途,''), '仓库' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(仓库,0)>0
+  
+    union all
+    SELECT isnull(申请内容,''),isnull(PMC,0) ,  isnull(规格,'') as Spec,isnull(单价,0),isnull(用途,'') , '计划' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(PMC,0)>0
+    
+    union all 
+    SELECT isnull(申请内容,''),isnull(RD,0) , isnull(规格,'') as Spec, isnull(单价,0),isnull(用途,'') , '研发部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(RD,0)>0
+  
+    union all
+    SELECT isnull(申请内容,''),isnull(采购部,0) ,  isnull(规格,'') as Spec,isnull(单价,0),isnull(用途 ,''), '采购' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(采购部,0)>0
+         	 	
+    union all
+    SELECT isnull(申请内容,''),isnull(中央称量室,0) , isnull(规格,'') as Spec, isnull(单价,0),isnull(用途 ,''), '中央称量室' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(中央称量室,0)>0
+	 		
+    union all
+    SELECT isnull(申请内容,''),isnull(EN,0) ,  isnull(规格,'') as Spec,isnull(单价,0),isnull(用途 ,''), '工程部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(EN,0)>0
+  
+    union all
+    SELECT isnull(申请内容,''),isnull(EI,0) , isnull(规格,'') as Spec, isnull(单价,0),isnull(用途,'') , '进出口部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(EI,0)>0
+    
+    union all 
+    SELECT isnull(申请内容,''),isnull(IT,0) ,  isnull(规格,'') as Spec,isnull(单价,0),isnull(用途,'') , 'IT部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(IT,0)>0
+  
+    union all
+    SELECT isnull(申请内容,''),isnull(HR,0) ,  isnull(规格,'') as Spec,isnull(单价,0),isnull(用途 ,''), '人力资源部' as depart
+      FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+       'Excel 12.0;Database=c:\work\10月份学友.xlsx', sheet1$)
+        where isnull(HR,0)>0
+        
+    ) as v_core
+  
+  left join    (select NAME as DepDesc,id as depid from obpm.dbo.T_DEPARTMENT ) v_dep
+        on depart = v_dep.depdesc 
+  left join (
+         select item_contents, item_department  , max(item_keyid)  as Item_keyid
+              from  reconcile.dbo.tlk_paid_details  tlk_paid_details 
+            where parent= (  select id from tlk_request_accounts
+                    where ITEM_APP_ID='FK2013000334' ) 
+            group by item_contents, item_department  
+         ) as v_key on v_core.contents=v_key.item_contents
+           and v_dep.depid = v_key.item_department 
+
+
+以下是样例数据，需要检查总金额和用户提供文件中的总金额是否相同
+ Grp, Contents, Qty, Price, Qty*Price As Amt, Depid, DepDesc, depart ，keyid
+B008	斑马小双头油性笔120（黑）	15	5.4	81	11e2-07a0-7fbc60f8-a727-737843936455	质检部	质检部
+B019	四色笔	5	2.25	11.25	11e2-07a0-7fbc60f8-a727-737843936455	质检部	质检部  11e3-63bb-3d7b46c1-b764-fb59ce137192
+B021	圆珠笔	10	0.45	4.5	11e2-07a0-7fbc60f8-a727-737843936455	质检部	质检部  11e3-63ad-440224ff-b764-fb59ce137192
+
+
+ 
+检查整理出来的Excel表
+------------------------------------------------------------------------
+
+检查是否有重复Key
+
+select * FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 'Excel 12.0;Database=c:\work\myapp.xlsx', FK334$)
+ where  keyid in 
+  ( select keyid FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 'Excel 12.0;Database=c:\work\myapp.xlsx', FK334$)
+     group by keyid having COUNT(*)>1    )
+
+
+
+没有找到KeyID的用户清单
+
+SELECT 'fk2013000367', *  FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 'Excel 12.0;Database=D:\holts\myapp12.xlsx', FK367$)
+        where  isnull(item_keyid,'') =''
+         order by grp,depdesc 
+
+
+
+没有核对过的清单：
+
+单号	名称	数量	单价	金额	部门	KeyId
+
+select 'FK2013000305', ITEM_CONTENTS, ITEM_PAY_AMOUNT,ITEM_PAY_UNIT_PRICE,ITEM_PAY_MONEY, DepDesc, ITEM_KEYID 
+   from  tlk_paid_details  left join  (select NAME as DepDesc,id as depid from obpm.dbo.T_DEPARTMENT ) v_dep
+        on ITEM_DEPARTMENT = v_dep.depid   
+  where parent= (  select id from tlk_request_accounts  where ITEM_APP_ID='FK2013000305' ) 
+    and item_keyid   NOT in 
+       ( SELECT  KEYID  FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 'Excel 12.0;Database=c:\work\myapp.xlsx', FK305$)
+           where  isnull(keyid,'') <> ''   )
+      order by ITEM_CONTENTS,DepDesc 
+
+
+这部份数据需要用户手工比对确定。
+
+
+
+
+导入用户核对过的资料 或 用以下命令更正
+------------------------------------------------------------------------
+
+从用户核对好正确的资料中，更新付款申请的单价，数量，金额（转帐）
+select item_department ,ITEM_CONTENTS, ITEM_PAY_AMOUNT, item_pay_unit_price, 
+   ITEM_PAY_MONEY ,    Qty,depdesc,price 
+     from tlk_paid_details  left join 
+       (   select grp,contents,price ,depid,depdesc,  qty 
+             from  OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+              'Excel 12.0;Database=D:\holts\myapp10.xlsx', fk334$)
+          ) as v_tmp on  item_department = v_tmp.depid 
+                 and ITEM_CONTENTS = v_tmp.contents 
+     where parent= (  select id from tlk_request_accounts
+                       where ITEM_APP_ID='FK2013000334' ) 
+
+
+update  TLK_PAID_DETAILS set ITEM_PAY_AMOUNT=Qty,ITEM_PAY_UNIT_PRICE=price,
+      ITEM_PAY_MONEY= qty * price 
+     from tlk_paid_details  left join 
+       (   select grp,contents,price ,depid,depdesc,  qty 
+             from  OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+              'Excel 12.0;Database=D:\holts\myapp10.xlsx', fk334$)
+          ) as v_tmp on  item_department = v_tmp.depid 
+                 and ITEM_CONTENTS = v_tmp.contents 
+     where parent= (  select id from tlk_request_accounts
+                       where ITEM_APP_ID='FK2013000334' ) 
+
+
+
+对于标准导入文件，由于已有Key, 可以直接这样更新（转帐）
+  select * from tlk_paid_details 
+    left join (  select *    from  OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+         'Excel 12.0;Database=D:\holts\myapp10.xlsx', fk297$)
+          ) as v_outside on v_outside.主键 = TLK_PAID_DETAILS.ID 
+      where PARENT = (  select id from tlk_request_accounts
+                    where ITEM_APP_ID='FK2013000297' ) 
+
+ update tlk_paid_details set  ITEM_PAY_AMOUNT=v_outside.Qty,
+    ITEM_PAY_UNIT_PRICE=v_outside.Price,      ITEM_PAY_MONEY= v_outside.Amt,
+      item_department=v_outside.depid 
+   from TLK_PAID_DETAILS 
+    inner join (  select  *    from  OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+         'Excel 12.0;Database=D:\holts\myapp12.xlsx', fk367$)
+          ) as v_outside on v_outside.item_keyid = TLK_PAID_DETAILS.ID 
+      where PARENT = (  select id from tlk_request_accounts
+                    where ITEM_APP_ID='FK2013000367' )   
+ 
+
+对于标准导入文件，由于已有Key, 可以直接这样更新（现金）
+ select * from tlk_paid_details 
+    left join (  select *    from  OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+         'Excel 12.0;Database=D:\holts\myapp10.xlsx', xj349$)
+          ) as v_outside on v_outside.主键 = TLK_PAID_DETAILS.ID 
+      where PARENT = (  select id from TLK_PAYMENT_REQUEST 
+                     where ITEM_APP_ID='XJ2013000349' ) 
+
+  update tlk_paid_details set  ITEM_PAY_AMOUNT=v_outside.当前付款数量,
+    ITEM_PAY_UNIT_PRICE=v_outside.付款单价,
+      ITEM_PAY_MONEY= v_outside.当前付款数量 * v_outside.付款单价 
+   from tlk_paid_details 
+    left join (  select *    from  OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+         'Excel 12.0;Database=D:\holts\myapp10.xlsx', xj349$)
+          ) as v_outside on v_outside.主键 = TLK_PAID_DETAILS.ID 
+      where PARENT = (  select id from TLK_PAYMENT_REQUEST 
+                     where ITEM_APP_ID='XJ2013000349' ) 
+
+删除多余的记录
+------------------------------------------------------------------------
+
+delete TLK_PAID_DETAILS   where item_keyid not in 
+   (  SELECT fk2014000303  FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 'Excel 12.0;Database=c:\work\学友201403.xlsx', update$)
+        where LEN(fk2014000303)>8 )
+   and PARENT in 
+   (select id from TLK_REQUEST_ACCOUNTS where ITEM_APP_ID='FK2014000303')
+

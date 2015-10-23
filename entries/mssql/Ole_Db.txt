@@ -1,0 +1,96 @@
+﻿select * from
+openrowset('SQLoledb','mzlserver11';'sa';'mcl6685596',
+   'select * from ldmis2000.dbo.k31 k31
+      left join ldmis2000.dbo.a01 a01 on k31.a0188=a01.a0188
+      left join ldmis2000.dbo.deptcode deptcode on a01.dept_id=deptcode.dept_id
+    where k31.d9999>=''2012-01-01'' and dept_code like ''01120%''
+    ')
+
+
+select * from 
+openrowset('SQLoledb','192.168.1.205';'sa';'PM428096','select * from dwprc.dbo.dp_PO where Status=''未审核''')
+
+select *  from  
+      openrowset('MSDASQL','PRJ_LIVDTA';'MISCS';'MISCS',
+      ' select * from f4111  where ILDCT NOT IN (''IS'', ''IO'', ''IZ'', '''', ''CG'', ''CP'')
+         and ILMCU=''  ZZS0760210''  and ILLITM=''@ItemNumber''  and ILLOTN =''@Lot'' ')
+
+
+SELECT * FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\产品体积及规格.xls', 体积$)
+
+如果要操作office 2007则需采用如下方式
+SELECT * FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+   'Excel 12.0;Database=D:\holts\tmp1.xlsx', sheet1$)
+
+ 
+
+如果表已存在，SQL语句为：
+
+insert into aa select * from OPENDATASOURCE('Microsoft.Ace.OLEDB.12.0',
+
+'Data Source=D:/OutData.xls;Extended Properties=Excel 12.0')...[sheet1$]
+
+ 
+
+其中，aa是表名，D:/OutData.xls是excel的全路径 sheet1后必须加上$
+
+ 
+
+如果表不存在，SQL语句为：
+
+SELECT * INTO aa FROM OPENDATASOURCE('Microsoft.Ace.OLEDB.12.0',
+
+'Data Source=D:/OutData.xls;Extended Properties=Excel 12.0')...[sheet1$]
+
+ 
+
+其中，aa是表名，D:/OutData.xls是excel的全路径 sheet1后必须加上$
+
+ 
+
+
+
+------------------------
+
+EXEC sp_addlinkedserver VolumeSrv, 'Excel', 'Microsoft.Jet.OLEDB.4.0','d:\mis\zhongshan\仓库\成品报表\产品体积及规格.xls',NULL,'Excel 8.0'
+EXEC sp_addlinkedsrvlogin VolumeSrv, FALSE, NULL, Admin, NULL
+select * from  VolumeSrv...体积$
+
+------------------------
+1，首先创建一个链接的服务器，sp_addlinkedserver 'B'；
+2，其次，创建或更新本地 Microsoft&reg; SQL Server&#8482; 实例上的登录与链接服务器上远程登录之间的映射
+sp_addlinkedsrvlogin 'B', 'false', NULL, 'sa'，''
+3,执行insert B.DB1.dbo.table1 values (1,'20')就可以了.
+
+语法
+sp_addlinkedsrvlogin [ @rmtsrvname = ] 'rmtsrvname'
+    [ , [ @useself = ] 'useself' ]
+    [ , [ @locallogin = ] 'locallogin' ]
+    [ , [ @rmtuser = ] 'rmtuser' ]
+    [ , [ @rmtpassword = ] 'rmtpassword' ]
+
+参数
+[@rmtsrvname =] 'rmtsrvname'
+
+是应用登录映射的链接服务器名称。rmtsrvname 的数据类型为 sysname，没有默认设置。
+
+[@useself =] 'useself'
+
+决定用于连接到远程服务器的登录名称。useself 的数据类型为 varchar(8)，默认设置为 TRUE。true 值指定 SQL Server 验证的登录使用其自己的凭据以连接到 rmtsrvname，而忽略 rmtuser 和 rmtpassword 参数。false 值指定 rmtuser 和 rmtpassword 参数用来连接到特定 locallogin 的 rmtsrvname。如果 rmtuser 和 rmtpassword 也设置为 NULL，则连接链接服务器不需使用任何登录或密码。对于 Windows NT 身份验证登录而言，useself 为 true 则无效，除非 Microsoft Windows NT&reg; 环境支持安全帐户委托，并且，提供程序支持 Windows 身份验证（此时不再需要创建值为 true 的映射，不过创建仍然有效）。
+
+[ @locallogin =] 'locallogin'
+
+本地服务器上的登录。locallogin 的数据类型为 sysname，默认设置为 NULL。NULL 值指定此条目将应用于所有连接到 rmtsrvname 的本地登录。如果值不为 NULL，则 locallogin 可以是一个 SQL Server 登录或 Windows NT 用户。必须授予 Windows NT 用户直接访问 SQL Server 或通过其作为已授予访问权限的组的成员来访问 SQL Server 的权限。
+
+[@rmtuser =] 'rmtuser'
+
+当 useself 为 false 时，用来连接 rmtsrvname 的用户名，rmtuser 的数据类型为 sysname，默认设置为 NULL。
+
+[@rmtpassword =] 'rmtpassword'
+
+与 rmtuser 相关的密码。rmtpassword 的数据类型为 sysname，默认设置为 NULL。
+
+
+
+

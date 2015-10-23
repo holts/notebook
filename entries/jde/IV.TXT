@@ -1,0 +1,104 @@
+﻿.. 关于成本差异分析的说明
+
+========================================================================
+成本差异
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+
+------------------------------------------------------------------------
+ 文档副标题 
+------------------------------------------------------------------------
+
+.. 文档信息栏 :
+
+:作者: holts 
+:Email: holts@mentholatum.com.cn
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2010/08/26 11:27:46 $
+:版权: 此文档版权属于曼秀雷敦，工作权限内你可以自由使用此文档.
+ 
+.. contents:: 内容索引  
+.. section-numbering::
+
+说明
+------------------------------------------------------------------------
+
+在JDE中，一个工单是一个独立的结构，单独进行核算，当工单在过30状态生成Partlist时，系统生成一份差异表F3102，在工单的整个进行过程中，当过98状态进行工单结算时，记录产生的差异。
+
+由于我们的产品结构是由多层构成，在上述情况下，作为一个下层的产品，在上层的Partlist中被当作原料，下层的所有成本已经合并为A1进入到顶层的成本中，这样在进行成本差异分析时，没有办法看出成品的差异和下层的关系。
+
+基于以上的分析，我们想根据产品的层次关系，将下层的差异（那个已合并的A1）拆分为成本结构，并标明层次关系放入表IV进行分析。
+
+数据表结构
+------------------------------------------------------------------------
+
+建立表IV，保存数据
+
+CREATE TABLE [dbo].[IV](
+	[OrderNumber] [decimal](8, 0) NULL,
+	[ItemNumber] [nchar](25) NULL,
+	[SubOrderNo] [decimal](8, 0) NULL,
+	[CostType] [nchar](3) NULL,
+	[Layer] [tinyint] NULL,
+	[ActualQty] [numeric](18, 2) NULL,
+	[ActualAmt] [numeric](18, 2) NULL,
+	[PlanQty] [numeric](18, 2) NULL,
+	[PlanAmt] [numeric](18, 2) NULL,
+	[CompletedQty] [numeric](18, 2) NULL,
+	[CompletedAmt] [numeric](18, 2) NULL,
+	[ScrapQty] [numeric](18, 2) NULL,
+	[ScrapAmt] [numeric](18, 2) NULL,
+	[CurrQty] [numeric](18, 2) NULL,
+	[CurrAmt] [numeric](18, 2) NULL,
+	[StdQty] [numeric](18, 2) NULL,
+	[StdAmt] [numeric](18, 2) NULL
+) ON [PRIMARY]
+
+计算公式
+------------------------------------------------------------------------
+
+costtype in ('A1','B1','C3','C4')
+标准成本差 = PlanAmt - CompletedAmt - ScrapAmt  
+
+costtype in ('A1')    
+生产领用物料差 = ActualAmt - PlanAmt  
+
+costtype in ('A2')     
+废料 = ActualAmt - PlanAmt  
+
+costtype in ('B1','C3')
+生产人工差异 =  ActualAmt - PlanAmt  
+      
+costtype in ('C4')
+专用设备差异 = ActualAmt - PlanAmt  
+
+JDE对应转换关系
+------------------------------------------------------------------------
+
+igdoco as OrderNumber
+igdcto as OrderType
+iglitm as ItemNumber 
+igcost as CostType
+igpart as PCflag
+igopun/10000 as StdQty
+igopat/10000 as StdAmt,
+igclun/10000 as ActualQty
+igclat/10000 as ActualAmt 
+igcccu/10000 as CurrQty
+igccca/10000 as CurrAmt 
+igplun/10000 as PlanQty
+igplat/10000 as PlanAmt,
+igcpun/10000 as CompletedQty
+igcpat/10000 as CompletedAmt 
+igslun/10000 as ScrapQty
+igslat/10000 as ScrapAmt 
+ 
+
+IV表计算方法
+------------------------------------------------------------------------
+
+对于只有一层的产品，直接将F3102中的数据按照对应关系填入IV就可以了，对于多层的产品，则要进行分摊计算。
+
+插入第一层，在插入第二层的时候，
+

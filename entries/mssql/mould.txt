@@ -1,0 +1,363 @@
+﻿
+生成产能数据:
+
+
+delete from prodability
+
+insert prodability(ivcitm,ivlitm,yyyymm,ability,supp)
+select IVCITM,IVLITM ,yyyymm,ability ,supp 
+  from f4104 inner join
+    (SELECT rtrim(ltrim(supp)) as supp,rtrim(ltrim(mould)) as mould,
+        yyyymm,SUM(ability) as ability 
+         FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+       'Excel 8.0;Database=d:\holts\ability.xls', ability$)
+       where rtrim(ltrim(mould)) is not null
+        group by rtrim(ltrim(supp)),rtrim(ltrim(mould)),yyyymm
+      ) as v_ability on mould=IVCITM 
+
+
+
+focus数量
+============================================================================
+
+delete focus
+
+insert focus ( itemnumber,supp,uom,yyyymm,demand)
+select itemno,supp,UOM,yyyymm,demand
+ from 
+(
+
+SELECT itemno,supp,UOM,201401 as yyyymm,
+  SUM(round(isnull(f201401,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201401,0)>0
+  group by itemno,supp,UOM,f201401
+
+union All
+SELECT itemno,supp,UOM,201402 as yyyymm,
+  SUM(round(isnull(f201402,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201402,0)>0
+  group by itemno,supp,UOM,f201402
+
+union All
+SELECT itemno,supp,UOM,201403 as yyyymm,
+  SUM(round(isnull(f201403,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201403,0)>0
+  group by itemno,supp,UOM,f201403
+
+union All
+SELECT itemno,supp,UOM,201404 as yyyymm,
+  SUM(round(isnull(f201404,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201404,0)>0
+  group by itemno,supp,UOM,f201404
+/*
+union All
+SELECT itemno,supp,UOM,201405 as yyyymm,
+  SUM(round(isnull(f201405,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201405,0)>0
+  group by itemno,supp,UOM,f201405
+  */   
+union All
+SELECT itemno,supp,UOM,201406 as yyyymm,
+  SUM(round(isnull(f201406,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201406,0)>0
+  group by itemno,supp,UOM,f201406
+ /* 
+union All  
+SELECT itemno,supp,UOM,201307 as yyyymm,
+  SUM(round(isnull(f201307,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201307,0)>0
+  group by itemno,supp,UOM,f201307
+  */
+union All  
+SELECT itemno,supp,UOM,201308 as yyyymm,
+  SUM(round(isnull(f201308,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201308,0)>0
+  group by itemno,supp,UOM,f201308
+
+union All  
+SELECT itemno,supp,UOM,201309 as yyyymm,
+  SUM(round(isnull(f201309,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201309,0)>0
+  group by itemno,supp,UOM,f201309
+  
+union All  
+SELECT itemno,supp,UOM,201310 as yyyymm,
+  SUM(round(isnull(f201310,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201310,0)>0
+  group by itemno,supp,UOM,f201310
+  
+union All  
+SELECT itemno,supp,UOM,201311 as yyyymm,
+  SUM(round(isnull(f201311,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201311,0)>0
+  group by itemno,supp,UOM,f201311
+  
+union All  
+SELECT itemno,supp,UOM,201312 as yyyymm,
+  SUM(round(isnull(f201312,0),0)) as demand
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', mrp$)
+    where ISNULL(f201312,0)>0
+  group by itemno,supp,UOM,f201312
+  ) as v_core
+ 
+ 
+ 
+ 
+ 
+update focus set yyyymm=yyyymm - 1
+update focus set yyyymm=201312 where yyyymm=201400
+
+
+
+未结PO数据:
+
+select dbo.hf_yyyymm(v_po.PromisedDeliveryDate) as yyyymm, v_po.itemnumber,
+    SUM(v_po.quantityopen) as OpenQty
+  from (
+   select PurchaseOrder.OrderNumber,purchaseorder.ordertype, 
+    PurchaseOrder.ItemNumber, requestdate, PromisedDeliveryDate, OrderDate,
+     QuantityOpen,  transactionuom,quantityopen * uom_conversion.ConversionFactor   Qty ,PrimaryUOM
+    from PurchaseOrder  
+     left join  UOM_Conversion on purchaseorder.ItemNumber=uom_conversion.ItemNumber
+        and purchaseorder.TransactionUOM=uom_conversion.UOM
+         and purchaseorder.PrimaryUOM=uom_conversion.RelatedUOM
+    where PurchaseOrder.ordertype in ('HC','HE','HJ')
+     and orderdate>='20110101' and StatusCodeLastC <>'980'
+       and PurchaseOrder.BU='  ZZS0760210' and QuantityOpen<>0
+         and GLClass = 'IN98'
+   ) as v_po
+ group by  dbo.hf_yyyymm(v_po.PromisedDeliveryDate) , v_po.itemnumber 
+
+
+新格式产能数据
+============================================================================
+  
+select   '90000' as PDKCOO,ord + 90000605 as PDDOCO,'HT' as PDDCTO,
+  '000' as PDSFXO,line*1000 as PDLNID,'  ZZS0760210' as PDMCU,
+  '90000' as PDCO,'' as PDOKCO,'' as PDOORN,'' as PDOCTO, 0 as PDOGNO,
+  '' as PDRKCO,'' as PDRORN,'' as PDRCTO, 0 as PDRLLN,'' as PDDMCT,
+  0 as PDDMCS,'' as PDBALU,aban8 as PDAN8, aban8 as PDSHAN,
+  dbo.hf_date(tdate) as PDDRQJ,dbo.hf_date(tdate) as PDTRDJ,
+  dbo.hf_date(tdate) as PDPDDJ,dbo.hf_date(tdate) as PDOPDJ,
+  0 as PDADDJ,0 as PDCNDJ,0 as PDPEFJ,0 as PDPPDJ,0 as PDPSDJ,
+  0 as PDDSVJ,dbo.hf_date(tdate) as PDDGL,0 as PDPN,'' as PDVR01,
+  '' as PDVR02,0 as PDITM,'' as PDLITM,'' as PDAITM,'' as PDLOCN,
+  '' as PDLOTN,'' as PDFRGD,'' as PDTHGD,0 as PDFRMP,0 as PDTHRP,
+  mould as PDDSC1,'' as PDDSC2,'J' as PDLNTY,'110' as PDNXTR,
+  '100' as PDLTTR,'' as PDRLIT,'' as PDPDS1,'' as PDPDS2,'' as PDPDS3,
+  '' as PDPDS4,'' as PDPDS5,'' as PDPDP1,'' as PDPDP2,'' as PDPDP3,
+  '' as PDPDP4,'' as PDPDP5,'' as PDUOM,0 as PDUORG,0 as PDUCHG,
+  0 as PDUOPN,0 as PDUREC,0 as PDCREC,0 as PDURLV,'' as PDOTQY,
+  0 as PDPRRC,qty*100 as PDAEXP,0 as PDACHG,0 as PDAOPN,0 as PDAREC,
+  0 as PDARLV,0 as PDFTN1,0 as PDTRLV,'' as PDPROV,0 as PDAMC3,
+  0 as PDECST,'' as PDCSTO,	'' as PDCSMP,'' as PDINMG,'' as PDASN,
+  '' as PDPRGR,'' as PDCLVL,'' as PDCATN,10000 as PDDSPR,'30' as PDPTC,
+  'N' as PDTX,'' as PDEXR1,'' as PDTXA1,'' as PDATXT,'' as PDCNID,
+  '' as PDCDCD,'' as PDNTR,'' as PDFRTH,'N' as PDFRTC,'' as PDZON,
+  '' as PDFRAT,'' as PDRATT,0 as PDANBY,0 as PDANCR,'' as PDMOT,'' as PDCOT,
+  '' as PDSHCM,'' as PDSHCN,'' as PDUOM1,0 as PDPQOR,'' as PDUOM2,
+  0 as PDSQOR,'EA' as PDUOM3,0 as PDITWT,'' as PDWTUM,0 as PDITVL,
+  '' as PDVLUM,'' as PDGLC,20 as PDCTRY,12 as PDFY,'' as PDSTTS,
+  '' as PDRCD,'' as PDFUF1,'' as PDFUF2,0 as PDGRWT,'' as PDGWUM,
+  '' as PDLT,'ZZS0760110.802100.210' as PDANI,'00403721' as PDAID,
+  '  ZZS0760110' as PDOMCU,'802100' as PDOBJ,'210' as PDSUB,
+  '' as PDSBLT,'' as PDSBL,'' as PDASID,0 as PDCCMP,'' as PDTAG,
+  '' as PDWR01,'' as PDPL,'' as PDELEV,'' as PDR001,'' as PDRTNR,
+  '' as PDLCOD,'' as PDPURG,'' as PDPROM,'' as PDFNLP,'N' as PDAVCH,
+  '' as PDPRPY,'N' as PDUNCD,'' as PDMATY,'' as PDRTGC,'' as PDRCPF,
+  '' as PDPS01,'' as PDPS02,'' as PDPS03,'' as PDPS04,'' as PDPS05,
+  '' as PDPS06,'' as PDPS07,'' as PDPS08,'' as PDPS09,'' as PDPS10,
+  '' as PDCRMD,'' as PDARTG,0 as PDCORD,'' as PDCHDT,0 as PDDOCC,
+  0 as PDCHLN,'RMB' as PDCRCD,0 as PDCRR,0 as PDFRRC,0 as PDFEA,
+  0 as PDFUC,0 as PDFEC,0 as PDFCHG,0 as PDFAP,0 as PDFREC,'' as PDURCD,
+  0 as PDURDT,0 as PDURAT,0 as PDURAB,'' as PDURRF,'ZZSHOLTS' as PDTORG,
+  'ZZSHOLTS' as PDUSER,'UPDATE' as PDPID,'UPDATE' as PDJOBN,
+    114270 as PDUPMJ,123000 as PDTDAY   
+  from (
+  
+    select ord, suppid, mould, '2014/09/01' as tdate,  1 as line, f201409 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+      
+    union all 
+    select ord, suppid, mould, '2014/10/01' as tdate,  2 as line, f201410 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+            
+    union all 
+    select ord, suppid, mould, '2014/11/01' as tdate,  3 as line, f201411 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+      
+    union all 
+    select ord, suppid, mould, '2014/12/01' as tdate,  4 as line, f201412 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)     
+      
+      
+     union all
+    select ord, suppid, mould, '2015/01/01' as tdate,  5 as line, f201501 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+      
+    union all
+    select ord, suppid, mould, '2015/02/01' as tdate,  6 as line, f201502 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+     
+    union all 
+    select ord, suppid, mould, '2015/03/01' as tdate,  7 as line, f201503 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+      
+    union all
+    select ord, suppid, mould, '2015/04/01' as tdate,  8 as line, f201504 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+    
+    union all
+    select ord, suppid, mould, '2015/05/01' as tdate,  9 as line, f201505 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+     
+    union all 
+    select ord, suppid, mould, '2015/06/01' as tdate,  10 as line, f201506 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+ 
+    union all 
+    select ord, suppid, mould, '2015/07/01' as tdate,  11 as line, f201507 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+
+    union all 
+    select ord, suppid, mould, '2015/08/01' as tdate,  12 as line, f201508 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$) 
+   
+    union all 
+    select ord, suppid, mould, '2015/09/01' as tdate,  13 as line, f201509 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+      
+    union all 
+    select ord, suppid, mould, '2015/10/01' as tdate,  14 as line, f201510 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+            
+    union all 
+    select ord, suppid, mould, '2015/11/01' as tdate,  15 as line, f201511 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)
+      
+    union all 
+    select ord, suppid, mould, '2015/12/01' as tdate,  16 as line, f201512 as qty
+     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=D:\holts\ability.xls', ability$)      
+      
+          
+    ) as v_core left join  f0101 on v_core.suppid=f0101.abac21
+  where qty<>0
+ order by ord,suppid,line
+
+
+ 
+
+上传到MIS/H4311后搬到F4311
+========================================================================
+
+ insert into f4311( PDKCOO,PDDOCO,PDDCTO,PDSFXO,
+  PDLNID,PDMCU,PDCO,PDOKCO,PDOORN,PDOCTO,PDOGNO,PDRKCO,
+  PDRORN,PDRCTO,PDRLLN,PDDMCT,PDDMCS,PDBALU,PDAN8,PDSHAN,
+  PDDRQJ,PDTRDJ,PDPDDJ,PDOPDJ,PDADDJ,PDCNDJ,PDPEFJ,PDPPDJ,
+  PDPSDJ,PDDSVJ,PDDGL,PDPN,PDVR01,PDVR02,PDITM,PDLITM,
+  PDAITM,PDLOCN,PDLOTN,PDFRGD,PDTHGD,PDFRMP,PDTHRP,PDDSC1,
+  PDDSC2,PDLNTY,PDNXTR,PDLTTR,PDRLIT,PDPDS1,PDPDS2,PDPDS3,
+  PDPDS4,PDPDS5,PDPDP1,PDPDP2,PDPDP3,PDPDP4,PDPDP5,PDUOM,
+  PDUORG,PDUCHG,PDUOPN,PDUREC,PDCREC,PDURLV,PDOTQY,PDPRRC,
+  PDAEXP,PDACHG,PDAOPN,PDAREC,PDARLV,PDFTN1,PDTRLV,PDPROV,
+  PDAMC3,PDECST,PDCSTO,PDCSMP,PDINMG,PDASN,PDPRGR,PDCLVL,
+  PDCATN,PDDSPR,PDPTC,PDTX,PDEXR1,PDTXA1,PDATXT,PDCNID,
+  PDCDCD,PDNTR,PDFRTH,PDFRTC,PDZON,PDFRAT,PDRATT,PDANBY,
+  PDANCR,PDMOT,PDCOT,PDSHCM,PDSHCN,PDUOM1,PDPQOR,PDUOM2,
+  PDSQOR,PDUOM3,PDITWT,PDWTUM,PDITVL,PDVLUM,PDGLC,PDCTRY,
+  PDFY,PDSTTS,PDRCD,PDFUF1,PDFUF2,PDGRWT,PDGWUM,PDLT,PDANI,
+  PDAID,PDOMCU,PDOBJ,PDSUB,PDSBLT,PDSBL,PDASID,PDCCMP,PDTAG,
+  
+  PDWR01,PDPL,PDELEV,PDR001,PDRTNR,PDLCOD,PDPURG,PDPROM,
+  PDFNLP,PDAVCH,PDPRPY,PDUNCD,PDMATY,PDRTGC,PDRCPF,PDPS01,
+  PDPS02,PDPS03,PDPS04,PDPS05,PDPS06,PDPS07,PDPS08,PDPS09,
+  PDPS10,PDCRMD,PDARTG,PDCORD,PDCHDT,PDDOCC,PDCHLN,PDCRCD,
+  PDCRR,PDFRRC,PDFEA,PDFUC,PDFEC,PDFCHG,PDFAP,PDFREC,PDURCD,
+  PDURDT,PDURAT,PDURAB,PDURRF,PDTORG,PDUSER,PDPID,PDJOBN,
+  PDUPMJ,PDTDAY)
+select PDKCOO,PDDOCO,PDDCTO,PDSFXO,
+  PDLNID,PDMCU,PDCO,PDOKCO,PDOORN,PDOCTO,PDOGNO,PDRKCO,
+  PDRORN,PDRCTO,PDRLLN,PDDMCT,PDDMCS,PDBALU,PDAN8,PDSHAN,
+  PDDRQJ,PDTRDJ,PDPDDJ,PDOPDJ,PDADDJ,PDCNDJ,PDPEFJ,PDPPDJ,
+  PDPSDJ,PDDSVJ,PDDGL,PDPN,PDVR01,PDVR02,PDITM,PDLITM,
+  PDAITM,PDLOCN,PDLOTN,PDFRGD,PDTHGD,PDFRMP,PDTHRP,PDDSC1,
+  PDDSC2,PDLNTY,PDNXTR,PDLTTR,PDRLIT,PDPDS1,PDPDS2,PDPDS3,
+  PDPDS4,PDPDS5,PDPDP1,PDPDP2,PDPDP3,PDPDP4,PDPDP5,PDUOM,
+  PDUORG,PDUCHG,PDUOPN,PDUREC,PDCREC,PDURLV,PDOTQY,PDPRRC,
+  PDAEXP,PDACHG,PDAOPN,PDAREC,PDARLV,PDFTN1,PDTRLV,PDPROV,
+  
+  PDAMC3,PDECST,PDCSTO,PDCSMP,PDINMG,PDASN,PDPRGR,PDCLVL,
+  PDCATN,PDDSPR,PDPTC,PDTX,PDEXR1,PDTXA1,PDATXT,PDCNID,
+  PDCDCD,PDNTR,PDFRTH,PDFRTC,PDZON,PDFRAT,PDRATT,PDANBY,
+  PDANCR,PDMOT,PDCOT,PDSHCM,PDSHCN,PDUOM1,PDPQOR,PDUOM2,
+  PDSQOR,PDUOM3,PDITWT,PDWTUM,PDITVL,PDVLUM,PDGLC,PDCTRY,
+  PDFY,PDSTTS,PDRCD,PDFUF1,PDFUF2,PDGRWT,PDGWUM,PDLT,PDANI,
+  PDAID,PDOMCU,PDOBJ,PDSUB,PDSBLT,PDSBL,PDASID,PDCCMP,PDTAG,
+  PDWR01,PDPL,PDELEV,PDR001,PDRTNR,PDLCOD,PDPURG,PDPROM,
+  PDFNLP,PDAVCH,PDPRPY,PDUNCD,PDMATY,PDRTGC,PDRCPF,PDPS01,
+  PDPS02,PDPS03,PDPS04,PDPS05,PDPS06,PDPS07,PDPS08,PDPS09,
+  PDPS10,PDCRMD,PDARTG,PDCORD,PDCHDT,PDDOCC,PDCHLN,PDCRCD,
+  PDCRR,PDFRRC,PDFEA,PDFUC,PDFEC,PDFCHG,PDFAP,PDFREC,PDURCD,
+  PDURDT,PDURAT,PDURAB,PDURRF,PDTORG,PDUSER,PDPID,PDJOBN,
+  PDUPMJ,PDTDAY
+   from mis/h4311
+
+
+
+ insert into f4301(  PhKCOO,PhDOCO,PhDCTO,PhSFXO, 
+  PhMCU, PhAN8,PhSHAN,  PhDRQJ,PhTRDJ,PhPDDJ,PhOPDJ ,
+   phptc,phexr1,phtxa1,phcrrm,phcrcd  )
+ select  PDKCOO,PDDOCO,PDDCTO,PDSFXO, PDMCU, PDAN8,PDSHAN,
+   max(PDDRQJ),max(PDTRDJ),max(PDPDDJ),max(PDOPDJ) ,
+    30,'V','ZS17','D','RMB'
+   from f4311 where pddcto='HT'
+     and pddoco>'90000605'
+  group by PDKCOO,PDDOCO,PDDCTO,PDSFXO, 
+   PDMCU, PDAN8,PDSHAN 
+
+G00-->16 更改HT单号为 当前最大单号 + 1
+
+update f4301 set phtrdj=today() 
+  where phdcto='HT' and phdoco>'90000605'
+update f4311 set pdtrdj=today()
+  where pddcto='HT'  and pddoco>'90000605'
+

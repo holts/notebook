@@ -1,0 +1,171 @@
+﻿
+提取系统当前用户
+------------------------------------------------------------------------
+DSPUSRPRF USRPRF(*ALL) OUTPUT(*OUTFILE) outfile(temp/user)
+从操作系统生成用户资料表
+
+下载到PC机 user_profile.xls
+
+
+从JDE下载F0092,F00821,F0083，导入数据库
+------------------------------------------------------------------------
+
+delete f0092
+insert f0092(uluser,ulmni,ulipgm,ulugrp)
+select uluser as Userid, ulmni as menu ,ulipgm,ulugrp
+   FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0',  'Excel 8.0;Database=D:\holts\f0092.xls', f0092$)
+
+delete f00821
+insert f00821(mzmni,mzseln,mzmtoe, mzjtoe,mzopky,mzver)
+  select  mzmni,mzseln, MZMTOE ,mzjtoe,mzopky,mzver 
+   FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 'Excel 8.0;Database=D:\Holts\f00821.xls', f00821$)
+        -- where MZMTOE is not  null
+
+//,mzjtoe,mzopky,mzver
+//select  mzmni,mzseln, MZMTOE, mzjtoe  into f00821A
+//  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 'Excel 8.0;Database=D:\Holts\f00821.xls', f00821$)
+//    group by mzmni,mzseln, MZMTOE,mzjtoe 
+         
+delete f0083
+insert f0083(mtmni,mtseln,mtmntx)
+  select  mtmni, mtseln,  mtmntx  
+    FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 'Excel 8.0;Database=D:\holts\f0083.xls', f0083$)
+        where isnull(mtlngp,'')=''
+
+生成顶层菜单
+------------------------------------------------------------------------
+
+delete topmenu
+insert topmenu(userid,name,grp,corp,mtmni,mtseln,mtmntx)
+select  v_usr.UPUPRF as userid, v_usr.uptext as name,  v_usr.grp,
+    SUBSTRING(v_usr.upuprf,1,3) as Corp, mtmni,mtseln,mtmntx 
+ from (
+  select  UPUPRF ,uptext, isnull(case when ulipgm='JRFINIT' then 'RFS' else ulugrp end ,'') as grp,ulmni 
+        FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+            'Excel 8.0;Database=D:\holts\user_profile.xls', user_profile$)
+              inner join f0092 on upuprf=uluser
+     where  upstat='*ENABLED'
+ ) as v_usr left join f0083 on v_usr.ulmni = mtmni
+
+ 
+    
+
+再刷新MIS报表
+------------------------------------------------------------------------
+
+select v_core.grp as dept, v_core.userid, v_core.name, substring(v_core.name,1,5) AS 'deptname',v_core.mtmni, v_core.mtseln, 
+   v_core.mtmntx,   f00821.mzmtoe, v_submenu.mtseln as SubMenuNo, 
+       v_submenu.mtmntx as SubMenuText
+  from 
+   ( select grp, userid,name,mtmni,mtseln,mtmntx  
+       from topmenu   where userid like 'ZZS%'
+         ) as v_core
+  left join f00821 on f00821.mzmni = v_core.mtmni  
+         and f00821.mzseln = v_core.mtseln
+    and MZMTOE is not  null
+ left join f0083 v_submenu on f00821.mzmtoe = v_submenu.mtmni
+
+
+
+
+
+
+以下旧方法弃用
+========================================================================
+
+将下面的结查贴到新建的user sheet
+
+select  UPUPRF ,uptext, isnull(case when ulipgm='JRFINIT' then 'RFS' else ulugrp end ,'') as grp,ulmni 
+        FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+            'Excel 8.0;Database=D:\holts\user_profile.xls', user_profile$)
+              inner join 
+                ( select uluser, ulmni, ulipgm, ulugrp 
+                   FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+                    'Excel 8.0;Database=D:\holts\f0092.xls', f0092$)
+                ) v_menu  on upuprf=uluser 
+    where  upstat='*ENABLED'
+
+
+
+
+从指定的用户分组清单中提取顶层菜单 贴到user_profile.xls 中的topmenu sheet (执行时间约4小时)
+------------------------------------------------------------------------
+
+select  UPUPRF as userid,uptext as name,   grp,
+    SUBSTRING(upuprf,1,3) as Corp, mtmni,mtseln,mtmntx 
+        FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+            'Excel 8.0;Database=D:\holts\user_profile.xls', user$)
+      left join 
+              (   select  mtmni, mtseln,  mtmntx  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+                          'Excel 8.0;Database=D:\Holts\f0083.xls', f0083$)
+                        where isnull(mtlngp,'')=''
+                   )  as v_submenu on ulmni = v_submenu.mtmni
+
+
+ 
+ 
+
+
+从指定的用户分组清单中提取顶第二层菜单
+------------------------------------------------------------------------
+
+select v_core.grp as dept, v_core.userid, v_core.name, v_core.mtmni, v_core.mtseln, 
+   v_core.mtmntx,   v_f00821.mzmtoe, v_submenu.mtseln as SubMenuNo, 
+       v_submenu.mtmntx as SubMenuText
+  from 
+   ( select grp, userid,name,mtmni,mtseln,mtmntx  FROM OPENROWSET    
+          ('Microsoft.Jet.OLEDB.4.0', 'Excel 8.0;Database=D:\Holts\user_profile.xls', TopMenu$)
+      -- where userid like 'ZZS%'
+         ) as v_core
+  left join 
+     (
+        select  mzmni,mzseln, MZMTOE FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+          'Excel 8.0;Database=D:\Holts\f00821.xls', f00821$)
+         where MZMTOE is not  null
+     )  as v_f00821 on v_f00821.mzmni = v_core.mtmni  
+         and v_f00821.mzseln = v_core.mtseln
+ left join 
+     (
+        select  mtmni, mtseln,  mtmntx  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+       'Excel 8.0;Database=D:\holts\f0083.xls', f0083$)
+         where isnull(mtlngp,'')=''
+     )  as v_submenu on v_f00821.mzmtoe = v_submenu.mtmni
+
+
+以下速度太慢作废
+------------------------------------
+select v_core.dept,v_core.userid,v_core.name, v_f0083.mtseln, v_f0083.mtmntx,
+   v_f00821.mzmtoe, v_submenu.mtseln as SubMenuNo,  v_submenu.mtmntx as SubMenuText
+  from 
+   ( select '' as  dept, upuprf as userid  ,uptext as name
+        FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+       'Excel 8.0;Database=D:\holts\user_profile.xls', user_profile$)
+           where upuprf like 'ZZS%'
+      ) as v_core
+ left join 
+     ( select uluser as Userid, ulmni as menu 
+          FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+       'Excel 8.0;Database=D:\holts\f0092.xls', f0092$)
+     ) as v_t1 on v_core.userid=v_t1.userid
+ left join 
+     (
+        select  mtmni, mtseln,  mtmntx  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+        'Excel 8.0;Database=D:\holts\f0083.xls', f0083$)
+         where isnull(mtlngp,'')=''
+     )  as v_f0083 on v_t1.menu = v_f0083.mtmni  
+ left join 
+     (
+        select  mzmni,mzseln, MZMTOE FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+       'Excel 8.0;Database=D:\holts\f00821.xls', f00821$)
+         where MZMTOE is not  null
+     )  as v_f00821 on v_f00821.mzmni = v_f0083.mtmni  
+         and v_f00821.mzseln = v_f0083.mtseln
+ left join 
+     (
+        select  mtmni, mtseln,  mtmntx  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+       'Excel 8.0;Database=D:\holts\f0083.xls', f0083$)
+         where isnull(mtlngp,'')=''
+     )  as v_submenu on v_f00821.mzmtoe = v_submenu.mtmni
+
+
+

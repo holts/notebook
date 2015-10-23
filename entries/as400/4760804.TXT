@@ -1,0 +1,171 @@
+﻿.. The routing quantities is zero
+
+================================================================================
+The routing quantities is zero
+================================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+--------------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+--------------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2006/04/12 11:27:46 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+--------------------------------------------------------------------------------
+
+To: Sydney-Support@peoplesoft.com
+From: holts@mentholatum.com.cn
+Subject: JDE error
+
+Client number: 5331151
+No case number yet
+Software release: World A7.3
+Cumulative updates: 00014
+Contact person: Holts He
+Contact Number: 86-760-6685596-6828
+
+Hi,
+
+I have steps on my routing that are completed by outside operations, then run order procession to create purchase (P31410), when I record the receipt? (P4312), a window automatically displays for me to update the routing quantities and status (P3103), that's ok, but if I change location at purchase, why routing quantities is zero ? ask for your help.  
+
+--------------------------------------------------------------------------------
+To: holts@mentholatum.com.cn
+From: PeopleSoft-CRM@peoplesoft.com
+Subject: JDE error
+
+The status of your case has been changed to 0-Awaiting Customer Response
+
+--------------------------------------------------------------------------------
+To: holts@mentholatum.com.cn
+From: jeff.meese@oracle.com
+Subject: Case 4760804
+
+Holts,
+
+Regarding your outside operation issue, I have attached a white paper regarding outside operations.
+
+Does the process you describe work if you don't change locations?
+Meaning does this process you describe fail only when you try to change locations?
+
+Can you email screen shots to illustruate what you are seeing? It will help in testing here to duplicate your issue. Thanks
+
+
+________________________________________
+Title: Outside Operations Explanation, Set Up, Execution, and Accounting
+Abstract:  An Outside Operation is Manufacturing’s vehicle to interface with Accounts Payable, so that when the vendor sends an Invoice for their services, there is a Purchase Order in the system to Voucher Match.  It is important to remember that an Outside Operation is nothing more than the payment for services rendered.  It is not an inventoried item. The set up of an outside operation is not complicated but you must follow each step exactly or you will not produce the desired results.
+________________________________________
+Special Notes:  This paper is applicable to JD Edwards World Software
+________________________________________
+Table of Contents
+Item Master
+Item Branch
+Work Center
+Routing Master
+Standard Cost Simulation
+Generate and Print Work Orders
+Receipts by Purchase Order
+Manufacturing WIP Journal Entries
+________________________________________
+F4101 – Item Master:
+The Item Number (LITM) must be formatted as follows:  
+Parent Item Number + *OP + the Operation Sequence number from the corresponding routing step, i.e. 333*OP10. 
+Note: JD Edwards World software supports decimal separated operation sequence numbers. EnterpriseOne software does not support this convention. 333*OP10.6 is not supported by EnterpriseOne. 
+If you use the Short Item Number (ITM), or the Catalog Number (AITM) the Purchase Order will not be created; product costing will not generate a D cost component for the parent and a cost for the Outside Operation in the P30026 will not be generated.
+The Stocking Type is X (STKT)
+UDC table 41/I requires a P for purchased part in the 1st character position of the second description field of the X stocking type. 
+The Line Type is an X (LNTY)
+The Line Type helps maintain the link between the Purchase Order and the Work Order by controlling whether or not the P3103 video is displayed after Purchase Order Receipt. 
+Inventory Interface for Line Type X
+The Inventory Interface for an Outside Operation is set up on Menu G4241 number 2, Order Line Types, P40205.  For Line Type X the inventory interface must be set to Yes.
+The dollar or unit value of any activity containing this line type will be reflected in inventory. Y is the default value and is correct in this special case. If the interface is changed to No the *OP item will be created with the Short Item ID instead of the 2nd item number and a valid PO will not generate. If the Interface is set to D the system will not generate the P3103 pop up window for the work order routing quantities and status.
+Inventory Cost Level of 1 or 2 (CLEV)
+Inventory Cost Level 3 is not supported because Outside Operations are not inventory items, but rather the payment for services rendered. As a result of this, the functionality for Multi-Location, Lot Numbers or Serial Numbers was not included.  Do not make the *OP item lot controlled because at Purchase Order Receipt an OV will be written to the Cardex in the location that is in the fold of the Purchase Order (LOCN), but the corresponding IM will always be written to the Primary Location, therefore causing integrity problems. 
+F4102 – Item Branch:
+The Stocking Type and Line Type will default from the Item Master. Do not change them. 
+A value must be keyed into the P4105, Item Cost Revisions, because this is a special type of purchased part with stocking type X. This value will be used for Cost Simulations.
+  
+Back to Top
+F3006 – Work Center:
+The Pay Point should be zero.  It could be an "M" if there are really long lead times.
+The Prime Load Code should be the letter O. 
+Critical Work Center should be N (no). 
+Populate the Move or Queue hours if you want the lead-time to default into the routing, if not, manually key the fields in the Routing.  
+Back to Top
+F3003 – Routing Master:
+The routing sequence number for the outside operation step must correspond to the one used when defining the outside operation item number. 333*OP10 indicates the routing operation sequence number is 10.00. 
+In the fold of the Routing step populate the following fields:
+Supplier Number (VEND) – the number keyed in here must be a valid Address Book number and is the Supplier for Purchase Order that will be generated. 
+PO (POY) – there must be a Y in this field to generate a purchase order. 
+Cost Type (COST) – this field contains the cost component type used in Product Costing and Manufacturing Accounting.  JD Edwards uses the D cost component type for Outside Operations.  If multiple Outside Operation steps exist on the same Routing, then use a different number for each Outside Operation.  For example: D1, D2, D3, etc.  Each of these Cost Component Types must be defined in the UDC table 30/CA with the Special Handling Code set to 1 in the fold. 
+If outside operations are not being used the Cost Component Type field must be blank or Manufacturing Accounting, P31802, Job Logs with a Divide by Zero error.
+The Outside Operation cannot be the last step on the Routing for two reasons.
+1)  If using Super Backflush the final completion cannot be set up to an outside operation work center because the pay point is zero.  The last routing operation therefore must be a payable pay point, not an outside operation step.
+2)  The purchasing receipt does NOT update the F43121 which in turn prevents a voucher match. 
+Note: A work around is to add an additional step to the routing, such as "receive outside op", with zero machine or labor hours.  
+Back to Top
+P30820 – Standard Cost Simulation:
+In Processing Option number 7, key in a valid P4105 cost method that has a cost value associated with it for the Outside Operation.  The result of a successful completion of P30820 yields an A1 cost for the *OP item and a D cost type on the Parent Item for the Outside Operation.
+P30835/R30835 - Frozen Update
+Freeze the costs.
+F4801 – Work Order Master File:
+A record will be added in the Work Order Master file if a Work Order is manually entered, a MRP message is answered to create a Work Order, or if a Sales Order with W line type is entered.  
+Back to Top
+P31410 – Generate and Print Work Orders/Order Processing:
+The work order routing must be attached using P31410 or no Outside Operation Purchase Order will be generated.  The P31410 will call the P3420, Write Purchase Order program, to generate the PO. In A81 the version of P3420 called can be specified.
+When P31410 completes normally, the Related PO fields in the fold will be populated with the Related Purchase Order Number and Document Type.  When P31410 attaches the routing a F3112 record is created for the Outside Operation.  This record has the Quantity, UORG, and Quantity at Operation, QMTO, populated with the quantity that the Purchase Order was issued for.
+Generation:  Enter either a 2 or a 3 to attach a routing. 
+Purchase Order Information:  
+Enter the Purchase Order Document Type, for example OP. 
+Enter line type X. 
+Enter the beginning status that corresponds to the Order Activity Rules for Purchasing. 
+Back to Top
+P4312 – Receipts by Purchase Order:  (G43A11, number 7)
+1)  Receive the Outside Operation Purchase Order by keying a 1 into the option field and pressing enter. Be sure the Location (LOCN) and Lot/SN (LOTN) fields are blank in the fold of the Purchase Order. The beginning status and document type must match the values of the processing options in P31410 (Order Processing), P4311 (Purchase Order Entry) and P4312 (Receipts by Purchase Order).  Be sure also that the Order Activity Rules are be setup for Line Type X.  These are located on G43A41, number 3.
+Note:  Once the Purchase Order is received an OV transaction is written to the Cardex increasing the on-hand balance.  The P3103 window is displayed immediately after hitting enter to receive the Purchase Order. This window creates an IM record in the Cardex for the opposite amount of the OV. The net effect is a zero on-hand balance in the Cardex.
+The IM will always be written to the primary location.
+Note:  In the F3112, after Purchase Order Receipt, the Quantity (UORG) remains the same but the Quantity at Operation (QMTO) is decreased by the quantity received, and the Quantity Shipped (SOQS) is increased by the quantity received.
+2)  There are three Purchasing AAI's that are generally used: 4310 - Inventory,  4320 - Received not Vouchered, and  4335 - Standard Cost.
+When a receipt is entered, the AAI's that are populated are:
+4310 with a Debit (this should be an off setting account with 3401)
+4320 with a Credit
+The 4320 AAI table interfaces with Accounts Payable. 
+The 4310 balances the journal entry for 4320.  
+Back to Top
+P31802 – Manufacturing WIP Journal Entries:
+1)  After the Outside Operation Purchase Order has been received in all or in part, the P31802 can be run to produce IH Journal Entries that relate to the Outside Operation.
+2) The AAI's that are generally used by P31802 for the Outside Operation are 3120 – Work in Process and 3401 – Accruals. 
+            3120 with a Debit
+            3401 with a Credit (This should be an off setting account with the 4310)
+The 3120 AAI table is the value of the Outside Operation and is incorporated into the parent cost. It is the value of WIP.  The 3401 balances the journal entry for 3120.  The 3401 should be the same account number as the 4310, because other than balancing the 3120 and 4320, they are relatively meaningless.                
+Note – The P31802 performs the following calculation:  (SOQS – CLUN) * F30026 of the Outside Operation.
+SOQS = Quantity shipped from F3112    
+CLUN = Actual Units from the F3102
+(These fields are internal to the system and cannot be viewed on a video.)
+An IH document type journal entry is created for this amount.
+After the calculation takes place, the system updates the CLUN in the F3102 to match the SOQS in the F3112.  This ensures that duplicate IH Journal Entries are not created for the Outside Operation.
+Note – The Batch Number, G/L Date, User ID, and Program ID are not updated in the Cardex for the IM entry that correspond to the Outside Operation.
+
+--------------------------------------------------------------------------------
+To: jeff.meese@oracle.com
+From: holts@mentholatum.com.cn
+Subject: Case 4760804
+
+Jeff,
+
+That's Ok, please close this case, thank you very much.
+
+

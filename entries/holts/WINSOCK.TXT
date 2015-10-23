@@ -1,0 +1,28 @@
+﻿很多网友都遇到杀完病毒后，能上QQ确不能浏览网页的问题！那可能就是winsock被破坏了！有三种方法可修复！     
+     工具修复方法
+     下载工具“WinSockXPFix”软件，运行后 先选择REG-BACKUP对注册表进行备份，然后点击FIX对注册表进行修复，重启系统后便可上网！如是固定IP，请重新设置一下！
+
+      手工修复方法！
+
+   　方法1、 如果要在已安装 Windows XP Service Pack 2 (SP2) 的系统内修复 Winsock，在命令提示行中输入 netsh winsock reset，然后按下 ENTER。执行这个命令后，重新启动电脑即可
+
+　　方法2、 如果要在未安裝 Windows XP SP2 的情況下修复 Winsock，请刪除毀损的winsock键值，然后重新安裝 TCP/IP 协议。
+    步驟 1：刪除毀损的winsock键值
+    1. 点击 [开始]，然后选择 [运行]。 
+    2. 输入 regedit，然后按一下 [确定]。 
+    3. 依次来到下面路径，再用右鍵点击该项目，然后按 [刪除]：
+    HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Winsock
+    HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Winsock2  
+    4. 提示您是否确定要刪除时，请点击 [是]。 
+    注意 刪除 Winsock 机码之后，请重新启动电脑。系统就会为winsock键值建立新的键值。如果刪除 Winsock 键值之后沒有重新启动电脑，下一个步骤就會无法正确执行。
+
+    步驟 2：安裝 TCP/IP
+    1. 到控制面板－网络连接，右击本地连接，再选择 [属性]。 
+    2. 选择[安裝]。 
+    3. 选择 [协议]，然后选择 [添加]。  
+    4. 选择 [从磁盘安裝]。 
+    5. 输入 C:\Windows\inf，然后点击 [确定]。 
+    6. 在网络协议框选择 [Internet Protocol 协议 (TCP/IP)]，然后按 [确定]。 
+    7. 重新启动电脑即可。
+原文出处：
+http://bbs.bitscn.com/viewthread.php?tid=63070& ... 3&extra=page%3D1#pid595563

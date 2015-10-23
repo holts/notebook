@@ -1,0 +1,51 @@
+﻿
+
+安装 python-2.7.6.amd64
+
+
+下载安装webpi
+http://www.microsoft.com/web/downloads/platform.aspx
+
+安装完成后，运行webpi, 查找Web Matrix
+
+添加找到的最新版的Web Matrix记录：
+Microsoft WebMatrix 3
+
+在安装界面点右下角的选项，在打开的在选项中，在自定义源栏位输入最新版的(iiswsgi) *.webpi.xml链接地址：
+https://github.com/downloads/rpatterson/iiswsgi/iiswsgi-0.3-py2.7-win32.webpi.xml
+
+在使用哪种Web服务器栏，选 IIS Express
+确认后，回到主窗口，开始安装。
+
+
+
+
+easy_install -U iiswsgi
+
+从https://github.com/rpatterson/iiswsgi下载iiswsgi文件
+
+Copy the following to the dist root and adjust as appropriate:
+
+    examples/pyramid.msdeploy/Manifest.xml.in
+    examples/pyramid.msdeploy/Parameters.xml
+    examples/pyramid.msdeploy/iis_install.stamp.in
+    examples/pyramid.msdeploy/web.config.in
+
+定制setup.py
+
+...
+from iiswsgi import install_msdeploy
+...
+class install_custom_msdeploy(install_msdeploy.install_msdeploy):
+    def run(self):
+        """Perform custom tasks."""
+        os.environ['WEB_CONFIG_VAR'] = 'foo'
+        self.pre_install()
+        CUSTOM_SETUP
+        self.post_install()
+...
+setup(
+...
+      cmdclass=dict(install_msdeploy=install_custom_msdeploy),
+...
+

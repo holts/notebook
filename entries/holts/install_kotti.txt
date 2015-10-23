@@ -1,0 +1,234 @@
+﻿.. 在Windows 2008 sp2 下安装Kotti
+
+========================================================================
+Install Kotti
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2014/05/29 15:00:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+安装前的准备工作
+========================================================================
+
+在windows下安装kotti, 有些包需要编绎，所以需要建立VC的编绎环境，请先从官网下载安装 Visual Studio 2010 Express Edition. The main Visual Studio 2010 Express installer is available from (the C++ installer name is vc_web.exe):
+
+Install the Microsoft Windows SDK  for Windows Server 2008. The Microsoft Windows SDK is available by searching Microsoft's download site, or by going directly to: http://www.microsoft.com/downloads/details.aspx?FamilyId=E6E1C3DF-A74F-4207-8586-711EBE331CDC&displaylang=en 
+
+To verify that you have all installed components, check that the Microsoft SDK contains the "amd64" version of the C/C++ compiler "cl.exe". This is usually installed into
+
+C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\amd64\cl.exe
+
+copy .../VC/bin/vcvars64.bat to .../VC/bin/vcvarsamd64.bat
+
+copy .../VC/bin/vcvars64.bat to .../VC/bin/amd64/vcvarsamd64.bat
+
+安装完成后，重新启动系统
+
+每次当需要使用编绎时，打开CMD窗口，然后在命令行执行：
+
+set DISTUTILS_USE_SDK=1
+set MSSdk=1
+C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat
+
+python setup.py install
+
+
+其实可以不用装 2010 express  ,只是SDK有时会缺少一些 .H文件，这时就可以从2010 Express中复制，如果要使用2010 express，则 执行C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvarsall.bat
+
+有时还要设以下环境变量
+SET VS90COMNTOOLS=%VS100COMNTOOLS%
+
+还可以更暴力，在“..python安装路径...\Lib\distutils目录下有个msvc9compiler.py找到243行  toolskey = "VS%0.f0COMNTOOLS" % version   直接改为 toolskey = "VS你的版本COMNTOOLS" (这个就是为什么要配 ”VS90COMNTOOLS“ 的原因，因为人家文件名都告诉你了是  Microsoft vc 9的compiler,   代码都写死了要vc9的comntools，就要找这个玩意儿，找不到不干活)
+
+
+
+安装Kotti
+========================================================================
+
+It is recommended to install Kotti inside a virtualenv:
+
+.. code-block:: cmd
+
+  virtualenv mysite
+  cd mysite
+  bin/pip install -r https://raw.github.com/Kotti/Kotti/master/requirements.txt
+
+This will install Kotti master and all its requirements into your virtualenv.
+
+其中，py-bcrypt安装不成功，从https://github.com/wcdolphin/python-bcrypt下载源文件单独安装成功。
+
+Kotti uses Paste Deploy for configuration and deployment. An example configuration file is included with Kotti's source distribution. Download it to your virtualenv directory (mcl):
+
+.. code-block:: cmd
+
+  wget https://github.com/Kotti/Kotti/raw/master/app.ini
+
+See the list of Kotti tags, perhaps to find the latest released version. You can search the Kotti listing on PyPI also, for the latest Kotti release (Kotti with a capital K is Kotti itself, kotti_this and kotti_that are add-ons in the list on PyPI).
+
+To run Kotti using the app.ini example configuration file:
+
+bin/pserve app.ini
+
+This command runs Waitress, Pyramid's WSGI server, which Kotti uses as a default server. You will see console output giving the local URL to view the site in a browser.
+
+运地成功后，系统自动生成Kotti数据库文件
+
+现在系统结构看起来象这样
+
+c:\work\aerp
+
+├─Include
+├─Lib
+│  ├─distutils
+│  ├─encodings
+│  └─site-packages
+│      ├─alembic
+│      ├─alembic-0.5.0-py2.7.egg-info
+│      ├─babel
+│      ├─Babel-0.9.6-py2.7.egg-info
+│      ├─beaker
+│      ├─Beaker-1.6.4-py2.7.egg-info
+│      ├─chameleon
+│      ├─Chameleon-2.11-py2.7.egg-info
+│      ├─colander
+│      ├─colander-1.0b1-py2.7.egg-info
+│      ├─deform
+│      ├─deform-2.0a2-py2.7.egg-info
+│      ├─docopt-0.6.1-py2.7.egg-info
+│      ├─fanstatic
+│      ├─fanstatic-1.0a5-py2.7.egg-info
+│      ├─formencode
+│      ├─FormEncode-1.2.6-py2.7.egg-info
+│      ├─html2text-3.200.3-py2.7.egg-info
+│      ├─js
+│      ├─js.angular-1.1.4-py2.7.egg-info
+│      ├─js.bootstrap-3.1.1-py2.7.egg-info
+│      ├─js.chosen-0.9.11-py2.7.egg-info
+│      ├─js.deform-2.0a2_1-py2.7.egg-info
+│      ├─js.fineuploader-3.3.0-py2.7.egg-info
+│      ├─js.html5shiv-3.6.2_1-py2.7.egg-info
+│      ├─js.jquery-1.9.1-py2.7.egg-info
+│      ├─js.jqueryui-1.10.3-py2.7.egg-info
+│      ├─js.jqueryui_tagit-2.0.24_2-py2.7.egg-info
+│      ├─js.jquery_form-3.09-py2.7.egg-info
+│      ├─js.jquery_maskedinput-1.3.1-py2.7.egg-info
+│      ├─js.jquery_maskmoney-1.4.1-py2.7.egg-info
+│      ├─js.jquery_sortable-0.9.12-py2.7.egg-info
+│      ├─js.jquery_tablednd-0.4-py2.7.egg-info
+│      ├─js.jquery_timepicker_addon-1.3_1-py2.7.egg-info
+│      ├─js.modernizr-2.5.3.1-py2.7.egg-info
+│      ├─js.tinymce-4.0.12-py2.7.egg-info
+│      ├─kotti
+│      ├─Kotti-0.10a1-py2.7.egg-info
+│      ├─kotti_tinymce
+│      ├─kotti_tinymce-0.5a1-py2.7.egg-info
+│      ├─lingua
+│      ├─lingua-1.5-py2.7.egg-info
+│      ├─mako
+│      ├─Mako-0.8.0-py2.7.egg-info
+│      ├─markupsafe
+│      ├─MarkupSafe-0.15-py2.7.egg-info
+│      ├─paste
+│      ├─PasteDeploy-1.5.0-py2.7.egg-info
+│      ├─peppercorn
+│      ├─peppercorn-0.4-py2.7.egg-info
+│      ├─PIL
+│      ├─Pillow-2.4.0.dist-info
+│      ├─pip
+│      ├─pip-1.5.4.dist-info
+│      ├─plone
+│      ├─plone.scale-1.3.1-py2.7.egg-info
+│      ├─polib-1.0.3-py2.7.egg-info
+│      ├─pygments
+│      ├─Pygments-1.6-py2.7.egg-info
+│      ├─pyramid
+│      ├─pyramid-1.5a2-py2.7.egg-info
+│      ├─pyramid_beaker
+│      ├─pyramid_beaker-0.7-py2.7.egg-info
+│      ├─pyramid_chameleon
+│      ├─pyramid_chameleon-0.1-py2.7.egg-info
+│      ├─pyramid_debugtoolbar
+│      ├─pyramid_debugtoolbar-1.0.9-py2.7.egg-info
+│      ├─pyramid_deform
+│      ├─pyramid_deform-0.2-py2.7.egg-info
+│      ├─pyramid_mailer
+│      ├─pyramid_mailer-0.11-py2.7.egg-info
+│      ├─pyramid_mako
+│      ├─pyramid_mako-1.0.2-py2.7.egg-info
+│      ├─pyramid_tm
+│      ├─pyramid_tm-0.7-py2.7.egg-info
+│      ├─pyramid_zcml
+│      ├─pyramid_zcml-1.0.0-py2.7.egg-info
+│      ├─pytz
+│      ├─pytz-2013b-py2.7.egg-info
+│      ├─repoze
+│      ├─repoze.lru-0.6-py2.7.egg-info
+│      ├─repoze.sendmail-4.0-py2.7.egg-info
+│      ├─repoze.workflow-0.6.1-py2.7.egg-info
+│      ├─repoze.zcml-0.4-py2.7.egg-info
+│      ├─setuptools
+│      ├─setuptools-2.2.dist-info
+│      ├─shutilwhich-1.0.1-py2.7.egg-info
+│      ├─sqlalchemy
+│      ├─SQLAlchemy-0.8.2-py2.7.egg-info
+│      ├─transaction
+│      ├─transaction-1.4.1-py2.7.egg-info
+│      ├─translationstring
+│      ├─translationstring-1.1-py2.7.egg-info
+│      ├─unidecode
+│      ├─Unidecode-0.04.12-py2.7.egg-info
+│      ├─venusian
+│      ├─venusian-1.0a8-py2.7.egg-info
+│      ├─waitress
+│      ├─waitress-0.8.5-py2.7.egg-info
+│      ├─webob
+│      ├─WebOb-1.2.3-py2.7.egg-info
+│      ├─xlrd
+│      ├─xlrd-0.9.2-py2.7.egg-info
+│      ├─xlwt
+│      ├─xlwt-0.7.5-py2.7.egg-info
+│      ├─zope
+│      ├─zope.component-4.1.0-py2.7.egg-info
+│      ├─zope.configuration-4.0.2-py2.7.egg-info
+│      ├─zope.deprecation-4.0.2-py2.7.egg-info
+│      ├─zope.event-4.0.2-py2.7.egg-info
+│      ├─zope.i18nmessageid-4.0.2-py2.7.egg-info
+│      ├─zope.interface-4.0.5-py2.7.egg-info
+│      ├─zope.schema-4.3.2-py2.7.egg-info
+│      ├─zope.sqlalchemy-0.7.2-py2.7.egg-info
+│      └─_markerlib
+├─mcl
+└─Scripts
+
+在c:\work\aerp目录下，建立mcl.wsgi
+
+.. code-block:: python
+
+
+activate_this = 'c:/work/aerp/Scripts/activate_this.py'
+execfile(activate_this, dict(__file__=activate_this))
+
+
+from pyramid.paster import get_app, setup_logging
+ini_path = 'c:/work/aerp/mcl/production.ini'
+setup_logging(ini_path)
+application = get_app(ini_path, 'main')
+
+

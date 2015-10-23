@@ -1,0 +1,79 @@
+﻿.. About options at P41202
+
+================================================================================
+About options at P41202
+================================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+--------------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+--------------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2006/04/12 11:27:46 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+--------------------------------------------------------------------------------
+
+To: Sydney-Support@peoplesoft.com
+From: holts@mentholatum.com.cn
+Subject: About options at P41202
+
+Client number: 5331151
+No case number yet
+Software release: World A7.3
+Cumulative updates: 00014
+Contact person: Holts He
+Contact Number: 86-760-6685596-6828
+
+Hi,
+
+At summary Availability(P41202), I wish to disabled OPT 7 of options list, how can I do this ? asked for help.
+
+--------------------------------------------------------------------------------
+To: holts@mentholatum.com.cn
+From: PeopleSoft-CRM@peoplesoft.com
+Subject: About options at P41202
+
+This email is to inform you that your case has been logged with PeopleSoft.
+
+Case ID: 4833144
+Case Status: Assigned
+Assigned Analyst: Meese, Jeff M
+Priority: 3-Standard Production Normal
+Summary: about options at P41202
+Detail: 
+
+--------------------------------------------------------------------------------
+To: holts@mentholatum.com.cn
+From: jeff.meese@oracle.com
+Subject: Notes Correspondence of case 4833144
+
+Holts,
+
+Regarding your question on removing option 7 from V41202.
+
+Go to menu G90 option 13(fast path VO) Inquire on V41202 Then use F16 to go to function key definitions, page down to the option 7 you want to remove Place an "N" where the "Y" is and a C in the action code this will remove the option.
+
+To add back the option: after you inquire on V41202 in  vocabulary overrides hit F16 twice and page down to where you see "#S07" on the right hand side and place a "Y" in the include field on the left and enter appropriate text "Branch/Plant Costs " and 07 in option column and a C in the action code and you get it back.
+
+Let me know if this is what you were looking for and if the case can be closed out.
+
+Regards
+
+
+
+
+

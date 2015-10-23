@@ -1,0 +1,459 @@
+﻿ 
+ 
+ 
+ChinaUnix首页 > 精华文章 > LDAP > 正文     
+ 
+ 
+
+[精彩] [转贴] 分享：构建基于LDAP的地址薄之一 基础篇 
+
+--------------------------------------------------------------------------------
+ 
+http://www.chinaunix.net 作者:andrewleading_h  发表于：2005-12-09 01:33:08 
+【发表评论】【查看原文】【LDAP讨论区】【关闭】  
+
+构建基于 LDAP 的地址簿 
+
+本教程向您演示了如何创建一个基于 LDAP 的后端来存储多个应用程序可以方便共享的联系人信息。同时，我们提供了 LDAP 基础知识的概述，并向您介绍了一个预先构建的联系人管理工具，该工具将帮助您着手使用这一开放技术。 
+
+预备知识 
+读者应基本掌握一般管理任务方面的知识及其概念。包括诸如设置权限、管理用户账户、移动和复制文件、创建符号链接等任务。 
+
+要执行本教程中的示例，您必需正确安装和配置 Linux 系统和下列软件： 
+
+Red Hat Linux 7.3。操作系统特定的说明是基于 Red Hat Linux 7.3 的。 因为 Red Hat Linux 很受欢迎并且大多数管理员／用户至少熟悉它的系统布局和一些约定，所以我们选择它。  
+OpenLDAP。OpenLDAP 用作 LDAP 目录服务器。 OpenLDAP 是基于开放标准的开放源码，可以免费下载。然而，在很大程度上，我们所讨论的结构、布局和管理任务可很容易地转移到商用目录服务器，如 IBM 的 SecureWay Server 和 Netscape 的 Directory Server 产品。  
+LDAP入门 
+
+概述： 
+
+首字母缩略 LDAP 代表轻量级目录访问协议（Lightweight Directory Access Protocol）。与某些计算机术语不同，术语 LDAP 的自我描述性真是令人惊异。 
+
+LDAP 是一种部分基于 X.500 目录标准的开放标准，但更简单、更精练且可扩展性更好 — 与某些其它通信协议相比，它是轻量级的。LDAP 标准的规范是以一系列 RFC（或注释请求，Request For Comment）的形式编排的。有关与 LDAP 相关的 RFC 的更多信息，请参阅参考资料中列出的 LDAPman RFC 页面。  
+信息被集中存储在服务器上的 LDAP 目录中。LDAP 目录是一种数据库；然而，它不是关系数据库。它的目录或数据库的结构与 UNIX 文件系统非常相似：数据按层次存储；有“根”或“基本 DN”（专有名称，Distinguished Name）；目录被进一步细分成组织单元（Organization Units 或 OU）；在这些 OU 中是包含数据的项。这种树-叶结构不仅使 LDAP 变得可扩展，而且当进行简单的搜索或查询时，比传统的关系数据库更快。  
+通过使用 LDAP 协议，客户机将查询发送给 LDAP 服务器（从技术上讲，LDAP 没有“读”功能；客户机通过将搜索请求发送给服务器来“读”目录项）。服务器检查客户机权限（即，客户机有权访问数据库吗？可以读被请求的树吗？可以将信息写入数据库吗？可以删除项吗？），然后返回请求信息。几乎所有的现代编程语言都有 LDAP API，这意味着几乎任何一个软件都可以支持 LDAP。  
+遗憾的是，术语 LDAP 经常在没有上下文的情况下或在不适当的上下文中使用。而目前又有多种使用该术语的方法（LDAP 协议、LDAP 服务器或 LDAP 客户机），那些不熟悉 LDAP 世界的人很可能会被搞糊涂。出于本教程的目的，我已经做了所有努力以确保说明了上下文或者使上下文明显有别于相关的讨论。 
+
+为什么使用LADP 
+
+在过去两三年中，LDAP 实现已经从相对不为人知的技术变成“当今的热门主题”。其突然受欢迎的原因可以大致概括为两个词：可扩展性和灵活性。 
+
+LDAP 协议既是跨平台的也是基于标准的。这意味着几乎在任何计算机平台上运行的任何应用程序都可以从 LDAP 目录获取信息。另外，无论什么服务器操作系统、文件系统或平台对于客户机都是无关紧要的。 
+
+LDAP 目录几乎可以存储所有类型的数据：电子邮件地址、DNS 信息、NIS 映射、安全性密钥、联系人信息列表和计算机名等。如果需要专门的组织单元或项，则可以根据具体实现来定制控制给定字段可以保存哪种信息的规则（称为模式，稍后将详细讨论）。 
+
+大多数 LDAP 服务器的安装和配置相对比较简单，并且可以在很少或没有维护的情况下运行多年，而且很容易为特定类型的访问而进行最优化。 
+
+可以容易地配置 LDAP 目录来复制部分或所有目录树（使用推(push)或拉(pull)方法）。这可以使系统管理员不必担心出现单点故障的情况。 
+
+可以通过 ACL（访问控制表，Access Control List）来控制对目录的访问。例如，管理员可以根据给定组或位置中的成员资格来限制谁可以看到哪些内容，或者给予特殊用户在其自己记录中修改所选字段的能力。ACL 提供极其细粒度的访问控制，而且 ACL 将这种控制与 LDAP 安装结合在一起，而不是与请求信息的客户机结合在一起。此外，可以容易地将 LDAP 与大多数现有的安全性层和／或认证系统（例如 SSL、Kerberos 和 PAM 等）集成在一起。
+
+
+
+--------------------------------------------------------------------------------
+ andrewleading_h 回复于：2004-08-16 13:37:35
+
+LDAP目录结构：基本DN 
+
+目前为止，我们已经讨论了什么是 LDAP、它（在高级别上）是如何工作的、LDAP 目录的一般结构以及为什么 LDAP 实现如此受欢迎。现在，应该更深入地研究项本身的各种组件了。正如上一页所提到的那样，LDAP 目录树的“根”或顶部是基本 DN。基本 DN 通常有两种形式：organization=（例如，o=syroidmanor.com），或者从组织的 DNS 域组件派生的 DN（dc=syroidmanor,dc=com）。 
+
+对于大多数安装，后者是首选格式，只因为它将两个截然不同的组件分隔开。如果将来您的公司决定与另一家公司合并，那么不必修改现有结构；然后，基本 DN 变成 dc=com 和 com 树的两个公司分支（当然，如果 syroidmanor.com 与 syroidmanor.com 合并，这样就不会有多大帮助）。 
+
+所有这些都给我们带来了两个非常重要的提示：(1) 成功的 LDAP 实现的 99% 在于为您的组织预先规划一个可扩展且有效的结构，(2) 从某种程度上讲，每个 LDAP 安装都是唯一的；换句话说，对于结构布局没有一成不变的规则。 
+
+下图显示了“dc”（与“organization”相对比）LDAP 目录结构的示例。
+
+
+
+ 
+ 
+ 
+
+
+
+
+--------------------------------------------------------------------------------
+ andrewleading_h 回复于：2004-08-16 13:52:38
+
+LDAP目录结构：组织单元 
+
+在目录基本 DN 的下面是容器或组织单元（OU），它们从逻辑上对您的数据进行分隔或分组。这里的选项通常由您业务或安装的组织结构确定。另外，第二层 OU 可用来进一步分隔数据。例如，国际企业可以使用下列结构： 
+
+
+dc=foobar,dc=com 
+ou=customers 
+ou=northamerica 
+ou=southamerica 
+ou=asia 
+ou=europe 
+ou=employees 
+ou=group 
+ou=projects 
+ou=accounting 
+ou=resource 
+ou=service 
+
+
+一般的经验方法可以使您的组织结构尽可能地保持简单，并且不危及将来的可扩展性。还要紧记一点，您将结构容器嵌套得越深，它返回查询所用的时间就越长。 
+
+LDAP目录结构：个别项 
+
+在 LDAP 结构的组织单元下面是实际的项。下面是以 LDIF 格式显示的示例（填充 LDAP 目录中有更多 LDIF 格式的示例）。 
+
+
+dn: cn=Tom Syroid, ou=employee, dc=syroidmanor, dc=com 
+objectClass: person 
+objectClass: organizationalPerson 
+objectClass: inetOrgPerson 
+cn: Tom Syroid 
+cn: Thomas Syroid 
+sn: Syroid 
+givenName: Tom 
+initials: TMS 
+title: Project Manager 
+uid: tsyroid 
+mail: tom@syroidmanor.com 
+telephoneNumber: 306 555 1212 
+mobile: 306 555 1999 
+roomNumber: 115 
+employeeNumber: 33 
+employeeType: full time 
+
+
+首先，请注意下列事实： 
+
+项只是存储属性的地方。  
+属性是可用来将一种类型的信息存储在目录中的容器。  
+每个属性都有一种类型和一个或多个值。  
+所以，cn: Tom Syroid 是项的一个属性，cn 是类型，与该类型相关联的值是“Tom Syroid”和“Thomas Syroid”。 
+
+现在，让我们仔细研究上述项的属性。第一行包含项的 DN 或“专有名称”。LDAP 目录中的每个项都有唯一的 DN，每个 DN 都由两部分组成 —“相对专有名称”（或 RDN）和对 LDAP 目录结构中存储记录的位置的引用。几乎存储在 LDAP 目录中的所有数据都有一个唯一名称，这个名称通常存储在 cn 属性中。在上面的示例中，用于唯一标识或区别记录的 cn 值是“Tom Syroid”。注：也可以使用“Thomas Syroid”，只要提供的 dn 对于数据库中的所有其它项是唯一的即可。后面的 ou 和 dc 值指向目录结构中记录的位置。 
+
+对象类 
+
+对象类由 LDAP 目录使用来定义给定类型的对象可以有哪些属性。对象类还定义项必须有什么属性，以及项可以有什么属性。所有对象类都从其父对象类继承需求，然后添加它们自己的需求。下面是一个对象类示例： 
+
+
+objectclass ( 2.5.6.6 NAME 'person' SUP top STRUCTURAL 
+        MUST ( sn $ cn ) 
+        MAY ( userPassword $ telephoneNumber $ seeAlso $ description ) ) 
+
+
+对象类有五个组件：OID（对象标识）、唯一名称、父对象（SUP）、任何需要的属性（MUST）和允许的属性列表（MAY）。OID 是由 LDAP 目录的内部数据库机制使用的数据标识符。从概念上讲，它们与 IP 地址相似，因为每个对象类都必须有一个唯一数字。并且象 DNS 和 IP 之间的关系那样，由创建它们的个人进行注册，并由这些人“拥有”。有关注册 OID 的更多信息，请参阅 Internet Assigned Numbers Authority（或 IANA）。 
+
+您需要一个 OID 号来创建您自己的对象类吗？答案取决于您的目录服务器软件 — 有的允许而有的不允许。有关详细信息，请查看 LDAP 文档。有关已定义的对象类及其属性的更多信息，请查看 LDAPman 模式参考页面或极其有用的 LDAP 模式查看器网站 
+
+您或许会问什么是模式？模式只是按照相似性进行分组的对象类集合。例如，inetOrgPerson 模式包含 departmentNumber、employeeType、givenName、homePhone 和 manager 等的对象类。inetOrgPerson 模式还继承了其它“父”模式的许多对象类。 
+
+小结 
+
+本章以很短的篇幅讨论了许多基础知识。虽然在安装和配置 LDAP 服务器（下一章主题）之前不需要了解这些所讨论的内容，但至少大致掌握一下 LDAP 目录服务背后的基本概念可帮助管理员更好地理解 LDAP 操作后面的原理。有关 LDAP 结构、对象类和属性的更多信息，请参考 OpenLDAP Administrator's Guide 和许多可从 www.openldap.org 获得的 FAQ
+
+
+--------------------------------------------------------------------------------
+ andrewleading_h 回复于：2004-08-16 13:55:12
+
+接下来贴 安装和配置  
+
+....有点慢啊
+
+
+--------------------------------------------------------------------------------
+ andrewleading_h 回复于：2004-08-16 14:06:33
+
+[color=red][size=18]安装和配置OPENLDAP[/size][/color] 
+
+必需的软件包 
+
+在大多数基于软件包的系统上（例如，在基于 RPM 的分发版（distribution）上，如 Red Hat、Mandrake 和 SuSE）安装和配置 OpenLDAP 是一个相对比较简单的过程。第一步先确定将哪些 OpenLDAP 组件（如果有的话）作为初始 Linux 设置的一部分进行安装。 
+
+从控制台窗口或命令行，输入： 
+
+
+[root@thor root]# rpm -qa | grep openldap 
+openldap-devel-2.0.23-4 
+openldap-2.0.23-4 
+openldap-servers-2.0.23-4 
+openldap-clients-2.0.23-4 
+[root@thor root]# 
+
+
+您应该看到类似上面的输出。注：Red Hat 分发版安装 OpenLDAP 客户机软件，但不安装 openldap-servers 软件包，即使您选择了服务器配置也是如此。要安装 RPM 软件包，在分发版媒质上找到所需文件的位置并输入： 
+
+rpm -ivh packagename 
+
+配置 OpenLDAP 服务器 
+
+安装了必需的软件之后，下一步是要配置服务器。首先，备份原始配置文件以供今后参考（ cp /etc/openldap/slapd.conf /etc/openldap/slapd.conf.orig ）。现在，在您所喜爱的文本编辑器中打开 /etc/openldap/slapd.conf 文件，花几分钟时间通读注释。除了定义目录数据库类型、suffix、rootdn 和存储目录数据库的位置的几个项外，slapd.conf 中的大多数缺省设置都是适当的。 
+
+
+database        ldbm 
+suffix          "dc=syroidmanor,dc=com" 
+rootdn          "cn=root,dc=syroidmanor.com,dc=com" 
+rootpw          {CRYPT}05T/JKDWO0SuI 
+directory /var/lib/ldap 
+index   objectClass,uid,uidNumber,gidNumber,memberUid   eq 
+index   cn,mail,surname,givenname                       eq,subinitial 
+保护 rootdn 
+
+rootdn 项控制谁可以对目录数据库进行写操作，以及他们要这样做所必须提供的密码。请确保阅读“访问控制”一章结束部分的注释： 
+
+
+# if no access controls are present, the default is: 
+#       Allow read by all 
+# 
+# rootdn can always write! 
+
+
+“rootdn can always write!”（rootdn 总是可以写！）的意思正如它所表示的那样。您在 rootdn 项的 cn= 部分填充的任何项都是对数据库有完全读／写访问权的用户。另外，缺省配置文件使用“secret”作为密码，它以明文形式发送。如果只能从装了防火墙与外界隔离的内部网访问您的 LDAP 服务器，并且确信将访问 LDAP 服务器的用户不知道有关信息包嗅探的任何事情，您大概可以以明文形式安全地发送 rootdn 密码（只要确保将密码“secret”稍加修改，使之不易被猜出）。但是，如果您打算存储在目录中的数据只有一点点机密性，则对密码进行散列处理。可以用 slappasswd 实用程序完成它，如下所示： 
+
+
+[root@thor root]# slappasswd -h {crypt} 
+
+
+该程序将要求您输入密码，然后 slappasswd 将给出与所提供的项相对应的 crypt 字符串。将该字符串剪切并粘贴到 slapd.conf，如上一页所示。其它散列选项包含 SSHA（缺省值）、SMD5、MD5 和 SHA。输入 man slappasswd ，以获取更多信息。 
+
+测试服务器 
+
+现在是测试服务器的好时机了。这里的配置相对比较简单也容易对可能出现的问题进行故障诊断。在 Red Hat Linux 系统上，命令是： 
+
+
+[root@thor root]# service ldap start 
+
+
+接下来，测试您访问目录的能力： 
+
+
+[root@thor root]# ldapsearch -x -b '' -s base '(objectclass=*)' namingContexts 
+
+
+如果正确配置了服务器，您应该看到类似于下面的输出（当然，有不同的 dc）： 
+
+
+version: 2 
+
+# 
+# filter: (objectclass=*) 
+# requesting: namingContexts  
+# 
+
+# 
+dn: 
+namingContexts: dc=syroidmanor,dc=com 
+
+# search result 
+search: 2 
+result: 0 Success 
+
+# numResponses: 2 
+# numEntries: 1 
+
+如果您得到了错误消息，或输出与上面有很大的不同，则返回并检查配置。要使 LDAP 服务在重新引导时自动启动，输入以下命令： 
+[root@thor root]# chkconfig ldap on 
+
+再提醒一下，上面的命令特定于 Red Hat 分发版。 
+配置 ACL 
+
+配置 LDAP 服务器的最后一步是设置一些基本访问控制。这样做可以确保用户只能访问他们需要访问的项。 
+
+在 OpenLDAP 下设置 ACL（访问控制表，Access Control List）的方法有两种：可以将 include 行放在 /etc/openldap/slapd.conf 的顶部，指向一个单独的文件（例如， include /etc/openldap/slapd.access.conf ）；或者可以将 ACL 直接添加到 slapd.conf。这完全由您选择 — Mandrake 通常使用 include 行；Red Hat 将 ACL 添加到配置文件。 
+
+您将在下一页看到一组示例 ACL 以及它们做些什么的说明。 
+
+ACL 示例 
+
+# Define ACLs -- access control definitions 
+
+access to dn=".*,dc=syroidmanor,dc=com" attr=userPassword 
+        by dn="cn=root,dc=syroidmanor,dc=com" write 
+        by self write 
+        by * auth 
+
+access to dn=".*,dc=syroidmanor,dc=com" attr=mail 
+        by dn="cn=root,dc=syroidmanor,dc=com" write 
+        by self write 
+        by * read 
+
+access to dn=".*,ou=people,dc=syroidmanor,dc=com" 
+        by * read 
+
+access to dn=".*,dc=syroidmanor,dc=com" 
+        by self write 
+        by * read 
+
+
+上面的配置仅允许 userPassword 属性的所有者修改项，但仅当所有者提供他或她的优先密码时才允许进行修改。在所有其它情况下，只能出于认证目的来访问该项，而不能查看它。第二个 access to... 项允许用户修改自己的电子邮件地址（attr=mail）。第三个项指定除了 rootdn 外，对于所有人，ou=people,dc=syroidmanor,dc=com 中的任何 DN 都是只读的。这可防止用户更改其用户名、uid、gid 和主目录等。最后，最后一项是包容前面访问控制中未涉及的任何东西的安全的“大杂烩”。例如，它允许用户更改其自己地址簿中的项。 
+
+在服务器可以使用新的 ACL 之前，需要重新启动： service ldap restart 。 
+
+完成基本配置之后，应该将一些有用的项填充到数据库。 
+
+填充数据 
+
+进行到这一阶段，您应该大致了解了 LDAP 的内部机制和结构，并且有了一个正在运行的 OpenLDAP 服务器。下一步是将联系人数据填充到您的目录，随后，电子邮件应用程序将使用这些数据来查询电子邮件地址。遗憾的是，这会使事情变得有点儿棘手。 
+
+有三种使联系人信息填入目录树的基本方法：从命令行手工输入，通过 LDIF（LDAP 数据库交换文件 (LDAP Database Interchange File) ）导入，或者通过使用脚本。棘手的部分是选择有效的方法以及将数据正确地填入数据库而不出差错。好处就是，一旦完成了，您不必再次执行整个过程 — 当然前提是您继续使用支持 LDAP 的应用程序。 
+
+手工填充数据库是三种方法中最直接的一种（虽然，正如单词“手工”暗示的那样，它需要的劳动力最多），所以我们先处理这一过程。 
+
+手工数据输入 
+
+首先，从控制台窗口或命令行，输入下列命令： 
+
+
+[root@thor root]# ldapadd -D "cn=root" -h 
+server 
+password: ******* 
+dn: uid=juser,ou=people,dc=syroidmanor,dc=com 
+uid: juser 
+cn: Joe User 
+givenname: Joe 
+sn: User 
+mail: juser@syroidmanor.com 
+objectClass: top 
+objectClass: mailRecipient 
+objectClass: person 
+objectClass: inetOrgPerson 
+^D 
+
+adding new entry uid=juser,ou=people,dc=syroidmanor,dc=com 
+[root@thor root]#  
+
+
+上面概述的过程使用三个基本的 LDAP 操作：绑定操作、更新操作和隐式取消绑定操作。为了修改目录，您必须以特权用户身份绑定或连接到 LDAP 服务器。所显示的示例使用 cn=root，因为那就是 OpenLDAP 服务器的配置方式。如果您对 slapd.conf 中的 rootdn 项使用了其它名称，则用合适的替换它。 
+
+在密码提示后，输入 DN，后跟要与 DN（RDN 项）相关联的数据，后跟包含类型／值对的属性的对象类。过程结束部分的 CTRL-D 会将数据发送给服务器，并隐式取消与服务器的绑定。然后，LDAP 服务器用一条已经成功输入（已显示）数据的消息或错误消息来响应。常见错误是尝试添加类型／值，而不指定正确的对象类、添加已经存在的用户或 RDN 或遗忘了“MUST”项（例如，对象类人员同时需要 givenname 和 sn）等。 
+
+另外，在进行手工数据输入时，要知道以下几点： 
+
+您必须知道哪个对象类拥有您正在添加的类型／值 RDN 数据的属性。  
+该过程所需的工作量较大。  
+很容易错误地输入一个项，这会使目录树中有错误信息。  
+一般而言，能使您的目录树布局可视化并熟悉配置 LDAP 服务器以使用的模式很重要。  
+最后一点对于所有数据输入方法都适用，它正是 LDAP 入门一章的目的。熟悉 LDAP 的结构并清楚地知道您正在尝试完成什么对于消除与填充 LDAP 数据库相关联的失败和不可避免的错误大有帮助。 
+
+LDIF 方法 
+
+将数据插入 LDAP 目录的第二种方法是使用 LDIF 文件。LDIF 文件只是包含想要插入的以特定语法编排的数据的纯文本文档。您已经熟悉了语法：dn: 后跟树中存储项的位置，后跟一个或多个 RDN 项（包含数据的类型／值对），后跟必需的对象类。要创建 LDIF，使用纯文本编辑器，然后输入想要添加到目录中的数据。使用我们的上一个示例： 
+
+
+dn: uid=juser,ou=people,dc=syroidmanor,dc=com 
+uid: juser 
+cn: Joe User 
+givenname: Joe 
+sn: User 
+mail: juser@syroidmanor.com 
+objectClass: top 
+objectClass: mailRecipient 
+objectClass: person 
+objectClass: inetOrgPerson 
+
+
+保存文件（比如，example.ldif），在控制台窗口或命令行上，输入： 
+
+
+[root@thor root]# ldapadd -x -D "cn=root,dc=syroidmanor,dc=com" -W -f sample.ldif 
+
+
+将提示您输入 rootdn 密码，通过认证后，包含在 LDIF 中的数据将被写入 LDAP 数据库。 
+
+LDIF 方法的优缺点 
+
+LDIF 方法既有优点也有缺点。其优点为： 
+
+在将文件导入数据库之前，您可以检查拼写和语法。  
+可以创建带有许多项的 LDIF 文件，然后用一个操作将它们添加到目录中。  
+如果导入失败，只要打开 LDIF 文件，查找错误，并尝试重新导入即可。  
+LDIF 文件是一种开放标准，几乎可以将它们导入到任何目录服务器中。  
+其缺点为： 
+
+该过程仍需要较大的工作量 — 必须输入 LDIF 中的所有项，并遵循正确的语法。  
+当 LDAP 服务器遇到导入文件中的错误时，它并不总是能方便地处理。虽然您可能会得到一条“syntax error（语法错误）”消息，但它不会告诉您，在一个相当大的 LDIF 文件中，错误在哪里。  
+归结起来讲，比起从命令行手工输入数据，LDIF 文件有某些明显的优势。但您仍必须遵守正确的语法来将联系人信息输入文件，并将它导入目录中。有没有一个更自动化的方法来填充 LDAP 数据库呢？— 请继续读下去。 
+
+脚本方法 
+
+可以使用通常用 Perl 或 PHP 编写的脚本，它们的目的是接收您的数据并将它“自动”放到 LDAP 目录中。这种方法有两个问题。首先，也是最重要的，我亲自尝试过的任何脚本都有许多可恶的错误，在某些最坏的情形下，会在导入期间毁坏您的数据或者破坏目录树本身。其次，使用脚本导入数据假设数据已经以某种形式存在。当分别从 /etc/passwd 和 /etc/groups 导入用户密码和组信息时，这当然很好，但您的联系人信息可能不是通常可识别的格式。毕竟，本教程的主要目的是使联系人信息不受专用格式的支配。 
+
+如果将联系信息数据导出成纯文本、用逗号分隔的文件，并找到能够将数据导入 LDAP 目录的脚本，会怎么样呢？如果可以找到这种脚本，并且如果它运行得如它所宣称的那样，则您会得到所有的功能。请记住，您的电子邮件客户机对“用逗号分隔的文件”有其自己精确的解释。要在每行结束的地方添加回车吗？导出程序如何处理嵌入字段中的空格？某些人通常窃用 LDAP 导入脚本来将他们的数据从应用程序 A（已经以格式 X 导出）传送到 LDAP 目录。如果他们的应用程序和导出格式与您的相合，则尝试它。不过要确保先备份您的目录数据库，这样，如果导入失败，您就可以返回到“已知的好”状态。
+
+
+--------------------------------------------------------------------------------
+ rockins 回复于：2004-08-21 19:35:03
+
+早就想看这样的文章了,版主辛苦了.
+
+
+--------------------------------------------------------------------------------
+ shenmue71 回复于：2004-09-07 10:37:55
+
+继续呀，怎么没有关键的部分
+
+
+--------------------------------------------------------------------------------
+ andrewleading_h 回复于：2004-09-07 14:13:20
+
+不好意思啊，这几天在 training  其他的东西，到上面来的时间少了点，我晚上的时候再发上来。争取再挤点时间出来跟大家交流。
+
+
+--------------------------------------------------------------------------------
+ shenmue71 回复于：2004-09-07 18:01:17
+
+^_^
+
+
+--------------------------------------------------------------------------------
+ blueantelope 回复于：2005-06-23 16:00:06
+
+安装phpldapadmin出现以下错误,但我openldap已安装好,不知为何? 
+
+
+出错
+Your install of PHP appears to be missing LDAP support. Please install LDAP support before using phpLDAPadmin. (Don't forget to restart your web server afterwards)
+
+
+
+
+--------------------------------------------------------------------------------
+ blueantelope 回复于：2005-06-23 16:02:22
+
+安装phpldapadmin出现以下错误,但我openldap已安装好,不知为何? 
+
+
+出错
+Your install of PHP appears to be missing LDAP support. Please install LDAP support before using phpLDAPadmin. (Don't forget to restart your web server afterwards)
+
+
+
+
+--------------------------------------------------------------------------------
+ ldqqxf 回复于：2005-06-26 13:26:14
+
+不错的文章，写的很详细！
+
+
+--------------------------------------------------------------------------------
+ monitorzhu 回复于：2005-11-24 13:52:00
+
+学习中，楼主辛苦了
+
+
+--------------------------------------------------------------------------------
+ yuchun 回复于：2005-12-09 01:33:08
+
+在编译PHP的时候估计没有加上对LDAP的支持
+
+
+
+ 
+ 
+
+原文链接：http://bbs.chinaunix.net/viewthread.php?tid=387963
+转载请注明作者名及原文出处
+
+
+ 
+ 
+ 
+
+--------------------------------------------------------------------------------

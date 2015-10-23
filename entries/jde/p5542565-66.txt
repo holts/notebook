@@ -1,0 +1,128 @@
+﻿
+
+用户需求
+------------------------------------------------------------------------
+
+
+需要更改的程序及对应的新的程序编号
+P42565 -? P5542565
+P55501 -? P5542566
+
+新的程序存放在 库 TESTMOD
+
+根据f4211.sdsrp4 的值决定是否打印 lot nuber
+还需要打印 register no  格式见样张,  Register no 保存在 f4104中,  f4104.ivxrt的值决定是否打印 register no 
+
+漏了一点,最重要的,  当用户在出货确认更改了批号后,重打,应显示最新的批号.
+
+
+需求详解
+------------------------------------------------------------------------
+
+1.       存放问题
+XJDEMOD/JDESRC/P42565
+XJDEMOD/JDESRC/P55501
+
+2.       Process option 的 lot no & register no  是独立的, 两者间没有关系,   举例说明如下
+
+有如下所示销售单
+
+Order          2nd Item                     Lot        
+ Number          Number                 Serial Number             SDSRP4
+--------  --------------------       -------------------
+90016501  ME90617893                 5J94005S           
+90016501  ME90617895                 4IL3022            
+90016501  ME90617902                 5JB6002                      XX
+90016501  ME90617946                 4II5070                        XX
+90016501  ME90617948                 4IK9020            
+90016501  ME90617957                 5JK3001                      XX
+90016501  ME90617957                 5JK3002                      XX
+90016501  ME90617958                 5JG5004            
+90016501  ME90617987                 5JK1003            
+90016501  ME90617987                 5JK1003            
+90016501  ME91417142                 5ID3011            
+90016501  ME91417142                 5ID3011            
+90016501  ME91417165                 5IE1007                       XX
+90016501  ME91417165                 5IE1007                       XX
+
+P5542565   Option :
+
+Lot No = XX
+Reg No = YY
+
+If     只要Option  Lot No 有值需要处理 : 
+        If       检查 f4211.sdsrp4  =   p5542565  Option  lot no ,     
+如果相同则 打 印 Lot No  和 Reg No
+Reg No 保存在 F4104. IVCITM,   查找条件   f4104.ivxrt = YY    and   f4104.ivlitm = f4211.sdlitm
+Else 
+维持程序旧有的行为方式
+                endif
+  Else
+        维持程序旧有的行为方式
+  Endif 
+
+
+3.       控制是否印 取决于  P5542565  Option 中的 Lot No   及 F4211.SDSRP4 的值,   在同一张发票打印中, 只有符合条件的记录才会按新的要求打印批号及RegNo,  这些记录同一代码不汇总, 打印出来是多行,   而不符合条件的记录维持旧有方式, 这些记录同一代码会汇总后打印成一行.
+
+Option Reg NO= RN  只是一个查找条件,   F4104没有记录也应该生成打印文件(只是RegNo打印出来是空值),  现在程序不会生成spoole file 
+
+
+JDE的标准程序是根据 option20 判断决定 是否需要 group by  Itemno.    我们定制的这两支程序需要打印  lot & Reg,   
+ 需要根据Option38判断 是按旧的方式处理还是新的方式处理  新的方式需要 group by  itemno + lot
+
+
+特别需要注意的是 ,  由于我们有买一送一,  在 单价不同, 单位不同时, 不能合并.
+
+
+
+复制程序到正式环境
+------------------------------------------------------------------------
+
+从MODTEST测试库,复制到XJDEMOD(中国区的放这XPRCMODLIV)
+
+J5542565
+J5542566
+P5542565
+P5542566
+R5542565
+R5542566
+
+从测试环境复制DW参数到正式环境.
+
+菜单设置
+------------------------------------------------------------------------
+
+复制菜单whlocal -->whlocal2 将这个新菜单挂在 warehousea-->10
+
+复制菜单directpr -->directpr2 将这个新菜单挂在 whlocal2-->2
+将这个菜单下的J42565,P42565全换成J5542565,P5542565,涉及以下版本
+MAPE1,MAPE3,MAPE6,MAPE5,MAPE4,MAPE2,MAPE7,MAPE5A,MAPE5B,MAPE5C需要更改它们的Option38='R',Option39='RN'
+
+复制菜单%DDURGENT-->%DDURGENT2 将whlocal2-->3换成%DDURGENT2,将这个菜单下的J42565及P42565全部替换成J5542565及P5542565,这个菜单涉及P5542565的以下版本MAP4,MAP2,MAP7,MAP11,MAP24,MAP4A,MAP2A需要更改它们的Option38='R',Option39='RN'
+
+复制菜单%DDCHAIN-->%DDCHAIN2 将whlocal2-->5换成%DDCHAIN2,将这个菜单下的J42565及P42565全部替换成J5542565及P5542565,这个菜单涉及P5542565的以下版本MAP4,MAP2,MAP7,MAP11,MAP24,MAP4A,MAP2A需要更改它们的Option38='R',Option39='RN'
+
+复制菜单%DDSUB-->%DDSUBLOG 将whlocal2-->10换成%DDSUBLOT,将这个菜单下的J42565及P42565全部替换成J5542565及P5542565, 这个菜单涉及P5542565的以下版本MAP4,MAP2,MAP7,MAP11,MAP24,MA4A,MAP2A需要更改它们的Option38='R',Option39='RN'
+
+复制菜单REPRINT-->REPRINT2 将whlocal2-->12换成reprint2, 将这个菜单下的J42565及P42565全部替换成J5542565及P5542565, 这个菜单涉及P5542565的以下版本MAPR7,MAPR2,MAPR5,MAPR4,MAPR3,MAPR1,MAPR6,MAPR4A,MAPR4B,MAPR4C需要更改它们的Option38='R',Option39='RN'
+
+更改whlocal2-->23, 将J55501,P55501更换成J5542566,P5542566,版本MAP27需要更改它们的Option38='R',Option39='RN'
+
+
+复制运行环境参数
+------------------------------------------------------------------------
+
+VO,PO都要复制到正式环境.
+
+从菜单G9362 ->6 Copy DD,VO,DW,UDC,SVR,Menus
+
+From Lib: XLIVCOM   To Lib: LIVCOM
+Vocabulary Override: R5542566
+
+
+设置运行条件
+------------------------------------------------------------------------
+
+需要打印RegNo & LotNo的代码,需要在F4102.IBSRP4='R'  (BU=WHE), 如果用户忘记录入,开销售单后发现再补录, 则销售单上SDSRP4也必须手工补录, 才能正常打印
+
+

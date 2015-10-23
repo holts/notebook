@@ -1,0 +1,11 @@
+﻿update f00821 set mzjtoe='XXJ4113'     
+      where  mzjtoe ='J4113'  
+update f00821 set mzjtoe='XXJ4114'     
+      where  mzjtoe ='J4114'           
+update f00821 set mzjtoe='XXJ4116'     
+      where  mzjtoe ='J4116'                  
+
+update f00821 set mzjtoe='XXJ31113'    
+      where  mzjtoe ='J31113'          
+         
+

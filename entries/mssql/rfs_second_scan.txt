@@ -1,0 +1,41 @@
+﻿
+二次扫描程序
+
+
+2014－07－16
+------------------------------------------------------------------------
+
+1，数据库中添加数据表
+CREATE TABLE [dbo].[TaskBills](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[TaskNo] [varchar](20) COLLATE Chinese_PRC_CI_AS NULL,
+	[Code] [varchar](20) COLLATE Chinese_PRC_CI_AS NULL,
+	[ItemNo] [varchar](30) COLLATE Chinese_PRC_CI_AS NULL,
+	[BillType] [varchar](10) COLLATE Chinese_PRC_CI_AS NULL,
+	[StockFrom] [varchar](20) COLLATE Chinese_PRC_CI_AS NULL,
+	[StockTo] [varchar](20) COLLATE Chinese_PRC_CI_AS NULL,
+	[Qty] [int] NULL,
+	[Unit] [varchar](50) COLLATE Chinese_PRC_CI_AS NULL,
+	[Date] [datetime] NULL,
+	[State] [int] NULL,
+	[Note] [varchar](100) COLLATE Chinese_PRC_CI_AS NULL,
+	[UserID] [varchar](30) COLLATE Chinese_PRC_CI_AS NULL,
+	[Operate] [int] NULL,
+ CONSTRAINT [PK_TaskBills] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (IGNORE_DUP_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+
+2，运行PC_Client.exe, 首次登录无用户，可以用admin登录，密码:jeasun2014，在[网络、数据库配置]页中设置正确的数据库连接参数及PDA服务器端网络参数，在[用户管理]中添加PDA操作用户。
+
+3，任务单excel导入文件格式请参考"测试数据.xls"。
+
+4，安装framework net 4.0运行环境。
+
+5，运行PDA_Server.exe启动服务器，如果是win7、win8系统，请用管理员权限运行。（如果想把PDA_Server.exe单独运行于另一台PC机，请将bn6mfile.dll、Config.ini、CONN.txt、Hprose.dll、PDA_Server.exe、SecurityLib.dll这六个文件拷贝过去即可）
+
+6，把PDA目录拷贝到采集器，运行WMS_BarcodeVerify2.0.exe，首次运行会弹出网络配置界面，设置参数与上面2中的PDA服务器端网络参数必须一致。
+
+7，PDA操作上架、下架、移转扫描时，在单号、区域、货架任意输入框内输入条件后，按ENT键将列出符合条件的清单。
+

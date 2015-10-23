@@ -1,0 +1,43 @@
+﻿
+用户提供数据格式如下：
+
+CustId     Itemnumber     Qty
+--------   ------------   ------
+
+在Excel中按CustId + Itemnumber 排序，，增加一栏(D) Doc , 其第二行输入值1，在第三行设公式为 =IF(A3=A2,D2,D2+1 ), 增加一栏(E) LineNo, 其第二行输入值1，在第三行 设公式为 =IF(A3=A2,E2+1,1) 
+
+Doc号格式 年（XX）+月(XX)+日（XX）+序号（XX）
+
+CustId   Itemnumber     Qty    Doc   LineNo  
+------   ------------   ------ ----  ------- 
+
+用以下命令生成F47011内容，注意在Excel中syedst、 syekco、syan8必须是字符型的
+ 
+SELECT '850' as syedst,'R' as syeder, '00276' as syekco, '         WHE' as symcu,
+   13071200 + doc as syedoc,'SP' as syedct, custid as syan8, custid as syshan 
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', sheet2$)
+  group by custid ,13071200+doc
+
+
+用以下命令生成F47012内容，注意行号要*1000，数量不用乘系数，短号任填个数，上传后在ＪＤＥ中更新
+
+ SELECT '850' as szedst,'R' as syeder, '00276' as szekco, '         WHE' as szmcu,
+  13071200 + doc as szedoc,'SP' as szedct,  custid as szan8, custid as szshan,
+   [LineNo] * 1000 as szedln, 1 as szitm,  itemnumber  as szlitm, 
+    itemnumber  as szaitm,   qty as szuorg
+  FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+   'Excel 8.0;Database=D:\holts\ability.xls', sheet2$)
+
+
+
+update f47012 set szitm=(select imitm from f4101      
+  where szlitm=imlitm)                                
+ where szlitm in (select imlitm from f4101)           
+
+delete   from f47012                         
+    where szlitm not in                      
+       (select imlitm from f4101)  
+
+
+

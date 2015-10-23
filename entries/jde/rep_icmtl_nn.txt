@@ -1,0 +1,1842 @@
+ CREATE PROCEDURE [dbo].[rep_icmtl_nn]     AS
+
+-- =============================================
+-- Author:		<holts>
+-- Create date: <2015/04/24>
+-- Description:	Income Statement
+-- =============================================
+
+Declare @Comp nchar(5), @Period nchar(10)
+set @Comp = '00276'
+select  @Period = Period  from period where  company=@Comp  and fromdate<=convert(varchar,getdate() ,111)  and todate>=convert(varchar,getdate() ,111)
+
+
+if not exists (select * from period where company=@Comp and period=@period and status<>'P')
+   begin
+     print '不存在这个结算区间'
+     return
+   end
+
+Declare @startdate datetime, @enddate datetime, @Lperiod nchar(10)
+
+select @startdate=Fromdate, @enddate=Todate,@lperiod=LastPeriod
+  from period where company=@Comp and period=@period
+
+select  'R001.00' as ItemNo,  'Cross Sales (RSP w/o VAT)       '   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA' and gmr018='PGS'  and mcrp01 in ('SAL','COR')  ), 0)   as ThisMM,    cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and gmr018='PGS'  and mcrp01  in ('SAL','COR')  ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and gmr018='PGS'  and mcrp01 in ('SAL','COR')  ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and gmr018='PGS'  and mcrp01 in ('SAL','COR') ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and gmr018='PGS'  and mcrp01 in ('SAL', 'COR')  ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and gmr018='PGS'  and mcrp01 in ('SAL','COR') ),0)    as LastYTD
+
+into #icmtl
+
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R001.50' as ItemNo,  'Gross Goods Returns (RSP)'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gmr018='PRA'   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gmr018='PRA' ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PRA' ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gmr018='PRA' ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gmr018='PRA' ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PRA' ),0)    as LastYTD
+
+
+insert #icmtl (ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,   LastYTD)
+select  'R002.00' as ItemNo,  'Channel Discount RI'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gbsbl in ('CDKA','CDOT') ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbsbl in ('CDKA','CDOT')  ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbsbl in ('CDKA','CDOT')  ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbsbl in ('CDKA','CDOT')  ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbsbl in ('CDKA','CDOT')   ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbsbl in ('CDKA','CDOT') ),0)    as LastYTD
+
+insert #icmtl (ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,   LastYTD)
+select  'R002.10' as ItemNo,  'Channel Discount CN'   as  ItemDesc, 
+  isnull(( select SUM(glaa)  * (-1.00)    from f0911  left join f0901 on  glco=gmco and glaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  glco=@Comp  and glctry=substring(@Period,1,2) and  glfy=substring(@Period,3, 2)  
+           and glpn = substring(@period,5,2)    and  gllt='AA'   and mcrp01 in ('SAL','COR')  and glsbl in ('CDKA','CDOT')      
+                 and glpost='P'  and gldct='CN'          ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,    cast(0.00  as float) as Budget, 
+    isnull(( select SUM(glaa)  * (-1.00)    from f0911  left join f0901 on  glco=gmco and glaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  glco=@Comp  and glctry=substring(@Period,1,2) and  glfy=substring(@Period,3, 2)  
+           and glpn >= 1  and glpn <= substring(@period,5,2)    and  gllt='AA'   and mcrp01 in ('SAL','COR')  and glsbl in ('CDKA','CDOT')      
+                 and glpost='P'  and gldct='CN'          ), 0)  as   YTD,    cast(0.00 as float)   as RatioYTD,     cast(0.00 as float)   as BudgetYTD, 
+    isnull(( select SUM(glaa)  * (-1.00)    from f0911  left join f0901 on  glco=gmco and glaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  glco=@Comp  and glctry=substring(@LPeriod,1,2) and  glfy=substring(@LPeriod,3, 2)  
+           and glpn = substring(@Lperiod,5,2)    and  gllt='AA'   and mcrp01 in ('SAL','COR')  and glsbl in ('CDKA','CDOT')      
+                 and glpost='P'  and gldct='CN'          ), 0)  as    LastMM, 
+    isnull(( select SUM(glaa)  * (-1.00)    from f0911  left join f0901 on  glco=gmco and glaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  glco=@Comp  and glctry=substring(@LPeriod,1,2) and  glfy=substring(@LPeriod,3, 2)  
+           and glpn >= 1 and glpn <= substring(@Lperiod,5,2)    and  gllt='AA'   and mcrp01 in ('SAL','COR')  and glsbl in ('CDKA','CDOT')      
+                 and glpost='P'  and gldct='CN'          ), 0)  as   LastYTD
+
+update #icmtl  set thisMM = thisMM - (select thisMM from #icmtl where itemno='R002.10') ,
+          YTD = YTD - (select YTD from #icmtl where itemno='R002.10'),
+          lastMM =  lastMM - (select lastMM from #icmtl where itemno='R002.10') ,
+          LastYTD = LastYTD - (select lastYTD from #icmtl where itemno='R002.10')
+    where itemno='R002.00'
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select 'R003.00','Gross Invoice Value', sum(ThisMM),0.00, sum(Budget), sum(YTD),0.00, sum(BudgetYTD), sum(LastMM),sum(LastYTD)
+ from #icmtl  where itemno in ('R001.00','R002.00','R002.10')
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R004.00' as ItemNo,  'On-Invoice Discount RI'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gbsbl in ('PROMOTE','FREEGOOD') ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbsbl in ('PROMOTE','FREEGOOD')  ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbsbl in ('PROMOTE','FREEGOOD')  ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbsbl in ('PROMOTE','FREEGOOD')  ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbsbl in ('PROMOTE','FREEGOOD')   ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbsbl in ('PROMOTE','FREEGOOD') ),0)    as LastYTD
+
+
+
+insert #icmtl (ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,   LastYTD)
+select  'R004.10' as ItemNo,  'On-Invoice Discount CN'   as  ItemDesc, 
+  isnull(( select SUM(glaa)  * (-1.00)    from f0911  left join f0901 on  glco=gmco and glaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  glco=@Comp  and glctry=substring(@Period,1,2) and  glfy=substring(@Period,3, 2)  
+           and glpn = substring(@period,5,2)    and  gllt='AA'   and mcrp01 in ('SAL','COR')  and glsbl in ('PROMOTE','FREEGOOD')      
+                 and glpost='P'  and gldct='CN'          ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,    cast (0.00 as float)  as Budget, 
+    isnull(( select SUM(glaa)  * (-1.00)    from f0911  left join f0901 on  glco=gmco and glaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  glco=@Comp  and glctry=substring(@Period,1,2) and  glfy=substring(@Period,3, 2)  
+           and glpn >= 1  and glpn <= substring(@period,5,2)    and  gllt='AA'   and mcrp01 in ('SAL','COR')  and glsbl in ('PROMOTE','FREEGOOD')      
+                 and glpost='P'  and gldct='CN'          ), 0)  as   YTD,    cast(0.00 as float)   as RatioYTD,    cast(0.00 as float)  as BudgetYTD, 
+    isnull(( select SUM(glaa)  * (-1.00)    from f0911  left join f0901 on  glco=gmco and glaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  glco=@Comp  and glctry=substring(@LPeriod,1,2) and  glfy=substring(@LPeriod,3, 2)  
+           and glpn = substring(@Lperiod,5,2)    and  gllt='AA'   and mcrp01 in ('SAL','COR')  and glsbl in ('PROMOTE','FREEGOOD')      
+                 and glpost='P'  and gldct='CN'          ), 0)  as    LastMM, 
+    isnull(( select SUM(glaa)  * (-1.00)    from f0911  left join f0901 on  glco=gmco and glaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  glco=@Comp  and glctry=substring(@LPeriod,1,2) and  glfy=substring(@LPeriod,3, 2)  
+           and glpn >= 1 and glpn <= substring(@Lperiod,5,2)    and  gllt='AA'   and mcrp01 in ('SAL','COR')  and glsbl in ('PROMOTE','FREEGOOD')      
+                 and glpost='P'  and gldct='CN'          ), 0)  as   LastYTD
+
+update #icmtl  set thisMM = thisMM - (select thisMM from #icmtl where itemno='R004.10') ,
+          YTD = YTD - (select YTD from #icmtl where itemno='R004.10'),
+          lastMM =  lastMM - (select lastMM from #icmtl where itemno='R004.10') ,
+          LastYTD = LastYTD - (select lastYTD from #icmtl where itemno='R004.10')
+    where itemno='R004.00'
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select 'R005.00','Net Invoice Value (GUI)', sum(ThisMM),0.00, sum(Budget), sum(YTD),0.00, sum(BudgetYTD), sum(LastMM),sum(LastYTD)
+ from #icmtl  where itemno in ('R001.00','R002.00','R004.00')
+ 
+ insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select 'R005.50','Goods Return (CN)', sum(ThisMM),0.00, sum(Budget), sum(YTD),0.00, sum(BudgetYTD), sum(LastMM),sum(LastYTD)
+ from #icmtl  where itemno in ('R002.10','R004.10','R001.50')
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R006.00' as ItemNo,  'Cash Discount'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gbsbl in ('CASHDIS') ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbsbl in ('CASHDIS')  ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbsbl in ('CASHDIS') ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbsbl in ('CASHDIS') ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbsbl in ('CASHDIS')  ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbsbl in ('CASHDIS') ),0)    as LastYTD
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R006.10' as ItemNo,  'Rebates & Incentives'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gbsbl in ('MTHREB','PROCESS','RESERVED','CLEARING') ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbsbl in ('MTHREB','PROCESS','RESERVED','CLEARING')  ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbsbl in ('MTHREB','PROCESS','RESERVED','CLEARING') ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbsbl in ('MTHREB','PROCESS','RESERVED','CLEARING') ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbsbl in ('MTHREB','PROCESS','RESERVED','CLEARING')  ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbsbl in ('MTHREB','PROCESS','RESERVED','CLEARING') ),0)    as LastYTD
+
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R007.00' as ItemNo,  'Distribution Allowance'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gbsbl in ('DISTRIB','HANDING','EARLYPAY','LISTING','REG','ADV','ANNRUALS') ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbsbl in ('DISTRIB','HANDING','EARLYPAY','LISTING','REG','ADV','ANNRUALS')  ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbsbl in ('DISTRIB','HANDING','EARLYPAY','LISTING','REG','ADV','ANNRUALS') ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbsbl in ('DISTRIB','HANDING','EARLYPAY','LISTING','REG','ADV','ANNRUALS') ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbsbl in ('DISTRIB','HANDING','EARLYPAY','LISTING','REG','ADV','ANNRUALS')  ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbsbl in ('DISTRIB','HANDING','EARLYPAY','LISTING','REG','ADV','ANNRUALS') ),0)    as LastYTD
+
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R007.10' as ItemNo,  'Customer Promotion Expenses'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gmr011='CP'   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gmr011='CP' ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr011='CP' ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gmr011='CP' ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gmr011='CP' ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr011='CP' ),0)    as LastYTD
+ 
+
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select 'R009.00','Net Sales', sum(ThisMM),0.00, sum(Budget), sum(YTD),0.00, sum(BudgetYTD), sum(LastMM),sum(LastYTD)
+ from #icmtl  where itemno in ('R005.00','R005.50','R006.00','R006.10','R007.00','R007.10')
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R010.00' as ItemNo,  'Cost of Sales'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gmr018='PCG'   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gmr018='PCG' ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PCG' ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gmr018='PCG' ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gmr018='PCG' ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PCG' ),0)    as LastYTD
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R011.00' as ItemNo,  'Purchase Adjustment'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gmr018='PPV'   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gmr018='PPV' ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PPV' ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gmr018='PPV' ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gmr018='PPV'),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PPV' ),0)    as LastYTD
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select 'R012.00','Gross Profit', sum(ThisMM),0.00, sum(Budget), sum(YTD),0.00, sum(BudgetYTD), sum(LastMM),sum(LastYTD)
+ from #icmtl  where itemno in ('R009.00','R010.00','R011.00')
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R013.00' as ItemNo,  'General Administration'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gmr018='PGE'   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gmr018='PGE' ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PGE' ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gmr018='PGE' ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gmr018='PGE'),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PGE' ),0)    as LastYTD
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R014.00' as ItemNo,  'Advertising'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gmr018='PAE'   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gmr018='PAE' ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PAE' ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gmr018='PAE' ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gmr018='PAE'),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PAE' ),0)    as LastYTD
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R015.00' as ItemNo,  'Promotion'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gmr011='P'   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gmr011='P' ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr011='P' ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gmr011='P' ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gmr011='P'),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr011='P' ),0)    as LastYTD
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R016.00' as ItemNo,  'Selling'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gmr018='PSE'   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gmr018='PSE' ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PSE' ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gmr018='PSE' ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gmr018='PSE'),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gmr018='PSE' ),0)    as LastYTD
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select 'R017.00','Total Operating Expenses', sum(ThisMM),0.00, sum(Budget), sum(YTD),0.00, sum(BudgetYTD), sum(LastMM),sum(LastYTD)
+ from #icmtl  where itemno in ('R013.00','R014.00','R015.00','R016.00')
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select 'R018.00','Operation Income', sum(ThisMM),0.00, sum(Budget), sum(YTD),0.00, sum(BudgetYTD), sum(LastMM),sum(LastYTD)
+ from #icmtl  where itemno in ('R012.00','R017.00')
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R019.00' as ItemNo,  'Disposal of Fixed Asset'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gbobj in('910700')   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbobj in('910700') ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in('910700') ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbobj in('910700') ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbobj in('910700') ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in('910700') ),0)    as LastYTD
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R020.00' as ItemNo,  'Foreign Exchange Gain/L'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gbobj in ('910260','910270')   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbobj in ('910260','910270') ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in ('910260','910270') ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbobj in ('910260','910270') ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbobj in ('910260','910270') ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in ('910260','910270') ),0)    as LastYTD
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R021.00' as ItemNo,  'Interest Income'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gbobj in ('910210')   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbobj in ('910210') ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in ('910210') ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbobj in ('910210') ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbobj in ('910210') ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in ('910210') ),0)    as LastYTD
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R022.00' as ItemNo,  'Other Income'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gbobj in ('910280','910600')   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbobj in ('910280','910600') ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in ('910280','910600') ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbobj in ('910280','910600') ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbobj in ('910280','910600') ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in ('910280','910600') ),0)    as LastYTD
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R023.00' as ItemNo,  'Interest Expenses'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and gbobj in ('950010','950020')   ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbobj in ('950010','950020') ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in ('950010','950020') ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbobj in ('950010','950020') ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbobj in ('950010','950020') ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in ('950010','950020') ),0)    as LastYTD
+
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R024.00' as ItemNo,  'Other Expenses'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and  (gbobj in ('950220') or (gbobj='697000' and gbsub='001'))     ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and (gbobj in ('950220') or (gbobj='697000' and gbsub='001'))  ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and (gbobj in ('950220') or (gbobj='697000' and gbsub='001'))  ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and (gbobj in ('950220') or (gbobj='697000' and gbsub='001'))  ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and (gbobj in ('950220') or (gbobj='697000' and gbsub='001'))  ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and (gbobj in ('950220') or (gbobj='697000' and gbsub='001'))  ),0)    as LastYTD
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select 'R025.00','Non-Operating Income/Exp', sum(ThisMM),0.00, sum(Budget), sum(YTD),0.00, sum(BudgetYTD), sum(LastMM),sum(LastYTD)
+ from #icmtl  where itemno in ('R019.00','R020.00','R021.00','R022.00','R023.00','R024.00')
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select 'R026.00','Income Before Tax', sum(ThisMM),0.00, sum(Budget), sum(YTD),0.00, sum(BudgetYTD), sum(LastMM),sum(LastYTD)
+ from #icmtl  where itemno in ('R018.00','R025.00')
+ 
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select  'R027.00' as ItemNo,  'Profit Tax'   as  ItemDesc, 
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+         left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='AA'   and mcrp01 in ('SAL','COR')  and  gbobj in ('970020','970040')  ), 0)   as ThisMM,   cast(0.00 as float)  as RatioMM,
+  isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end) * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+          left join f0006  on   gmco=mcco and gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+          and gblt='BA' and mcrp01  in ('SAL','COR') and gbobj in ('970020','970040')  ), 0 )  as Budget, 
+   isnull( ( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+               left join f0006  on   gmco=mcco and gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in ('970020','970040')  ) ,0)   as YTD,    cast(0.00 as float)   as RatioYTD,  
+   isnull(( select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00 )  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+            and gblt='BA' and  mcrp01 in ('SAL','COR') and gbobj in ('970020','970040') ),0 )    as BudgetYTD, 
+    isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN03  when SUBSTRING(@LPeriod,5,2)='04' then GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN05  when SUBSTRING(@LPeriod,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@LPeriod,5,2)='08' then GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN09  when SUBSTRING(@LPeriod,5,2)='10' then GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN11  when SUBSTRING(@LPeriod,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+      from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+            left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+       where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+          and gblt='AA' and mcrp01 in ('SAL', 'COR') and gbobj in ('970020','970040') ),0 )   as  LastMM, 
+   isnull(( select SUM(case when SUBSTRING(@LPeriod,5,2)='01' then GBAN01  when SUBSTRING(@LPeriod,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@LPeriod,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@LPeriod,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@LPeriod,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@LPeriod,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@LPeriod,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@LPeriod,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@LPeriod,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@LPeriod,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@LPeriod,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@LPeriod,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (- 1.00)  from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+              left join f0006  on  gmco=mcco and  gmmcu=mcmcu
+         where  gbco=@Comp  and gbctry=substring(@LPeriod,1,2) and  gbfy=substring(@LPeriod,3, 2) 
+            and gblt='AA' and mcrp01 in ('SAL','COR') and gbobj in ('970020','970040') ),0)    as LastYTD
+
+insert #icmtl ( ItemNo, ItemDesc, ThisMM, RatioMM, Budget, YTD, RatioYTD, BudgetYTD, LastMM,  LastYTD)
+select 'R028.00','Net Income', sum(ThisMM),0.00, sum(Budget), sum(YTD),0.00, sum(BudgetYTD), sum(LastMM),sum(LastYTD)
+ from #icmtl  where itemno in ('R026.00','R027.00')
+
+
+
+
+------------------------------------------------------------------------------- 
+update #icmtl  set  RatioMM=  100.00 *  ThisMM / (   
+          select  SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN03  when SUBSTRING(@Period,5,2)='04' then GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN05  when SUBSTRING(@Period,5,2)='06' then GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN07  when SUBSTRING(@Period,5,2)='08' then GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN09  when SUBSTRING(@Period,5,2)='10' then GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN11  when SUBSTRING(@Period,5,2)='12' then GBAN12   else 0 end)  * (-1.00)
+                 from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+                   left join f0006  on   gmco=mcco and gmmcu=mcmcu
+              where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+                  and gblt='AA' and gmr018 in ('PGS' ,'PTD', 'PDA', 'PRA')   and mcrp01 in ('SAL','COR')              ),
+   RatioYTD=  100.00 * YTD/(
+         select SUM(case when SUBSTRING(@Period,5,2)='01' then GBAN01  when SUBSTRING(@Period,5,2)='02' then GBAN01+GBAN02 
+           when SUBSTRING(@Period,5,2)='03' then GBAN01+GBAN02+GBAN03 
+           when SUBSTRING(@Period,5,2)='04' then GBAN01+GBAN02+GBAN03+GBAN04 
+           when SUBSTRING(@Period,5,2)='05' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05 
+           when SUBSTRING(@Period,5,2)='06' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06 
+           when SUBSTRING(@Period,5,2)='07' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07  
+           when SUBSTRING(@Period,5,2)='08' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08 
+           when SUBSTRING(@Period,5,2)='09' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09
+           when SUBSTRING(@Period,5,2)='10' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10 
+           when SUBSTRING(@Period,5,2)='11' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11  
+           when SUBSTRING(@Period,5,2)='12' then GBAN01+GBAN02+GBAN03+GBAN04+GBAN05+GBAN06+GBAN07+GBAN08+GBAN09+GBAN10+GBAN11+GBAN12 
+            else 0 end)   * (-1.00)
+               from f0902 left join f0901 on  gbco=gmco and gbaid=gmaid
+                   left join f0006  on   gmco=mcco and gmmcu=mcmcu
+              where  gbco=@Comp  and gbctry=substring(@Period,1,2) and  gbfy=substring(@Period,3, 2) 
+                  and gblt='AA' and gmr018 in ('PGS' ,'PTD', 'PDA', 'PRA')   and mcrp01 in ('SAL','COR')        
+        )
+ 
+------------------------------------------------------------------------------- 
+
+
+delete icmtl  where comp=@Comp and perid=@period  and ver='ICMTL_NN'
+
+insert icmtl( perid,comp, ver, itemno, itemdesc, thismm,ratiomm,budgetmm,ytd,ratioytd,budgetytd,lastmm,lastytd)
+select   @period,@comp, 'ICMTL_NN' , itemno,itemdesc,thismm,ratiomm,budget,ytd,ratioytd,budgetytd,lastmm,lastytd
+ from #icmtl  order by itemno
+GO
+ 

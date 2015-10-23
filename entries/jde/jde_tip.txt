@@ -1,0 +1,245 @@
+﻿
+JDE的菜单选项
+========================================================================
+
+1-24 为一般键,执行该菜单项所指定的功能
+
+25-99为特殊键,功能如下:
+
+25 顯示菜單項
+27 執行  G9
+29 執行  G0
+30 logout
+33 Work with Submitted Jobs
+34 Display Messages
+36 Command Entry
+38 Display Library List
+39 打印控制選項
+40 文件字段描述 
+41 Display Messages
+42 Work with Job Queue
+43 Work with Output Queue
+44 Work with Active Jobs 
+45 Work with All Writers
+46 Display Program Messages
+50 日歷
+60 發送窗口消息 
+67 Work with Submitted Job
+82 暫留提交的作業
+85 用戶顯示選擇修改
+88 Change Password
+90 Logout
+95 Change Password
+97 顯示安裝歷史
+98 Logout
+99 Display All Merged File Overrides   
+
+
+AS/400如何将Spooled File 拷贝到源物理文件
+========================================================================
+
+http://www.chinaunix.net 作者:stephenxie2003??发表于：2003-11-05 13:07:28
+
+
+CRTSRCPF?FILE(MLY/SRCPF)?RCDLEN(212)?IGCDTA(*YES) 
+
+CRTPF?FILE(MLY/PF)?RCDLEN(200)?IGCDTA(*YES) 
+
+CPYSPLF?FILE(QPUOPRTF)?TOFILE(MLY/PF)?JOB(123456/MLY/QPADEV0001)?SPLNBR(3)? 
+
+CPYF?FROMFILE(MLY/PF)?TOFILE(MLY/SRCPF)?TOMBR(MBR003)?MBROPT(*ADD)?FMTOPT(*CVTSRC)
+
+
+Download Spool file from AS/400 to PC Procedure 
+=======================================================================
+
+Step 1 Position your cursor to the spool file and get some information as : File, File NBR, JOB,USER etc. 
+
+eg: WRKSPLF and press Enter 
+
+Work with All Spooled Files 
+
+Type options, press Enter. 
+1=Send 2=Change 3=Hold 4=Delete 5=Display 6=Release 7=Messages 
+8=Attributes 9=Work with printing status 
+
+File 
+Opt File Nbr Job User Number Queue Library 
+GL575PT 1 GLRPTUPDB 166790 QPRINT QGPL 
+CS721PT 1 BANK_BALNC 166791 QPRINT QGPL 
+PL391PT 1 PLSUPITEMS 166792 QPRINT QGPL 
+PL373PT2 1 PLCREDBALS 166793 QPRINT QGPL 
+PL373PT1 2 PLCREDBALS 166793 QPRINT QGPL 
+SL373PT2 1 SLDEBTBALS 166794 QPRINT QGPL 
+SL373PT1 2 SLDEBTBALS 166794 QPRINT QGPL 
+QSYSPRT 1 QPADEV0025 167495 PC01S1 QUSRSYS 
+QSYSPRT 1 QPADEV0025 167497 PC01S1 QUSRSYS 
+QPDSPJOB 1 QPADEV0008 167667 QPRINT QGPL 
+More... 
+Parameters for options 1, 2, 3 or command 
+===> 
+F3=Exit F10=View 2 F11=View 1 F12=Cancel F22=Printers F24=More keys 
+
+
+
+CONNECTED 5250 1 1 
+
+
+Step 2: Creat a PF file in AS/400 
+
+eg: CRTPF JBA/PL373PT2 , then Press F4 
+Create Physical File (CRTPF) 
+
+Type choices, press Enter. 
+
+File . . . . . . . . . . . . . . > PL373PT2 Name 
+Library . . . . . . . . . . . > JBA Name, *CURLIB 
+Source file . . . . . . . . . . QDDSSRC Name 
+Library . . . . . . . . . . . *LIBL Name, *LIBL, *CURLIB 
+Source member . . . . . . . . . *FILE Name, *FILE 
+Record length, if no DDS . . . . > 132 Number 
+Generation severity level . . . 20 0-30 
+Flagging severity level . . . . 0 0-30 
+File type . . . . . . . . . . . *DATA *DATA, *SRC 
+Member, if desired . . . . . . . *FILE Name, *FILE, *NONE 
+User specified DBCS data . . . . > *YES *NO, *YES 
+Text 'description' . . . . . . . *SRCMBRTXT 
+
+
+
+
+Bottom 
+F3=Exit F4=Prompt F5=Refresh F10=Additional parameters F12=Cancel 
+F13=How to use this display F24=More keys 
+
+
+CONNECTED 5250 18 35 
+
+
+Step 3: Copy Spool file to PF 
+
+eg: CPYSPLF then Press F4 
+
+Copy Spooled File (CPYSPLF) 
+
+Type choices, press Enter. 
+
+Spooled file . . . . . . . . . . > PL373PT2 Name 
+To data base file . . . . . . . > PL373PT2 Name 
+Library . . . . . . . . . . . > JBA Name, *LIBL, *CURLIB 
+Job name . . . . . . . . . . . . > PLCREDBALS Name, * 
+User . . . . . . . . . . . . . > Name 
+Number . . . . . . . . . . . . > 166793 000000-999999 
+Spooled file number . . . . . . > 1 1-9999, *ONLY, *LAST 
+To member . . . . . . . . . . . *FIRST Name, *FIRST 
+Replace or add records . . . . . *REPLACE *REPLACE, *ADD 
+
+
+Bottom 
+F3=Exit F4=Prompt F5=Refresh F10=Additional parameters F12=Cancel 
+F13=How to use this display F24=More keys 
+
+
+CONNECTED 5250 5 37 
+
+
+Step 4 Using FTP or other funcution of any one Vritusl Terminal tools downloading the file from AS/400 host ot PC , following is the example by using MPTN transfer session
+
+AS400的基本命令操作等。 
+========================================================================
+
+Signon?? signoff?? 登录? 登出 
+change password 更改密码
+wrksplf? 查看系统报表
+dspmsg查看信息
+sndmsg发送信息
+wrksyssts查看系统使用情况
+wrksysval查看系统变量
+wrkusrjob查看当前用户JOB情况
+wrkusrprf查看用户属性
+crtusrprf创建一个用户
+wrkusrjob user(*all) status(*active) jobtype(*interact) astlvl(*basic)? 查看当前所有用户情况
+go power查看关机开机情况
+sbmjob提交批处理
+wrksbmjob查看当前用户所提交的处理
+wrkjobscde查看所有的批处理工作
+dsphdwrsc查看当前机器的硬件信息
+chgmsgq *break更改信息的方式
+wrkactjob查看当前活动的工作情况
+go disktasks查看系统磁盘工作
+strsst
+savobj保存
+rstobj恢复
+　
+在AS400上数据库的结构及如何建立。
+strpdm? optin 3进入编程环境
+wrkmbrpdm
+create? PF建立一个PF
+compile PF编译一个PF
+strdfu启动DFU
+upddta 更改数据库文件
+wrkqry启动QUERY(用于制作报表)
+dspffd显示物理文件的结构
+dsppfm直接显示物理文件内容
+
+
+
+WRKWTR  打印机管理 (Wrok with Writer) 
+STRPRTWTR   打印机激活 (Start Printer Writer) 
+ENDWTR  打印机终止 (End Writer) 
+
+
+AS/400 RPG BIF不同版本适用性一览表
+========================================================================
+
+BIF = Built-In Function, 在RPG语言使用，可使程序更易读、更精炼 
+BIF 	功 能 描 述 	返回值 	OS版本 
+%ABS 	Absolute value of expression 	Absolute value of expression 	V3R7
+%ADDR 	Get address of variable 	Address of variable 	V3R1
+%CHAR 	Convert to character format 	Value in character format 	V4R1
+%DEC 	Convert to packed decimal format 	Value in packed numeric format 	V3R7
+%DECH 	Convert to decimal format, half adjust 	Half-adjusted value in packed 	V3R7
+%DECPOS 	Get number of decimal positions 	Number of decimal digits 	V3R7
+%DIV 	Return integer portion of quotient 	Quotient 	V4R4
+%EDITC 	Edit value using an edit code 	String with edit code applied 	V3R7
+%EDITFLT 	Convert to float external representation 	Character representation of floating 	V3R7
+%EDITW 	Edit value using an edit word 	String with edit word applied 	V3R7
+%ELEM 	Get number of elements 	Number of elements or occurreances 	V3R1
+%EOF 	Return end or beginning of file condition 	1 if beginning or end of file 	V4R2
+%EQUAL 	Return exact match condition 	1 if SETLL/LOOKUP found exact 	V4R2
+%ERROR 	Return error condition 	1 if op code with extender errored 	V4R2
+%FLOAT 	Convert to floating format 	Value in floating format 	V3R7
+%FOUND 	Return found condition 	1 if record, /element,/ or match found 	V4R2
+%GRAPH 	Convert to graphic value 	Value in graphic format 	V4R4
+%INT 	Convert to integer format 	Value in integer format 	V3R7
+%INTH 	Convert to iInteger format, half adjust 	Half-adjusted value in integer format 	V3R7
+%LEN 	Get or set length 	Length in digits or characters 	V3R7
+%NULLIND 	Query or set null indicator 	1 or 0, indicating null setting 	V3R7
+%OPEN 	Return file open condition 	1 if file is open 	V4R2
+%PADDR 	Get procedure address 	Address of procedure 	V3R1
+%PARMS 	Return number of parameters 	NNumber of parameters passed in 	V3R2
+%REM 	Return integer remainder 	Remainder from the division 	V4R4
+%REPLACE 	Replace character string 	String with replaced value inserted 	V4R2
+%SCAN 	Scan for characters 	First position of search argument, or 9 	V3R7
+%SIZE 	Get size in bytes 	Size of variable or literal 	V3R1
+%STATUS 	Return file or program status 	If error, value set for program or file status. 	V4R2
+%STR 	Get or store null terminated string 	Characters addressed by pointer 	V3R7
+%SUBST 	Get substring 	Subset of a string 	V3R1
+%TRIM 	Trim blanks at edges 	String with blanks trimmed front/back 	V3R1
+%TRIML 	Trim leading blanks 	String with leading blanks trimmed 	V3R1
+%TRIMR 	Trim trailing blanks 	Sttring with trailing blanks trimmed 	V3R1
+%UCS2 	Convert to UCS-2 value (Unicode) 	Value in UCS-2 format 	V4R4
+%UNS 	Convert to unsigned format 	Value in unsigned format 	V3R7
+%UNSH 	Convert to unsigned format, half-adjust 	Half-adjusted unsigned value 	V3R7
+%XFOOT 	Sum array expression elements 	Sum of the elements of array 	V4R4
+
+
+These are the RPG IV BIFs available with OS/400 V4R4. 金融电脑之家 http://as400.yeah.net 整理 
+
+
+显示隐藏的选项
+========================================================================
+
+在命令行输入HS
+
+

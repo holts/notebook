@@ -1,0 +1,104 @@
+﻿
+
+
+2009-3-10
+================================================================================
+
+Report name: 外发加工IC及IM比较表 
+Description:
+外发加工IC完工入库收货，同时还有加工费的收货会同步生成IM领用记录，正常情况下IC和IM的数量应该是相等的，由于我们在IM时不能带到HJ单号，这里从F3112中取得，另外在建档时对于*OP10的资料省了单位换算，所以IM的数量没有做单位转换直接和IC比对，如果两者单位不同，数量会对不上。
+Entry:
+SELECT WorkOrderPUOM.OrderType, WorkOrderPUOM.OrderNumber, WorkOrderPUOM.Description, WorkOrderPUOM.WorkOrderStatus, WorkOrderPUOM.Quantity, WorkOrderPUOM.QuantityCanceled, WorkOrderPUOM.QuantityShipped,WorkOrderPUOM.Lot,WorkOrderPUOM.WOFlashMessage, ic.ICQty, ic.ICAmount,im.ItemNumber as ItemNumber2, im.IMQty, im.IMAmount, f3112.wlrorn, (ic.icqty + im.imqty) as icvsim
+ 
+ FROM  WorkOrderPUOM
+   left join 
+    (
+       SELECT ItemLedgerPUOM.DocumentNumber, 
+        SUM(ItemLedgerPUOM.TransactionQuantityPUOM) AS ICQty,
+         SUM(ItemLedgerPUOM.ExtendedCost) AS ICAmount
+       FROM   ItemLedgerPUOM
+        WHERE (ItemLedgerPUOM.OrderType='WS') AND 
+            (ItemLedgerPUOM.DocumentType='IC')
+          GROUP BY  ItemLedgerPUOM.DocumentNumber 
+      ) IC   on ic.DocumentNumber = WorkOrderPUOM.OrderNumber
+
+   left join
+     (
+       SELECT ItemLedger.ItemNumber, ItemLedger.DocumentNumber ,
+             SUM(ItemLedger.TransactionQuantity) AS IMQty,
+                 SUM(ItemLedger.ExtendedCost) AS IMAmount
+             FROM  ItemLedger
+         WHERE (ItemLedger.DocumentType='IM') AND 
+                  (ItemLedger.ItemNumber Like '%OP10')
+           GROUP BY ItemLedger.ItemNumber, ItemLedger.DocumentNumber 
+       ) IM  on im.DocumentNumber = WorkOrderPUOM.OrderNumber
+ 
+    left join f3112 on f3112.WLOPSQ='1000' and f3112.wldcto = WorkOrderPUOM.OrderType and f3112.WLDOCO = WorkOrderPUOM.OrderNumber
+
+where workorderpuom.ordertype='WS'
+
+2009-3-6
+================================o================================================
+Report Name: 采购年度分析表
+Description:
+用收货日期确定期间，避开年前收年后做PV问题，金额取PV后的金额，准确度高，对于年底收货但还没做PV的单，用PO上的金额加上税后估值统计。
+Entry:
+select receipt.ADDRESSNUMBER as [地址号],Address.Name as [供应商],receipt.ORDERNUMBER as [订单号码], receipt.ORDERTYPE as [订单类型],receipt.ITEMNUMBER as [代码], RTRIM(dbo.f4101d.IMDSC1) + RTRIM(dbo.f4101d.IMDSC2) as [中文名称], receipt.quantitypaid as [付款数量],f0411.rpag/100 as [总金额]
+  
+FROM PORECEIPTANDVOUCHER as receipt
+    LEFT OUTER JOIN  address on 
+      receipt.addressnumber=dbo.address.addressnumber
+    LEFT OUTER JOIN f4101d on 
+      receipt.ITEMNUMBER=dbo.f4101d.IMLITM
+    left join f0411 on receipt.documentnumber= f0411.RPDOC 
+              and  receipt.PaymentItem=f0411.rpsfx
+where MATCHTYPE ='2' and receipt.ordercompany='90000' and 
+  year(receipt.receiptdate)=2008  and receipt.OrderType<>'HJ'
+ 
+
+union all
+select receipt.ADDRESSNUMBER as [地址号],Address.Name as [供应商],receipt.ORDERNUMBER as [订单号码], receipt.ORDERTYPE as [订单类型],receipt.ITEMNUMBER as [代码], RTRIM(dbo.f4101d.IMDSC1) + RTRIM(dbo.f4101d.IMDSC2) as [中文名称], receipt.quantityopen as [付款数量],receipt.amountopen * (1+isnull(vv_tax.tax,0)/100) as [总金额]
+ 
+FROM PORECEIPTANDVOUCHER as receipt
+    LEFT OUTER JOIN  address on 
+      receipt.addressnumber=dbo.address.addressnumber
+    LEFT OUTER JOIN f4101d on 
+      receipt.ITEMNUMBER=dbo.f4101d.IMLITM
+    left join (select a6an8, cast(substring(a6txa2,3,2) as numeric(12,6)) as tax 
+                from f0401 where a6txa2 like 'ZS%' ) vv_tax
+        on vv_tax.a6an8=receipt.AddressNumber
+where MATCHTYPE ='1' and receipt.ordercompany='90000' and 
+  year(receipt.receiptdate)=2008  and receipt.OrderType<>'HJ'
+     and   receipt.quantityopen>0
+
+
+2009-2-26
+================================================================================
+
+Report name: 工时汇总表（按成口归集工时） 
+Description:
+此表以WH_INOUT为基础，将产品生产过程中，前段的生产工时累计归集到成品（最后产出），其中工单标记为7,8,9的已经剔除，时间段的切分，以成品工单报工时的时间为计算依据。
+Entry:
+select vv_wh.ParentItemnumber,vv_wh.ItemNumber, vv_wh.ParentLot,vv_wh.Hours , vv_wh.ordernumber,workorder.quantityshipped
+     from
+      (
+       select wh_inout.ParentItemNumber as ItemNumber, wh_inout.ParentHours as Hours, wh_inout.ParentItemNumber, wh_inout.ParentLot, wh_inout.OrderNumber, wh_inout.ParentHours
+         from wh_inout 
+         WHERE   WH_INOUT.ParentHours <> 0 
+          group by wh_inout.ParentItemNumber, wh_inout.ParentHours, 
+           wh_inout.ParentLot, wh_inout.OrderNumber
+
+       union all
+       select wh_inout.ItemNumber, wh_inout.Hours, wh_inout.ParentItemNumber,
+         wh_inout.ParentLot,wh_inout.OrderNumber, wh_inout.ParentHours
+         from wh_inout 
+         WHERE  WH_INOUT.ParentHours <> 0 
+
+       ) as vv_wh
+
+    left join workorder on vv_wh.ordernumber=workorder.ordernumber
+    left join (
+        select max(dateupdated)as lastdate,ORDERNUMBER 
+           from workhours  group by ORDERNUMBER ) workhr
+    ON vv_wh.ordernumber = workhr.ORDERNUMBER  
+

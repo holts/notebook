@@ -1,0 +1,24 @@
+输出sploor file
+DSPJRN JRN(BSAFEAUD/BSAFEJRN)   
+       FILE((LIVDTA/F0901))     
+       RCVRNG(*CURCHAIN)        
+       FROMTIME('2012/01/01')   
+       OUTPUT(*OUTFILE)      
+       OUTFILFMT(*TYPE3)       
+       OUTFILE(TEMP/F0901JRN)   
+       ENTDTALEN(*CALC)         
+       NULLINDLEN(*CALC)               
+
+建空表(不能有Key)
+CRTPF FILE(TEMP/J0901)     
+      SRCFILE(TEMP/TESTJRN)
+      SRCMBR(J0901)        
+      SIZE(*NOMAX)         
+
+装入数据
+CPYF FROMFILE(TEMP/F0901JRN)  
+     TOFILE(TEMP/J0901)       
+     MBROPT(*REPLACE)         
+     FMTOPT(*NOCHK)           
+
+delete from j0901 where jocode not in ('R')

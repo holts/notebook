@@ -1,0 +1,160 @@
+﻿
+HF单查询
+------------------------------------------------------------------------
+select pddoco, pddcto, date(char(1900000+pddrqj)) pddrqj,
+  date(char(1900000+pdpddj)) pdpddj ,pdlnid  ,pdlitm  , 
+  imdsc1 || imdsc2  as  ItemDesc, pduom,pduorg/100 as Qty,
+   pduncd, pdnxtr,  JMTXLN
+from f4311 left join f4101d on PDLITM=IMLITM 
+  and f4101d.imlngp='CS'
+left join f4314 on pddoco=jmdoco
+ and pddcto=jmdcto and PDLNID=JMLNID
+  and JMLINS=100
+where pddcto='HF' and pdnxtr<=980
+
+
+更改按键事件
+insert  dtmp (tordernumber  , tordertype , treqdate , torddate ,
+tlnid  ,titemnumber  ,  tunit  , tqty  , tuncd  ,tnxtr  , tuserid)
+select pddoco , pddcto ,date(char(1900000+pddrqj)) pddrqj,
+  date(char(1900000+pdpddj)) pdpddj,pdlnid,pdlitm, pduom   
+   ,pduorg/100 as Qty,pduncd  ,pdnxtr, '%S'
+ from f4311
+where pddcto='HF' and PDDOCO='%S' and PDLNID='%S'
+
+
+
+HF单更改
+------------------------------------------------------------------------
+
+select pddoco , pddcto , date(char(1900000+pddrqj)) pddrqj,
+  date(char(1900000+pdpddj)) pdpddj ,pdlnid  ,pdlitm  , 
+(select imdsc1 || imdsc2 from f4101d where pdlitm=imlitm) as
+  ItemDesc,   pduom,pduorg/100 as Qty,pduncd, pdnxtr  
+from f4311 where pddcto='HF' and pdnxtr<=980
+
+load_data:
+insert  dtmp (tordernumber  , tordertype , treqdate , torddate ,
+tlnid  ,titemnumber  ,  tunit  , tqty  , tuncd  ,tnxtr  , tuserid)
+select pddoco , pddcto ,date(char(1900000+pddrqj)) pddrqj,
+  date(char(1900000+pdpddj)) pdpddj,pdlnid,pdlitm, pduom   
+   ,pduorg/100 as Qty,pduncd  ,pdnxtr, '%S'
+ from f4311
+where pddcto='HF' and PDDOCO='%S' and PDLNID='%S'
+
+
+
+update f4801 set wauncd='%S'
+ where walitm='%S' and wavr01='%S'
+   and wasrst<11
+update f4311 set pduncd='%S', pdpddj =
+   (year('%S') - 1900 ) * 1000  + dayofyear('%S')
+ where pddcto='%S' and pddoco='%S'
+  and pdlnid='%S'
+
+SB分货记录
+------------------------------------------------------------------------
+用户输入成品代码, 界面显示与此代码相关的HF单, 要求HF单状态为290-400, 并且HF单上的代码第6及7位是17(内销代码),然后用户手工输入每行HF记录的分货数量.
+分货数量和HF单数量可以不同, 可以大,也可以小, 所以要增加个按钮让用户手工结HF单
+
+如果是部分完工分货, 新增一条HF,状态为800记录分货总数, 原记录减已分货数量. 如果是全部完工分货或用户手工结HF, HF单状态变为800,  同时生成相应的SB记录.
+
+Address   Ship To 
+ Number    Number   Location
+--------  --------  --------
+90200002  90200002  SH
+90200002  902000XX  SH Local
+90200022  90200022  BJ
+90200022  902000XX  BJ Local
+90200012  90200012  GZ
+90200012  90200202  KA
+90200012  90200192  WC
+90200012  90200272  CD
+
+
+以下为SB单现在使用的值
+ BU            AddressNo       ShipNo
+  ZZS0760210	90200002	90200167　　SH
+  ZZS0760210	90200022	90200166    BJ
+ 
+  ZZS0760210	90200012	90200168    GZ
+  ZZS0760210	90200192	90200192    WC
+  ZZS0760210	90200202	90200202    KA
+
+HA单开单
+------------------------------------------------------------------------
+
+用户准备HA的开单资料, 资料中需指定(主要指GZ)关联的SB单类型,不同类型分开开单,每单总金额不能超过100万
+Company   BU            AddressNo       ShipNo
+93000	  ZBJ0100250	93130001	93000000
+92000	  ZGZ0200240	92130001	92000000
+92000     ZGZ0200244    92130001        9200  ??
+91000	  ZSH0210230	91130001	91000000
+
+
+LTTR  NXTR
+220   280      开单
+280   290      打印订单(或用户已审核)
+290   300      已上传到JDE的Sales EDI接口
+
+300   400      已生成NR单数据 (取消这步)
+
+
+
+
+
+
+NR单开单
+------------------------------------------------------------------------
+
+广州 售至90200012，发往：华南90200168、华西90200292、KA 90200202
+
+
+update f4311 set pdrkco=90000,  pdrorn=90009897,
+  pdrcto='NR', pdrlln=1000                 
+ where pddcto='HA' and pddoco=92003730    
+update f4301 set phrkco=90000,  phrorn=90009897,     
+  phrcto='NR'                                        
+ where phdcto='HA' and phdoco=92003730               
+
+update f4211 set sdrkco=92000,  sdrorn=92003730,    
+  sdrcto='HA', sdrlln=1000 ,sdso11='1'              
+ where sddcto='NR' and Sddoco=90009897              
+update f4201 set shrkco=92000,  shrorn=92003730,             
+  shrcto='HA'                                                
+ where shdcto='NR' and Shdoco=90009897
+
+开单是520-530, 生成后建立关联,更改为 520-540, 也可以只在F4211上建立单边关系就可以了.
+
+1.	在ＮＲ单的表头，补上ＨＡ单的公司，　需要根据ＨＡ单决定公司是 (91000,92000,93000)
+
+ Update  f4201 set shrkco =
+ (select phrkco from f4301 where  phdcto=shrcto and phdoco=shrorn )
+   Where shrkco=’’  and  shorn= %%
+
+2.	更新ＮＲ单明细，不需要关联到ＨＡ单．
+
+Update f4211 set sdso11=1, sdlttr=530, sdnxtr=540
+  Where sddcto=’NR’ and sdlttr=520 and sdnxtr=530
+     And sdoorn=%%
+
+
+
+------------------------------------------------------------------------
+
+> 我想从gb2312的数据库中存取数据，在页面显示是utf-8编码。
+> 怎么将从数据库中的值转换成utf-8编码,在页面正常显示？
+
+首先看从数据库中取出的是什么编码，如果是gb2312，则先转为unicode再转为utf-8，如果已经是unicode了，直接转为utf-8即可。
+
+#gb2312
+b = unicode(a, 'gb2312').encode('utf-8')
+
+#unicode
+b = a.encode('utf-8') 
+
+
+
+
+
+

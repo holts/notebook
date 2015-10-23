@@ -1,0 +1,274 @@
+﻿标题: slitaz 使用（一）
+
+这两天刚好用了一下 slitaz 这个发行版，就记录一下笔记好了。
+下载 slitaz-cooking.iso
+
+一. 在 windows 中安装 slitaz 到 FAT32 格式的 USB 盘中.
+
+1. copy iso file to flash usb
+
+iso file
+---------------------------
+images/header.png
+boot/bzImage
+boot/isolinux/display.txt
+boot/isolinux/en.cfg
+boot/isolinux/en.kbd
+boot/isolinux/enhelp.txt
+boot/isolinux/enopts.txt
+boot/isolinux/help.txt
+index.html
+boot/isolinux/isolinux.msg
+boot/isolinux/options.txt
+README
+boot/rootfs.gz
+boot/isolinux/splash.lss
+style.css
+boot/isolinux/isolinux.cfg
+boot/isolinux/us.cfg
+boot/isolinux/us.kbd
+
+flash usb ( 根目录 / )
+-----------------
+images/header.png
+bzImage
+display.txt
+en.cfg
+en.kbd
+enhelp.txt
+enopts.txt
+help.txt
+index.html
+isolinux.msg
+options.txt
+README
+rootfs.gz
+splash.lss
+style.css
+syslinux.cfg
+us.cfg
+us.kbd
+
+
+2. edit syslinux.cfg
+－－－－－－－－－－－
+display isolinux.msg
+default slitaz
+
+label slitaz
+kernel bzImage
+append initrd=rootfs.gz rw root=/dev/null vga=normal
+
+implicit 0
+prompt 1
+timeout 80
+F1 help.txt
+F2 options.txt
+F3 isolinux.msg
+F4 display.txt
+F5 enhelp.txt
+F6 enopts.txt
+－－－－－－－
+
+
+3. 下载 syslinux-3.72.zip
+提取 win32/syslinux.exe (如果是DOS 环境，请使用 dos/syslinux.com).
+d:\> syslinux.exe f: (我的 usb 是 F：，请千万不要打错盘符。)
+会生成 ldlinux.sys 这个文件。
+
+4.重启系统， 在 BIOS 中改变启动顺序。
+
+
+slitaz 使用（二）
+
+使用 flashboot 对 U 盘 在 USB-HDD / USB-ZIP 两种格式中互换.
+花了很多时间阅读 GRUB4DOS / plop 的文档和做实践，
+结果我的机器不支持 USB-HDD 启动！
+
+(二) slitaz 的初步使用
+
+1. 下载网卡驱动
+我的笔记本上的无线网卡是 Atheros 。
+下载 linux-crypto-2.6.25.5.tazpkg
+linux-wireless-2.6.25.5.tazpkg
+madwifi-r3861_2.6.25.5.tazpkg
+wireless_tools-29.tazpkg
+在 U 盘 / 下建立 tazpkg 目录，将上面 4 个文件拷入。
+
+2. edit syslinux.cfg
+--- append initrd=rootfs.gz rw root=/dev/null vga=normal
++++ append initrd=rootfs.gz rw root=/dev/null vga=771 user=henry
+
+3. 在硬盘中建立一个 ext3 分区。（我的是/dev/hda11）
+# mkfs.ext3 /dev/hda11
+# 或者在下面做这一步。
+
+4.重启系统从 USB 启动。
+
+5.安装网卡驱动
+打开一个 xterm , 切换到 root 用户，口令是 root 。
+( /dev/sda 是 我的 U 盘。)
+代码:
+
+$ su # cd /dev # 在 /dev 中， slitaz 只有 hda[1-9], 请根据实际情况修改/执行下面的命令 
+# mknod -m 644 hda11 b 3 11 
+# mkfs.ext3 /dev/hda11 
+# cd /mnt 
+# mkdir sda 
+# mount /dev/sda sda 
+# mkdir hda11 
+# mount /dev/hda11 hda11 
+# cp -a /home/* hda11/ 
+# umount hda11 
+# mount /dev/hda11 /home 
+# mkdir /home/tazpkg 
+# cd /home/tazpkg 
+# cp /mnt/sda/tazpkg/* . 
+# tazpkg install linux-crypto-2.6.25.5.tazpkg 
+# tazpkg install linux-wireless-2.6.25.5.tazpkg 
+# tazpkg install wireless_tools-29.tazpkg 
+# tazpkg install madwifi-r3861_2.6.25.5.tazpkg 
+# modprobe ath_pci
+
+6. 在 /etc 目录下修改相应配置文件
+# cd /etc
+
+edit fstab
+--- #/dev/hda3 /home ext3 defaults 0 2
++++ /dev/hda11 /home ext3 defaults 0 2
+
+edit rcS.conf
+--- LOAD_MODULES="......"
++++ LOAD_MODULES="...... ath_pci"
+
+--- RUN_DAEMONS="......"
++++ RUN_DAEMONS="............"
+
+edit network.conf
+根据自己的实际情况修改, 我的是由路由 dhcp 分配 IP。
+# udhcpc -b -i ath0 -p /var/run/udhcpc.ath0.pid
+
+在系统菜单->System Tools->Netbox configuage networking
+
+7.重建 rootfs.gz
+代码:
+
+# tazusb writefs gzip # cd /mnt/sda # mv rootfs.gz previous.gz # cp /rootfs.gz . # mkdir /home/rootfs # mv /rootfs.gz /home/rootfs
+
+(三) slitaz 的汉化
+
+1.简单汉化
+
+1.1 glibc 的处理
+下载并安装 glibc-locale-2.7.tazpkg
+将附件中 glibc 目录下的 locale.gen => /etc ; locale-get => /usr/sbin ;
+# locale-gen
+
+1.2 修改 ~/.xinitrc 增加下面2行在开始的非注释行
+export LANG=zh_CN.UTF-8
+export LC_ALL=zh_CN.UTF-8
+
+1.3 中文字体的安装
+http://wenq.org/
+下载 wqy-bitmapfont-pcf-0.9.9-0.tar.gz 和 wqy-zenhei-0.6.26-0.tar.gz
+将相关文件放入 ~/.fonts 或 /usr/share/fonts
+# fc-cache
+
+1.4 挂载分区时显示中文文件名
+# mount -o utf8 /dev/name /path
+
+1.5 中文输入
+Fireinput : 火输 (集成于 Firefox 浏览器的中文输入软件)
+http://www.fireinput.com/releases/fireinput-1.7.4l.xpi
+
+
+2. 复杂一些的内容
+
+2.1 内核的处理
+下载并解压 linux-2.6.25.5.tar.bz2 ,
+下载并安装 gcc-4.2.3.tazpkg ,
+make-3.81.tazpkg ,
+ncurses-dev-5.6.tazpkg
+
+代码:
+
+# cd /usr/src 
+# ln -s /path/linux-2.6.25.5 linux 
+# cd linux 
+# make mrproper 
+# make menuconfig General setup ---> (-slitaz) Local version - append to kernel release Processor type and features ---> Processor family (386) ---> File systems ---> -*- Native language support ---> <M> Simplified Chinese charset (CP936, GB2312) 
+# 在退出时保存 
+# make modules_prepare 
+# make M=fs/nls 
+# cd fs/nls 
+# gzip nls_cp936.ko 
+# cp nls_cp936.ko.gz /lib/modules/2.6.25.5-slitaz/kernel/fs/nls 
+# depmod -a 
+# modprobe nls_cp936 
+# mount -o codepage=936,iocharset=cp936 /dev/name /path
+
+以下内容未经完全验正,仅供参考
+在进行下一步前,请安装下面的包
+autoconf
+automake
+bash
+binutils
+bzip2
+busybox-1.12.0.tazpkg
+findutils
+fontconfig-dev
+freetype-dev
+glibc-dev
+libcrypto
+libiconv
+libiconv-dev
+linux-headers
+m4
+mercurial
+openssl
+patch
+perl
+pkg-config
+slitaz-toolchain
+xorg-inputproto
+xorg-libICE-dev
+xorg-libSM-dev
+xorg-libX11-dev
+xorg-libXaw-dev
+xorg-libXfont-dev
+xorg-libXft-dev
+xorg-libXi-dev
+xorg-libXmu-dev
+xorg-libXpm-dev
+xorg-libXrender-dev
+xorg-libXt-dev
+xorg-renderproto
+xorg-xproto
+
+2.2 xorg-libX11 的处理
+由于 slitaz 中 xorg-libX11 编译过程中 没有使用 libxcb ,
+并且只拷备了 X11 locale 中的 iso8859-1 和 iso8859-2 两个部分.
+建议还是加上 libxcb 包 (官方的 wok 中没有提供) , 然后重新编译 ,
+./configure --prefix=/usr --with-xcb
+并加入 X11 locale 中 zh_CN 部分.
+
+
+2.3 xterm 的汉字显示 ( 推荐 LXTerminal )
+在重新编译 xorg-libX11 后, 须重新编译 xterm ,
+代码:
+
+./configure \ --prefix=/usr \ --sysconfdir=/etc \ --enable-256-color \ --enable-i18n \ --enable-wide-chars \ # 关键在这 --mandir=/usr/share/man \ --localstatedir=/var \ --with-app-defaults=/usr/share/X11/app-defaults \ $CONFIGURE_ARGS
+
+2.4 fcitx 安装
+在重新编译 xorg-libX11 后,
+下载 fcitx-3.5-070703.tar.bz2
+代码:
+
+# mkdir /home/slitaz/src -p # cd /home/slitaz # mv fcitx-3.5-070703.tar.bz2 src # mkdir packages # mkdir wok # cd wok # 将附件中 fcitx 目录拷入. # tazwok cook fcitx # cd /home/slitaz/packages # tazpkg install fcitx-3.5.tazpkg
+
+不建议在低配置机上编译程序!
+我机器的内存是 1 G, 并单独有一个 1 G的交换分区.
+
+保存安装的程序,不要忘记重新生成 rootfs.gz !
+
+end.

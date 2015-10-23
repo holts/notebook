@@ -1,0 +1,318 @@
+﻿
+在PowerBuilder中利用自动化技术调用Excel处理与打印表格
+〔本文章从网上转载 〕 
+
+
+摘要Microsoft公司的Office办公软件中的Excel是一种专业的电子表格处理软件，Microsoft公司对它的Office软件系列都提供了对自动化技术的支持，这样就可以通过其他高级编程语言调用Office软件系列，利用其成熟而可靠的技术与功能来轻松实现特定功能。本文中，将通过自动化技术，实现在PowerBuilder中调用Excel来实现表格的输出与打印。
+
+
+
+1 问题的提出
+
+在为某企业设计电子图文档管理系统中，用户提出要求，要能够快速输出某些电子表格。在未使用自动化技术之前，该企业使用的是AutoCad软件来一次性将多个表格生成到一个DWG文件中，然后通过绘图仪出图。这种做法的好处在于能够有效的节省企业的开支，一次性生成大量的表格。但是，缺点也是明显的：这种做法欠缺灵活性，当遇到只需要输出少量表格的情况时，做法过于复杂。即这种做法非常适合于大量表格的批量输出，而不适合个别表格的单独输出。正是在这种背景下，我们提出了使用Excel电子表格处理软件来处理该企业的表格输出问题。
+
+Excel软件是专门为处理各式电子表格而设计，它能够非常高效而专业的处理各式表格，并且非常关键的是：它具有表格计算汇总功能，在这一点上，AutoCad软件是无法相比的。另外一个原因，在当前的企业中，打印机的使用日益普及，打印速度也日益加快，当多个用户同时需要打印时，可以通过高速的网络打印机来轻松实现，在这一点上，使用Excel也具有一定的优势。
+
+2 自动化技术
+
+Microsoft公司提供的自动化技术，简单的说，就是将某一个应用程序的功能（可能是一部分）当作一系列的对象来向其他的外部应用程序暴露（Expose），这个外部应用程序就可以使用这些对象，这个过程就被称为自动化（Automation）。例如，Excel，我们可以将它的大部分功能当作一系列对象来加以暴露，然后在另外的应用程序中使用这些对象，这就是使用自动化对象来调用Excel完成指定功能的关键所在。
+
+一个应用程序的可访问对象被称为对象模型（Object Model），如果能够使用自动化来操纵一个程序的对象模型就意味着可以重复使用组件。例如，使用自动化，利用Excel中已经编写和测试好的代码来进行复杂的数学运算，这就省去了程序员亲自动手编写和调试复杂代码的麻烦。
+
+暴露对象的程序被称为服务器（Servers），使用这些对象的程序被称为客户（Clients）。在这里，我们把Excel当作自动化服务器，把我们的PowerBuilder应用程序当作客户，这样就可以通过自动化技术来实现特定的表格生成和打印功能。
+
+在大多数的Office软件中都包含一个Application对象，Excel也不例外，这个对象是Excel对象模式中的基础对象，它包含了许许多多的成员（Member），但是在这里，我们只需要使用到其中的一部分。
+
+3 在PowerBuilder中使用自动化技术
+
+PowerBuider是Sybase公司推出的一种高级数据库应用程序开发环境，在这个环境中开发数据库应用程序，使用其专利技术——DataWindow，可以很轻松的开发出非常专业的数据库应用程序。此外，PowerBuilder还支持多种数据库，能够很轻松的与目前流行的MS SQL Server、Oracle等企业级数据库建立连接，处理各种事务。
+
+PowerBuilder中的编程语言被称为脚本（Script），实际上，使用PowerBuilder编写的程序也是事件驱动，在界面设计上也完全做到了“所见即所得”，并完全使用面向对象的编程思想，它还提供了对OLE、DDE、Automation等技术的支持，下面就来说明如何在PowerBuilder中使用自动化技术。
+
+首先，声明一个OLE对象，如下：
+
+OLEObject OLE_MyExcel
+
+其次，创建该OLE对象，如下：
+
+OLE_MyExcel =Create OLEObject
+
+然后，使用PowerBuilder中的ConnectToNewObject函数来创建一个新的OLE对象，并且连接到该对象上，如下：
+
+OLE_MyExcel. ConnectToNewObject ("excel.Application")
+
+调用该函数时，如果成功的话，返回值是0，否则就意味着调用失败。
+
+到此，自动化的准备工作已经完成，下面是具体的操作过程。
+
+4 处理和打印表格
+
+在调用Excel时，首先需要解决的一个问题是是否让Excel可见，即是否为后台操作。这个问题可以简单的通过设置Visible属性加以控制，如果希望Excel后台运行，可以简单的编写如下语句：
+
+OLE_MyExcel.visible=false
+
+然后是打开指定的XLS文件，具体的语句如下：
+
+OLE_MyExcel.Application.Workbooks.Open ("d:excel-example.xls")
+
+要操纵数据列表中的数据单元，就必须对ActiveCell对象进行操纵，该对象是Application对象中一项属性。将数据输入到一个数据单元包括两个步骤：第一是选择一个数据单元，第二是将数据传递给它。选择一个数据单元通过调用Range对象的Select()方法就可以完成，Range对象是用来选择一个或多个数据单元的。Select()方法需要起始的行数、列数和结束的行数、列数来确定所选择的数据单元。如果只选择一个单独的数据单元，就可以忽略结束的行、列数。当范围被设定以后，将数据传递给ActiveCell对象（引用了被Range对象指定的数据单元）的FormulaR1C1属性。如下：
+
+OLE_MyExcel.Range("c10").Select()
+
+OLE_MyExcel.ActiveCell.FormulaR1C1 = sle_2.text  //Sle_2为一个静态文本框控件
+
+OLE_MyExcel.Range("J10").Select()
+
+……
+
+如果希望得到一系列数值的和，则需要首先使用Select()方法来指定需要求和的Cell的范围，然后指定存放和的Cell位置，最后调用SUM方法即可，如下：
+
+OLE_MyExcel.Range(“A1:D1”).Select()
+
+OLE_MyExcel.Range(“E1”).Activate()
+
+OLE_MyExcel.ActiveCell.FormulaR1C1 = “=SUM(RC[-4]:RC[-1])”
+
+当然还可以进行其他方面的设置，例如把字体设置为粗体（Bold），则可以编写如下代码：
+
+OLE_MyExcel.Range(“A1:E1”).Select()
+
+OLE_MyExcel.Selection.Font.Bold = True
+
+至于其他的设置可以参考相关书籍。
+
+至于表格的打印，则是简单的调用PrintOut()方法即可，但是需要首先指定打印的范围，如下是打印名为“Sheet1”的WorkSheet的代码：
+
+OLE_MyExcel.Worksheets("sheet1").Activate()
+
+OLE_MyExcel.ActiveSheet.PrintOut()
+
+接下来是关于对XLS文件进行了改动以后，在关闭该文件时是否需要向用户提出警告。这个问题只需要简单的对OLE_MyExcel.Application.DisplayAlerts属性进行设置即可，为True时弹出警告框，为False时不弹出警告框，保存所作的修改。
+
+最后一步，在作完所有工作以后，需要关闭自动化对象，撤销与自动化服务器的连接，销毁OLE对象，因为使用自动化程序，尤其是Word或Excel这样的Office程序，所消耗的系统资源是很庞大的，因此在每次工作完成之后，需要释放这部分系统资源。如下：
+
+OLE_MyExcel.Application.quit() 
+
+OLE_MyExcel.DisConnectObject()
+
+destroy OLE_MyExcel
+
+5 结束语
+
+在使用了自动化技术以后，完满的解决了原来的表格处理问题，可以非常方便的对各种表格进行小批量的处理与打印，非常灵活。如果能够与企业的数据库结合起来，通过外部程序将数据成批输入，亦可解决大批量数据输出的问题，不失为一条好的解决方案。
+
+在实际应用中，通过与企业数据库相结合，使用此方法自动填写了包含了大量数据的XLS文件，并可以通过打印机打印出来，如图1所示。
+
+
+
+
+图1  生成的表格
+
+
+
+
+
+
+
+
+
+
+
+
+通过DDE在powerbuilder中向Excel传递数据  
+
+
+PowerBuilder（以下称PB）是一种强有力的企业级数据库应用系统开发工具，利用它可以方便地开发出数据库系统的前台应用软件。但由于用PB所开发的报表具有一定的局限性：报表的表头、列宽等都不能在应用程序中由用户来进行调整，所以若用户报表的格式有所变动，则必须在原程序中对报表进行调整，这在很大程度上降低了软件的灵活性。
+
+Excel是Microsoft公司的表格处理软件，由于其简单易用，近年来在各单位的报表处理中得到广泛的应用。那么，在应用程序中是否可以调用Excel，让用户在用PB开发的应用程序中管理数据库中的数据，而在用户熟悉的Excel表格处理软件中调整并打印报表呢？
+
+答案是肯定的，本文介绍如何利用动态数据交换DDE（Dynamic Data Exchange）技术，在PB中把数据库中的数据传送到Excel应用程序中，以便由用户在Excel中调整打印报表。
+
+DDE用于在Windows平台上的两个正在运行的应用程序之间动态交换数据，它是一种在Windows操作系统中基于消息的协议。动态数据交换总是发生在两个正在运行的程序之间，在这两个应用程序之间相互发送和接收命令及数据。这两个正在运行的程序分别称为客户程序和服务器程序，客户程序就是请求服务的程序，而提供服务的程序称为服务器程序。
+
+实现方法
+
+DDE应用程序在开始交换数据以前必须由客户端发出初始请求，建立与服务器端的DDE连接（又称为通道或会话）。在建立连接后客户端可以连续向服务器发送数据请求和命令请求。
+
+在本文的应用程序中，我们用Excel做DDE应用服务器程序，在PB中进行DDE连接。
+
+1、启动DDE服务器应用程序
+
+Excel.exe可以在Windows环境下单独启动，也可以在PB中用run函数启动。 
+
+PB中run函数的语法格式为：
+
+run(string{,windowstate})
+
+●string：字符型，要执行的程序文件名；
+
+●windowstate：枚举型，程序启动后的窗口状态，可以是最小化(minimized!)、最大化(maxized!)或原尺寸(normal!)。
+
+在本文中，我们从客户程序PB中启动服务器应用程序Excel.exe，并假设Excel.exe的路径为：
+
+c:\program files\Microsoft office\office\Excel .exe
+
+在PB中启动服务器应用程序的命令为：
+
+run("c:\program files\Microsoft office\office\Excel.exe", minimized!)
+
+2、建立DDE连接
+
+在客户程序和服务器程序均启动之后，就必须建立客户程序和服务器程序之间的连接。在客户程序PB中,可以使用OpenChannel函数建立这种连接，打开一个从客户程序到服务器程序的通道。
+
+PB中OpenChannel函数的格式为：
+
+OpenChannel（appname，topicname{,windowhandle }））
+
+●appname：服务器程序的应用程序名；
+
+●topicname：主题名，即客户端要使用的实例，如Word文档或Excel文档；
+
+●windowhandle：客户端的窗口句柄，如果客户端程序打开了多个窗口，需要指定其中一个作为客户端窗口。
+
+建立DDE连接的方式分为冷连接、暖连接和热连接：
+
+●冷连接：是指运行中的客户程序和服务器程序进行直接的数据交换，不需要建立通道或连接，每次操作都要指定应用程序名和项目名；
+
+●暖连接：是指用OpenChannel函数建立的连接，它可以利用OpenChannel函数返回的句柄对指定的应用进行操作;
+
+●热连接：是指用StartHotLink建立的连接。
+
+无论是冷连接还是暖连接都无法在客户端知道服务器端是否修改了数据，同样，在服务器端也无法知道客户端的数据修改情况。而用热连接就可以使服务器端和客户端彼此知道数据是否被修改
+
+在本文中，只是在PB中调用Excel报表，并向其中传递数据库数据，并不需要知道Excel中对数据的修改处理情况，所以选用暖连接方式比较合适。
+
+3、从客户端向服务器端发送数据
+
+在建立起客户程序和服务器程序的连接之后，就可以在客户程序PB中用SetRemote函数向服务器应用程序的报表中发送数据库数据，以生成完整的报表。
+
+根据DDE连接方式的不同，SetRemote函数有两种格式分别用于冷连接和暖连接。
+
+冷连接：
+
+SetRemote(location,value,applname,topicname)
+
+ids_emp.GetFullState(lblb_data)
+
+Return lblb_data
+
+创建一数据窗口对象，名为：d_emp，该数据窗口显示风格为Grid,语法如下：
+
+SELECT "employee"."emp_id",
+
+暖连接：
+
+SetRemote(location,value,handle{,windowhandle})
+
+我们可以利用该函数读取数据库中的数据并写入到Excel的报表文件中以待打印。
+
+4、通过客户端执行服务器端命令
+
+在客户程序向服务器Excel发送完数据后，用户可以在Excel中对报表做适当的调整，然后打印调整过的报表，并且关闭Excel。
+
+在应用程序的客户端中可以以远程方式执行服务器应用程序(Excel.exe)中的命令，执行远程命令的函数为ExecRemote。该函数也是根据DDE连接方式的不同有冷连接和暖连接两种格式。
+
+冷连接：
+
+ExecRemote ( command , appname, topicname)
+
+ExecRemote (command ,handle,{ windowhandle })
+
+利用这个命令可以在PB客户端执行Excel程序的保存、打印和关闭等操作。
+
+5、结束DDE连接
+
+当完成DDE的数据处理后，使用CloseChannel函数关闭DDE连接。该函数的语法格式为：
+
+CloseChannel ( handle, { windowhandle } )
+
+编程实例
+
+假设有某学校的成绩管理系统，学生的成绩报表格式如图1。
+
+XX班级考试成绩一览表（2000年XX月）
+
+在w_proxy的open事件中实例化连接对象，并连接至Jaguar CTS，代码如下： my_conn = create jag_connection
+
+my_conn.ConnectToServer()
+
+在w_proxy的close事件中断开连接并清理连接对象，代码如下：
+
+ 
+
+姓名 
+语文 
+数学 
+英语 
+物理 
+化学 
+总分 
+平均 
+
+
+全班平均 
+
+
+
+首先在Excel中按照上述格式做好报表grade1.xls，并且把全班的平均成绩和表头之间空余 100行（假设班级的学生人数不超过100人）。然后在Excel中设计好全班平均成绩、个人总成 绩和个人平均成绩的计算公式，以自动计算所需要的数值。最后从数据库中检索出数据并填充 在数据窗口控件dw_1中。
+
+部分源代码如下：
+
+int I,handle,n
+
+string excel,road_excel
+
+//得到Excel的路径
+
+registryget("HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\8.0\"＋＆
+
+"Excel\microsoft Excel ","GalleryPath",Regstring!, road_excel)
+
+Excel=road_excel＋"\Excel.exe"
+
+//启动服务器程序，并打开报表grade1.xls
+
+run(Excel＋" grade1.xls ")
+
+//建立到服务器程序的连接通道
+
+handle=OpenChannel("Excel"," grade1.xls ")
+
+n= dw_1.count()
+
+//向Excel报表传递数据
+
+for I= 1 to n
+
+handle=OpenChannel("Excel"," grade1.xls")
+
+SetRemote("r"＋string(I＋1)＋"c1",string(dw_1.getitemnumber(I＋1)),handle)
+
+SetRemote("r"＋string(I＋2)＋"c1",string(dw_1.getitemnumber(I＋2)),handle)
+
+SetRemote("r"＋string(I＋3)＋"c1",string(dw_1.getitemnumber(I＋3)),handle)
+
+SetRemote("r"＋string(I＋4)＋"c1",string(dw_1.getitemnumber(I＋4)),handle)
+
+SetRemote("r"＋string(I＋5)＋"c1",string(dw_1.getitemnumber(I＋5)),handle)
+
+next
+
+//在客户程序中打印Excel报表
+
+ExecRemote("[print()]","Excel","grade1.xls")
+
+//关闭并不保存grade.xls
+
+ExecRemote("[close(false)]","Excel","grade1.xls")
+
+//退出Excel
+
+ExecRemote("[quit()]","Excel","system")
+
+//关闭连接通道，结束DDE会话
+
+Close(handle)
+
+注意：从客户程序中启动Excel服务器程序与建立连接和传递数据之间必须要有一定的时间间隔，最好把启动Excel放在一个事件中，把建立连接和传递数据放在另一个事件中，避免由于在建立连接和传递数据时Excel还没有完全启动，造成建立连接和传递数据不正常。
+

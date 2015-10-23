@@ -1,0 +1,1130 @@
+﻿.. 关于WMS的设置说明。
+
+========================================================================
+WMS设置说明
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+
+------------------------------------------------------------------------
+ 文档副标题 
+------------------------------------------------------------------------
+
+.. 文档信息栏 :
+
+:作者: holts 
+:Email: holts@mentholatum.com.cn
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2010/12/11 11:27:46 $
+:版权: 此文档版权属于曼秀雷敦，工作权限内你可以自由使用此文档.
+ 
+.. contents:: 内容索引  
+.. section-numbering::
+
+
+
+地点大小(F46022)
+------------------------------------------------------------------------
+
+在正式系统中，在UDC中定义地点，UDC=46 LD
+
+S1	55 X 100 X 60	2#标签库储位		
+S2	140 X 80 X 80	2#阴凉库（药品，化妆品）-小货架		
+S3	50 X 60 X 44	C座2楼化妆品标签温控区小货架		
+S4	130 X 130 X 100	化妆品阴凉（有机产品）库		
+P1	100 X 120 X 140	2#2层普通库区及阴凉库大货架储位		
+P2	100 X 120 X 180	2#1层成品区		
+P3	100 X 120 X 150	B座1层化妆品原料、3#楼储位、金美怡货E座，F座货架区	
+P4	100 X 120 X 190	3#楼储位，平库板位,金美怡库区		
+P5	100 X 120 X 120	3#楼储位		
+P6	100 X 120 X 160	3#楼储位		
+
+输入地点大小到F46022,最大重量统一输入1000公斤,  这部份资料上载。
+
+
+输入Zone (UDC=46 ZN)
+------------------------------------------------------------------------
+GC1	化妆品普通区成品
+GC2	成品阴凉库化妆品
+GD1	药品普通区成品
+GD2	成品阴凉库药品
+GO	有机产品成品
+GA	消毒产品成品
+GM	医疗器械成品
+PC1	化妆品普通区包材
+PC6	化妆品标签温控室内销包材
+PCR	化妆品普通区包材（胶座、罩子）存放区域
+PCC	化妆品普通区包材（纸箱）存放区域
+PCB	化妆品普通区包材（盒子、卡纸）存放区域
+PSM	化妆品温控区面膜半成品
+PCT	化妆品普通区测试包材
+PD1	药品普通区包材
+PD5	药品标签区包材
+PD6	药品标签温控室包材
+PDT	药品测试包材
+PO	有机产品包材
+R8	危险品库物料
+RC1	化妆品普通区原料
+RC2	化妆品阴凉库原料
+RC4	化妆品冷库原料
+RCT	化妆品测试原料
+RD1	药品普通存放库原料
+RD2	药品挥发阴凉库原料
+RD3	药品不挥发阴凉库原料
+RD4	药品冷库原料
+RDT	药品测试原料
+RO2	有机产品阴凉库原料
+RO4	有机产品冷库原料
+RS1	药品普通区洗剂原料
+GA	消毒产品成品
+CSF	化妆品填充品
+DSF	药品填充品
+MSF	医疗器械填充品
+			
+B1	化妆品成品与化妆品包材的缓冲区域				
+B2	化妆品成品阴凉区与药品成品阴凉区缓冲区				
+B3	药品普通区成品与化妆品普通区成品缓冲区				
+B4	有机产品包材与有机产品成品公共存储区域				
+B5	药品包材与药品成品的公共存储区域				
+B6	药品普通包材与药品标签类的公共存储区域				
+B7	药品普通原料、普通区洗剂原料与化妆品普通区原料公共存储区域				
+B8	化妆品原料与化妆品包材暂存区域				
+B9	普通区药品包材与药品原料的公共存储区域				
+
+
+地点特征(UDC=46 DF)
+------------------------------------------------------------------------
+
+在正式系统中，输入地点特征码，不用上载
+
+H	内销
+E	外销
+L	液体
+S	固体
+O	外包
+B	Barrel桶装物料
+I	内包
+A	Acid酸类
+F	冷藏（冰柜）
+OC	开放式容器
+P	有毒有害
+UM	Un mix不能混放
+
+特征组合(F46021)
+------------------------------------------------------------------------
+
+为了表地点的特征组合，需要在正式环境建立特征组合的UDC = 46 LC
+
+LR1	内销液体
+LR2	内销固体
+LR3	内销内包材
+LR4	内销外包材
+LR5	内销酸类
+LR6	内销大桶原料
+LR7	外销液体
+LR8	外销固体
+LR9	外销内包材
+LR10	外销外包材
+LR11	外销大桶装原料
+LR12	冷藏（雪柜）
+
+然后在F46021中输入：
+
+LR1	H
+LR1	L
+LR2	H
+LR2	S
+LR3	H
+LR3	I
+LR4	H
+LR4	O
+LR5	H
+LR5	A
+LR6	H
+LR6	B
+LR7	E
+LR7	L
+LR8	E
+LR8	S
+LR9	E
+LR9	I
+LR10	E
+LR10	O
+LR11	E
+LR11	B
+LR12	F
+
+
+区域
+------------------------------------------------------------------------
+
+基本资料中的仓库处理组，JDE支持3组，目前我们只用到一组，存放于仓库处理组1，在正式系统中，手工录入以下UDC ＝ 41 02
+
+GC1	化妆品普通区成品
+GC2	成品阴凉库化妆品
+GD1	药品普通区成品
+GD2	成品阴凉库药品
+GO	有机产品成品
+GA	消毒产品成品
+GM	医疗器械成品
+PC1	化妆品普通区包材
+PC6	化妆品标签温控室内销包材
+PCR	化妆品普通区包材（胶座、罩子）存放区域
+PCC	化妆品普通区包材（纸箱）存放区域
+PCB	化妆品普通区包材（盒子、卡纸）存放区域
+PD1	药品普通区包材
+PD5	药品标签区包材
+PD6	药品标签温控室包材
+PO	有机产品包材
+R8	危险品库物料
+RC1	化妆品普通区原料
+RC2	化妆品阴凉库原料
+RC4	化妆品冷库原料
+RD1	药品普通存放库原料
+RD2	药品挥发阴凉库原料
+RD3	药品不挥发阴凉库原料
+RD4	药品冷库原料
+RO2	有机产品阴凉库原料
+RO4	有机产品冷库原料
+RS1	药品普通区洗剂原料
+
+
+随机规则(UDC = 46 SR)
+------------------------------------------------------------------------
+
+用于存放规则中的随机规则，在正式环境手工录入到UDC 
+
+IR1	内销液体
+IR2	内销固体
+IR3	内销内包材
+IR4	内销外包材
+IR5	内销酸类
+IR6	内销桶装
+IR7	内销不能混放
+IR8	内销冷藏
+IR9	外销液体
+IR10	外销固体
+IR11	外销内包材
+IR12	外销外包材
+IR13	外销大桶装原料
+IR14	外销开放式容器
+IR15	外销不能混放
+IR16	外销冷藏
+IR17	有毒有害,外销液体，不能混放
+IR18	有毒有害,外销固体，不能混放
+IR19	有毒有害,内销液体，不能混放
+IR20	有毒有害,内销固体，不能混放
+IR21	内销固体，不能混放
+
+
+随机要求(F46822)
+------------------------------------------------------------------------
+
+在正式环境中录入随要规则的具体要求（特征）（正式环境无法输入）
+
+IR1	1	H
+IR1	2	L
+IR2	1	H
+IR2	2	S
+IR3	1	H
+IR3	2	I
+IR4	1	H
+IR4	2	O
+IR5	1	H
+IR5	2	A
+IR6	1	H
+IR6	2	B
+IR7	1	H
+IR7	2	UM
+IR8	1	H
+IR8	2	F
+IR9	1	E
+IR9	2	L
+IR10	1	E
+IR10	2	S
+IR11	1	E
+IR11	2	I
+IR12	1	E
+IR12	2	O
+IR13	1	E
+IR13	2	B
+IR14	1	E
+IR14	2	OC
+IR15	1	E
+IR15	2	UM
+IR16	1	E
+IR16	2	F
+IR17	1	E
+IR17	2	L
+IR17	3	UM
+IR17	4	P
+IR18	1	E
+IR18	2	S
+IR18	3	UM
+IR18	4	P
+IR19	1	H
+IR19	2	L
+IR19	3	UM
+IR19	4	P
+IR20	1	H
+IR20	2	S
+IR20	3	UM
+IR20	4	P
+IR21	1	H
+IR21	2	S
+IR21	3	UM
+
+
+
+
+
+仓库地点(F4100)
+------------------------------------------------------------------------
+从setup_location_ver4复制地点资料到stwms1.xls, 包含210和510的资料
+
+ insert into  f4100 (  Lmmcu, lmlocn,lmaisl,lmbin,lmla03,
+   lmla04,lmla05,lmlldl,lmaput,lmapik,lmarpl,lmstag,lmctnf,
+    lmmcnt,lmmlot,lmjobn, lmsty1,lmcgrp,lmpzon,lmkzon,lmzonr,
+    lmwsqp,lmwsqq,lmwsqr)                                                       
+ select '  ZZS0760210' as lmmcu, lmlocn,lmaisl,lmbin,lmla03,
+  lmla04,  lmla05,9 as lmlldl, 'Y','Y','Y','N','N','Y','Y',
+   'UPDATE',  lmsty1,lmcgrp,lmpzon,lmkzon,lmzonr,
+    lmwsqp,lmwsqq,lmwsqr                
+ from stwms1 where lmmcu='  ZZS0760210' and  lmlocn not in
+   (select lmlocn from f4100 where lmmcu='  ZZS0760210')        
+
+update f4100 set lmmcu='  ZZS0760510'
+  where lmmcu='  ZZS0760210' and lmlocn in 
+    (select lmlocn from f4100 where lmmcu='  ZZS0760510)
+
+然后把BU改为510再做一次插入操作。
+ insert into  f4100 (  Lmmcu, lmlocn,lmaisl,lmbin,lmla03,
+   lmla04,lmla05,lmlldl,lmaput,lmapik,lmarpl,lmstag,lmctnf,
+    lmmcnt,lmmlot,lmjobn, lmsty1,lmcgrp,lmpzon,lmkzon,lmzonr,
+    lmwsqp,lmwsqq,lmwsqr)                                                       
+ select lmmcu, lmlocn,lmaisl,lmbin,lmla03,lmla04, 
+  lmla05,9 as lmlldl, 'Y','Y','Y','N','N','Y','Y','UPDATE',
+   lmsty1,lmcgrp,lmpzon,lmkzon,lmzonr,
+    lmwsqp,lmwsqq,lmwsqr                
+   from stwms1 where lmmcu='  ZZS0760510 and  lmlocn not in                       
+ (select lmlocn from f4100 where lmmcu='  ZZS0760510')   
+
+
+更改
+update f4100 set lmsty1=(select lmsty1 from  stwms1 where  
+  f4100.lmlocn=stwms1.lmlocn )                             
+     where lmlocn in (select lmlocn from  stwms1)          
+update f4100 set lmcgrp=(select lmcgrp from  stwms1 where 
+  f4100.lmlocn=stwms1.lmlocn )                            
+     where lmlocn in (select lmlocn from  stwms1)         
+update f4100 set lmpzon=(select lmpzon from  stwms1 where   
+  f4100.lmlocn=stwms1.lmlocn )                              
+     where lmlocn in (select lmlocn from  stwms1)           
+update f4100 set lmkzon=(select lmkzon from  stwms1 where   
+  f4100.lmlocn=stwms1.lmlocn )                              
+     where lmlocn in (select lmlocn from  stwms1)  
+update f4100 set lmzonr=(select lmzonr from  stwms1 where   
+  f4100.lmlocn=stwms1.lmlocn )                              
+     where lmlocn in (select lmlocn from  stwms1)  
+
+                            
+
+地点特征组合(F46021)
+------------------------------------------------------------------------
+
+
+物料分类码(F4102)
+------------------------------------------------------------------------
+
+高级仓库管理系统，用到了F4102中的分类码PRP7,PRP8,PRP9, 目前我们只使用PRP7，需要根所料品区域划分资料，取得上载资料：
+
+  select '  ZZS0760210' as ibmcu, v_core.ibitm, v_core.iblitm,
+        v_core.iblitm as ibaitm, v_core.ibprp7 
+     from 
+     (
+       SELECT ibitm,iblitm,ibprp7,处理群组 as ir
+         FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+       'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', f4102$)
+         
+      ) as v_core  
+    where v_core.ibprp7 is not null
+
+
+上载资料后，更新栏位IBPRP7：
+
+update f4102 set f4102.ibprp7 = (select stwms2.ibprp7
+ from  stwms2  where f4102.ibitm=stwms2.ibitm and
+   f4102.ibmcu=stwms2.ibmcu )
+ where f4102.ibmcu='  ZZS0760210'                                         
+    and f4102.ibitm in
+ (select ibitm from stwms2 where ibmcu               
+       ='  ZZS0760210')                                              
+
+
+上载F46010 
+------------------------------------------------------------------------
+delete from f46010 where ipmcu='  ZZS0760210'
+
+insert into f46010 (ipmcu,ipitm,ipptph,ippkph,iprpph,
+  ipmlit,ipmlot,ipsplp, ipdltn,ipvloc,iphloc,ippput,
+   ipppik,ippid,ipuser,ipupmj,iptday)
+select '  ZZS0760210', ibitm, 'I' as ipptph, 'I' as ippkph,
+ 'I' as iprpph, 'Y' as ipmlit, 'Y' as ipmlot, 'Y' as ipsplp,
+ 'O' as ipdltn, 'V' as ipvloc, 'H' as iphloc, 'R' as ippput,
+  'D' as ipppik,'UPDATE','UPDATE',110360, 235900
+ from f4102 where ibmcu='  ZZS0760210'
+  and ibitm not in 
+ (select ipitm from f46010 where ipmcu='  ZZS0760210')
+
+
+
+上载F46011
+------------------------------------------------------------------------
+
+ select ibitm as IQITM, uom1 as IQUOM, MAX(l*100) as IQGWID,
+  MAX(w*100) as IQGDEP,MAX(h*100) as IQGHET, 'MM' as IQWIUM,
+    max(l*w*h*100)/1000 as IQGCUB, 'CC' as IQVUMD,
+      case when mcnt IS null then 'Y'
+        else mcnt end mcnt
+     
+  from
+   ( 
+      select itemno, 'PL' as uom1  , [件/板] as rate,  uom as uom2 ,
+        l*10 as l, w*10 as w, h, 'A' as layer
+       FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', 料品规格$)
+         where [件/板] is not null    
+      
+      union all
+      select itemno, uom as uom1 , [pc/箱] as rate,  'PC' as uom2 ,
+       [长mm] as l, [宽mm] as w, [高mm] as h, 'B' as layer
+       FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', 料品规格$)
+         where [pc/箱]  is not null   
+         
+      union all
+      select itemno, uom as uom1 , [KG/件] as rate,  'KG' as uom2,
+         [长mm] as l, [宽mm] as w, [高mm] as h, 'B' as layer
+       FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', 料品规格$)
+         where [KG/件]   is not null
+         
+      ) as v_core
+      inner join (
+        select ibitm,iblitm,mcnt FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+         'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls',f4102$)
+           ) as f4102 on itemno=iblitm
+           
+  group by  ibitm , uom1 ,  
+        case when mcnt IS null then 'Y'   else mcnt end  
+
+以上是在测试环境做的
+
+
+select itm as IQITM, uomf as IQUOM,  (l*100) as IQGWID,
+   (w*100) as IQGDEP, (h*100) as IQGHET, 'MM' as IQWIUM,
+    (l*w*h*100)/1000 as IQGCUB, 'CC' as IQVUMD ,
+      case when mcnt IS null then 'Y'   else mcnt end 
+  from 
+  (      
+   select itm, uomf, rate, uomt,l,w,h, 'A' as layer
+    FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', f41002$)
+     where layer='1'
+   
+   union all
+   select itm, uomf, rate, uomt,l,w,h, 'B' as layer
+    FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', f41002$)
+     where layer='2'
+     
+   union all
+   select itm, uomf, rate, uomt,l,w,h, 'A' as layer
+    FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', sheet1$)
+     where layer='1'
+     
+     ) as tt
+     
+       inner join (
+        select ibitm,iblitm,mcnt FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+         'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls',f4102$)
+           ) as f4102 on itm=ibitm    　
+
+将上面的内容贴到STWMS3.XLS中
+
+delete from f46011 where iqmcu='  ZZS0760210'
+
+insert into f46011 ( iqmcu,iqprp6,iqitm,iquom,iqgwid,
+  iqgdep,iqghet,iqwium,iqgcub,iqvumd,iqgweI, IQUWUM,
+   IQDMTH,IQCRMT, iqequs,
+   iqarot,iqabkd,iqarol,iqslim,iqeqty,iqrpck,iqpack,
+  iqlipl,iqpptg,iqpktg,iqprtg,iqptra,iqktra,iqrtra,iquser,
+  iqpid,iqjobn,iqupmj,iqtday)
+select '  ZZS0760210' as  iqmcu,'' as iqprp6,iqitm,iquom,
+ iqgwid, iqgdep,iqghet,iqwium,iqgcub,iqvumd, 0 as iqgwei,
+  'KG' as IQUWUM, 1 as IQDMTH, '' as IQCRMT ,   2 as IQEQUS, 
+  'N' as IQAROT,'Y' as IQABKD,  'Y' as IQAROL, 0 as IQSLIM,
+  '' as IQEQTY,'N' as IQRPCK,  '' as IQPACK,'N' as IQLIPL,
+  'T' as IQPPTG,'T' as IQPKTG, 'T' as IQPRTG, '' as IQPTRA,
+   '' as IQKTRA,'' as IQRTRA,    'UPDATE' as IQUSER,
+      'UPDATE' as IQPID, 'UPDATE' as IQJOBN,110360 as IQUPMJ,
+         230000 as IQTDAY
+  from stwms3 where iquom not in 
+   (select iquom from f46011 where
+     iqmcu='  ZZS0760210' and f46011.iqitm=stwms3.iqitm)
+
+ 
+其它单位按数量检查加入到f46011中
+
+insert into f46011(iqmcu,iqitm,iquom,iqdmth,iquser)        
+select '  ZZS0760210' mcu,umitm,umrum,'1','TMP'    
+  from f41002 where umrum not in 
+    (select iquom from f46011 
+       where iqmcu='  ZZS0760210' and 
+          umitm=iqitm )
+  group by umitm,umrum   
+
+insert into f46011(iqmcu,iqitm,iquom,iqdmth,iquser)        
+select '  ZZS0760210' mcu,umitm,umum,'1','TMP'    
+  from f41002 where umum not in 
+    (select iquom from f46011 
+       where iqmcu='  ZZS0760210' and 
+          umitm=iqitm )
+  group by umitm,umum   
+    
+ 
+ 
+ insert into f46011(iqmcu,iqitm,iquom,iqdmth,iquser)    
+select '  ZZS0760210' mcu,ibitm,imuom1 ,'1' ,'TMP'      
+  from f4102   left join f4101 on ibitm=imitm           
+     where ibitm not in                                 
+         (select iqitm from f46011)                     
+      and f4102.ibmcu='  ZZS0760210'                    
+   and ibitm not in 
+        (select umitm from f41002)
+        and ibmcu='  ZZS0760210'
+ 
+
+
+update f46011 set IQUWUM='KG', IQDMTH=1, IQCRMT='',IQEQUS=2, 
+  IQAROT='N',IQABKD='Y',IQAROL='Y',IQSLIM=0,IQEQTY='',
+ IQRPCK='N', IQPACK='', IQLIPL='N',IQPPTG='T',IQPKTG='T',
+  IQPRTG='T', IQPTRA='',IQKTRA='',IQRTRA='', IQUSER='UPDATE',
+  IQPID='UPDATE', IQJOBN='UPDATE',IQUPMJ=110360,
+   IQTDAY=230000,iqgwei=0,
+iqgwid=100, iqgdep=100,iqghet=100,iqwium='MM',iqgcub=100,iqvumd='CC' 
+   where iqmcu='  ZZS0760210'  and iquser='TMP'
+     and iquom not in 
+      ( select iquom from stwms3 where stwms3.iqitm=f46011.iqitm )
+    
+
+
+上载F41002
+------------------------------------------------------------------------
+ select ibitm as IQITM, uom1 as IQUOM, 0 as IQGWID,
+  0 as IQGDEP, max(isnull(u1.conversionfactor,rate*u2.ConversionFactor)) as IQGHET, uom2 as IQWIUM,
+    max(rate) as IQGCUB, layer as IQVUMD,
+     f4101.imuom1 as puom ,itemno 
+ 
+    
+  from
+   ( 
+      select itemno, 'PL' as uom1  , [件/板] as rate,  uom as uom2 ,
+        l*10 as l, w*10 as w, h, 'A' as layer
+       FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', 料品规格$)
+         where [件/板] is not null    
+      
+      union all
+      select itemno, uom as uom1 , [pc/箱] as rate,  'PC' as uom2 ,
+       [长mm] as l, [宽mm] as w, [高mm] as h, 'B' as layer
+       FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', 料品规格$)
+         where [pc/箱]  is not null   
+         
+      union all
+      select itemno, uom as uom1 , [KG/件] as rate,  'KG' as uom2,
+         [长mm] as l, [宽mm] as w, [高mm] as h, 'B' as layer
+       FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', 料品规格$)
+         where [KG/件]   is not null
+         
+      ) as v_core
+      inner join (
+        select ibitm,iblitm,mcnt FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+         'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls',f4102$)
+           ) as f4102 on itemno=iblitm
+           
+       left join f4101 on v_core.itemno=f4101.imlitm
+       left join UOM_Conversion u1 on v_core.itemno=u1.ItemNumber 
+         and v_core.uom1=u1.UOM  and f4101.IMUOM1=u1.PUOM
+       left join UOM_Conversion u2 on v_core.itemno=u2.ItemNumber 
+         and v_core.uom2=u2.UOM  and f4101.IMUOM1=u2.PUOM
+     
+         
+  group by  ibitm, uom1, uom2, layer,f4101.imuom1,itemno
+
+
+
+
+  
+  select  itm as IQITM,  uomf as IQUOM, 0 as IQGWID,
+  0 as IQGDEP, max(tt.rate) as IQGHET,  uomt as IQWIUM,
+    max( f) as IQGCUB, layer as IQVUMD, puom  
+
+  from 
+  ( 
+   select itm, uomf, rate, uomt,l,w,h, 'A' as layer, f ,puom
+    FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', f41002$)
+     where layer='1'
+   
+   union all
+   select itm, uomf, rate, uomt,l,w,h, 'B' as layer,f ,puom
+    FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_material_ver4.xls', f41002$)
+     where layer='2'
+       
+     ) as tt
+  group by itm,uomf,uomt,layer,puom
+     
+将上面的内容贴到STWMS3.XLS中上载
+
+
+注意iggcub对应umconv
+insert into f41002 (ummcu,umitm,umum,umrum,umustr, umconv, umcnv1,
+  umuser,umpid,umjobn,umupmj,umtday)
+ select '' as mcu, iqitm, iquom,iqwium, iqvumd as umustr,
+  iqgcub*10000000, iqghet*10000000,
+ 'UPDATE','UPDATE','UPDATE',111017,000000
+   from stwms3 where IQuom||iqwium not in 
+    (select umum||umrum from f41002 where umitm=iqitm)
+   and iqwium||iquom  not in 
+    (select umrum||umum from f41002 where umitm=iqitm)
+   and iqgcub<>0
+
+update f41002 set umustr='1' where umustr='A'
+update f41002 set umustr='2' where umustr='B'
+
+
+update f41002 set f41002.umustr=(select stwms4.umustr from stwms4   
+ where stwms4.umitm=f41002.umitm and stwms4.umum=f41002.umum        
+     and stwms4.umrum=f41002.umrum)
+  where umum ||umrum in                            
+ (select umum||umrum from stwms4 where stwms4.umitm=f41002.umitm) 
+
+
+insert into f41002 (ummcu,umitm,umum,umrum,umustr, umconv, umcnv1,
+  umuser,umpid,umjobn,umupmj,umtday)
+select ummcu    , umitm, umum ,umrum , umustr          ,             
+ umconv*10000000, umcnv1*10000000,                                   
+'UPDATE','UPDATE','UPDATE',111090,210000                             
+  from stwms4 where umum ||umrum  not in                             
+   (select umum||umrum from f41002 where f41002.umitm=stwms4.umitm)  
+  and umrum ||umum   not in                                          
+   (select umrum||umum from f41002 where f41002.umitm=stwms4.umitm)  
+                                                                     
+
+
+增加F46093
+------------------------------------------------------------------------
+delete from f46093 where EMMCU='  ZZS0760210'
+
+insert into f46093(EMMCU,EMPRP7,EMPRP8,EMPRP9,EMOGRP,
+  EMMPUT,EMMPIK,EMMRPL,EMPUTP,EMPIKP,EMRPLP,EMPRO1,
+   EMPRO2,EMPRO3,EMUSER,EMUPMJ,EMTDAY)
+select IBMCU,IBPRP7, IBPRP8, IBPRP9,'' as GRP,
+  trim(ibprp7)||'-'||substring(ibprp8,3,2), 
+trim(ibprp7)||'-'||substring(ibprp8,3,2), 
+  trim(ibprp7)||'-'||substring(ibprp8,3,2), 
+'S' as PUTP, 'S' as PIKP, 'S' as RPLP,
+  '','','', 'UPDATE','111066','174600'
+  from f4102  where IBMCU='  ZZS0760210'
+   and ( (IBPRP7<>'') or (IBPRP8<>'') or (IBPRP9<>''))
+ group by ibmcu,ibprp7,ibprp8,ibprp9
+
+
+
+
+上载F46095
+------------------------------------------------------------------------
+select id,xx,aear,layer,irxx ,umum,umustr from 
+    (
+      select 处理组1 as id,处理组2 as XX,a1 as aear, 1 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+
+      union all
+      select 处理组1 as id,处理组2 as XX,a2 as aear, 2 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+
+       union all
+      select 处理组1 as id,处理组2 as XX,a3 as aear, 3 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+
+
+      union all
+       select 处理组1 as id,处理组2 as XX,a4 as aear, 4 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+
+       union all
+      select 处理组1 as id,处理组2 as XX,a5 as aear, 5 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+      
+      union all
+      select 处理组1 as id,处理组2 as XX,a6 as aear, 6 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+
+       union all
+      select 处理组1 as id,处理组2 as XX,a7 as aear, 7 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+
+
+      union all
+      select 处理组1 as id,处理组2 as XX,a8 as aear, 8 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+
+       union all
+      select 处理组1 as id,处理组2 as XX,a9 as aear, 9 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+      
+      union all
+      select 处理组1 as id,处理组2 as XX,a10 as aear, 10 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+
+       union all
+      select 处理组1 as id,处理组2 as XX,a11 as aear, 11 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+      
+      
+       union all
+      select 处理组1 as id,处理组2 as XX,a12 as aear, 12 as layer
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', 存储路径$)
+      
+      
+     ) as v_core   
+    left join  (
+      select ibprp7,ibprp8 as IrXX, umum,MIN(umustr) as umustr
+        FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\f4102.xls', f4102$) 
+               left join ( select umitm,umum,  umustr
+                            FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+                       'Excel 8.0;Database=e:\mis\holts\f41002.xls', f41002$) 
+                  ) f41002 on ibitm=umitm 
+           where ibprp8<>'' 
+          group by  ibprp7,ibprp8,umum
+
+      union all
+      select ibprp7,ibprp8 as IrXX, imuom1 ,'X' as umustr
+           from f4102 left join f4101 on ibitm=imitm
+             and IBMCU='  ZZS0760210'
+           where IBPRP8<>''
+             group by IBPRP7,IBPRP8,imuom1
+      
+      ) as v_tt on v_core.id=v_tt.ibprp7 
+          and v_core.XX=v_tt.IrXX
+
+  where aear is not null   and id<>'处理组1' 
+    order by layer,id,umustr
+
+
+
+将上面资料贴在setup_base_ver5.xls  sheet1, 增加一栏流水号
+
+      select ID+'-'+substring(xx,3,2) as mput_mpik_mrpl,
+         ord as etseq, umum, xx as srul, aear as pzon_kzon_zonr
+           FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\setup_base_ver5.xls', sheet1$)
+       where umum <>'NULL'
+  
+
+将上面资料贴在stwms1 上传到JDE
+
+delete from f46095 where etmcu='  ZZS0760210'
+
+insert into f46095 ( ETMCU, ETMPUT,ETMPIK,ETMRPL,ETPUTP, ETSEQ,
+  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,	ETPZON,	ETKZON,	ETZONR,
+ ETMLS1,ETMLS2,	ETMLS3,	ETAMNU,	ETAMPT,	ETABKD,	ETMERG,	ETAMPK,
+  ETKMNU,ETFIFX,ETAROL,	ETARPL,	ETOGRP,	ETRQLY,	ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY  )
+select  '  ZZS0760210' as etmcu,  lmsty1, '' as etmpik,
+  '' as etmrpl, 'S' as etputp, lmwsqp, lmzonr, '' as etumgp,
+   1 as etasum, 'R' as etprcd, lmpzon as etsrul,
+  lmcgrp as etpzon,'' as etkzon,'' as etzonr,
+   '1' as etmls1,'' as etmls2, '' as etmls3,
+   'N' as etamnu,'N' as etampt,'Y' as etabkd,'Y' as etmerg,
+   '','','','','','','Y' as etrqly, '' as etomov,
+  'UPDATE',110365,235900  
+    from stwms1
+   where lmsty1<>''
+
+
+插入pick记录
+insert into f46095 ( ETMCU, ETMPUT,ETMPIK,ETMRPL,ETPUTP, ETSEQ,
+  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,	ETPZON,	ETKZON,	ETZONR,
+ ETMLS1,ETMLS2,	ETMLS3,	ETAMNU,	ETAMPT,	ETABKD,	ETMERG,	ETAMPK,
+  ETKMNU,ETFIFX,ETAROL,	ETARPL,	ETOGRP,	ETRQLY,	ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY  )
+select  ETMCU, '' as  ETMPUT, etmput as ETMPIK, '' as ETMRPL,
+ ETPUTP, ETSEQ,  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,
+  '' as ETPZON, etpzon as ETKZON, '' as ETZONR,
+ 0 as  ETMLS1,etmls1 as ETMLS2, 0 as ETMLS3,
+  '' as	ETAMNU, '' as ETAMPT, '' as ETABKD, '' as ETMERG,
+  'N' as ETAMPK, 'N' as  ETKMNU, 'Y' as ETFIFX, 'N' as ETAROL,
+   'Y' as ETARPL, '' as ETOGRP,	'' as ETRQLY, '' as ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY
+ from f46095 where etmcu='  ZZS0760210' and 
+   etmput<>''
+ 
+插入补货记录
+insert into f46095 ( ETMCU, ETMPUT,ETMPIK,ETMRPL,ETPUTP, ETSEQ,
+  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,	ETPZON,	ETKZON,	ETZONR,
+ ETMLS1,ETMLS2,	ETMLS3,	ETAMNU,	ETAMPT,	ETABKD,	ETMERG,	ETAMPK,
+  ETKMNU,ETFIFX,ETAROL,	ETARPL,	ETOGRP,	ETRQLY,	ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY  )
+select  ETMCU, '' as  ETMPUT, '' as  ETMPIK,  etmput as ETMRPL,
+ ETPUTP, ETSEQ,  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,
+  '' as ETPZON, '' as ETKZON, etpzon as ETZONR,
+ 0 as  ETMLS1, 0  as ETMLS2, etmls1 as ETMLS3,
+  '' as	ETAMNU, '' as ETAMPT, '' as ETABKD, '' as ETMERG,
+  'N' as ETAMPK, 'N' as  ETKMNU, 'Y' as ETFIFX, 'N' as ETAROL,
+   'Y' as ETARPL, '' as ETOGRP,	'' as ETRQLY, '' as ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY
+ from f46095 where etmcu='  ZZS0760210' and 
+   etmput<>''
+
+
+
+
+
+insert into f46095 ( ETMCU, ETMPUT,ETMPIK,ETMRPL,ETPUTP, ETSEQ,
+  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,	ETPZON,	ETKZON,	ETZONR,
+ ETMLS1,ETMLS2,	ETMLS3,	ETAMNU,	ETAMPT,	ETABKD,	ETMERG,	ETAMPK,
+  ETKMNU,ETFIFX,ETAROL,	ETARPL,	ETOGRP,	ETRQLY,	ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY  )
+select  ETMCU, trim(etmput)||'-'||substring(etsrul,3,2) as  ETMPUT,
+ ETMPIK,ETMRPL,ETPUTP, ETSEQ,
+  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,	ETPZON,	ETKZON,	ETZONR,
+ ETMLS1,ETMLS2,	ETMLS3,	ETAMNU,	ETAMPT,	ETABKD,	ETMERG,	ETAMPK,
+  ETKMNU,ETFIFX,ETAROL,	ETARPL,	ETOGRP,	ETRQLY,	ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY
+ from f46095 where etmcu='  ZZS0760210' and 
+   etmput<>''
+
+insert into f46095 ( ETMCU, ETMPUT,ETMPIK,ETMRPL,ETPUTP, ETSEQ,
+  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,	ETPZON,	ETKZON,	ETZONR,
+ ETMLS1,ETMLS2,	ETMLS3,	ETAMNU,	ETAMPT,	ETABKD,	ETMERG,	ETAMPK,
+  ETKMNU,ETFIFX,ETAROL,	ETARPL,	ETOGRP,	ETRQLY,	ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY  )
+select  ETMCU, ETMPUT, trim(etmpik)||'-'||substring(etsrul,3,2) as 
+ ETMPIK,ETMRPL,ETPUTP, ETSEQ,
+  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,	ETPZON,	ETKZON,	ETZONR,
+ ETMLS1,ETMLS2,	ETMLS3,	ETAMNU,	ETAMPT,	ETABKD,	ETMERG,	ETAMPK,
+  ETKMNU,ETFIFX,ETAROL,	ETARPL,	ETOGRP,	ETRQLY,	ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY
+ from f46095 where etmcu='  ZZS0760210' and 
+   etmpik<>''
+
+insert into f46095 ( ETMCU, ETMPUT,ETMPIK,ETMRPL,ETPUTP, ETSEQ,
+  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,	ETPZON,	ETKZON,	ETZONR,
+ ETMLS1,ETMLS2,	ETMLS3,	ETAMNU,	ETAMPT,	ETABKD,	ETMERG,	ETAMPK,
+  ETKMNU,ETFIFX,ETAROL,	ETARPL,	ETOGRP,	ETRQLY,	ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY  )
+select  ETMCU, ETMPUT, ETMPIK,
+  trim(etmrpl)||'-'||substring(etsrul,3,2) as ETMRPL,ETPUTP, ETSEQ,
+  ETUOM, ETUMGP,ETASUM,	ETPRCD,	ETSRUL,	ETPZON,	ETKZON,	ETZONR,
+ ETMLS1,ETMLS2,	ETMLS3,	ETAMNU,	ETAMPT,	ETABKD,	ETMERG,	ETAMPK,
+  ETKMNU,ETFIFX,ETAROL,	ETARPL,	ETOGRP,	ETRQLY,	ETOMOV,
+	ETUSER,	ETUPMJ,	ETTDAY
+ from f46095 where etmcu='  ZZS0760210' and 
+   etmrpl<>''
+
+
+检查表F46822,F46821,F46027
+------------------------------------------------------------------------
+select  iblitm, ibprp7,etsrul,etmput,etmpik,etmrpl ,etuom               
+   from f46821 inner join f46095 on lxsrul=etsrul and lxmcu=etmcu 
+     inner join f4102 on lxmcu=ibmcu and etmput=ibprp7            
+  where iblitm in ('ME70501131','MER1902009')
+  group by iblitm,ibprp7,etsrul,etmput,etmpik,etmrpl,etuom                                                       
+
+
+
+将地点资料转到正式环境
+------------------------------------------------------------------------
+insert into stwms1 (
+LMMCU,LMLOCN,LMAISL,LMBIN,LMLA03,LMLA04,LMLA05,LMLA06,
+LMLA07,LMLA08 ,LMLA09 ,LMLA10 ,LMLLDL ,LMSTY1 ,LMCGRP ,
+LMLHLD ,LMFREZ ,LMNETA ,LMMNUP ,LMMNUK,LMLCOD,LMMMTH,
+LMEQTY,LMCTNF,LMMCNT,LMMLOT,LMMITM,LMSTAG,LMLVER,
+LMPCNF,LMKCNF,LMAPUT,LMAPIK,LMARPL,LMPZON,LMKZON,
+LMZONR,LMSTGP,LMSTGK,LMSTGR,LMWSQP,LMWSQQ,LMWSQR,
+LMDISX,LMDISY,LMDISZ,LMURCD,LMURDT,LMURAT,LMURAB,
+LMURRF,LMOT1Y,LMOT2Y,LMUSER,LMPID,LMJOBN,LMUPMJ,LMTDAY )
+
+select LMMCU,LMLOCN,LMAISL,LMBIN,LMLA03,LMLA04,LMLA05,LMLA06,
+LMLA07,LMLA08 ,LMLA09 ,LMLA10 ,LMLLDL ,LMSTY1 ,LMCGRP ,
+LMLHLD ,LMFREZ ,LMNETA ,LMMNUP ,LMMNUK,LMLCOD,LMMMTH,
+LMEQTY,LMCTNF,LMMCNT,LMMLOT,LMMITM,LMSTAG,LMLVER,
+LMPCNF,LMKCNF,LMAPUT,LMAPIK,LMARPL,LMPZON,LMKZON,
+LMZONR,LMSTGP,LMSTGK,LMSTGR,LMWSQP,LMWSQQ,LMWSQR,
+LMDISX,LMDISY,LMDISZ,LMURCD,LMURDT,LMURAT,LMURAB,
+LMURRF,LMOT1Y,LMOT2Y,LMUSER,LMPID,LMJOBN,LMUPMJ,LMTDAY
+from f4100 where lmmcu='  ZZS0760210'
+
+
+
+
+  
+ECS上载测试
+------------------------------------------------------------------------
+insert into f47121(m1edst,m1ekco,m1edoc,m1edct,m1edln )
+ values(852,'90000',81000001,'IT',1000)
+
+
+Location capacity
+------------------------------------------------------------------------
+insert into f46024(lcmcu,lcsty1,lcitm,lcuom,lcmaxq,lcuser,lcupmj)
+select ibmcu,'S1',ibitm, imuom1, 300000 as lcmaxq,'UPDATE',111001
+  from f4102 inner join f4101 on ibitm=imitm
+ where f4102.ibmcu='  ZZS0760210'
+   and f4101.imglpt='IN98'
+
+S1-S5  P1-P5
+
+
+
+检查
+------------------------------------------------------------------------
+
+检查F46095是否有对应记录
+select etmcu,etmput,etmpik,etmrpl,etuom,etsrul,etpzon,etkzon,etzonr
+ from f46095 where
+
+检查F46821是否有对应随机规则IXX
+select etmput, etuom,etsrul,etpzon 
+ from f46095 left join f46821 on etsrul=lxsrul
+  where lxsrul is null
+ group by etmput, etuom,etsrul,etpzon
+
+检查F46821对应的Location LXX
+select lxsrul,etpzon,lmcgrp
+ from f46821 inner join f46095 on lxsrul=etsrul
+  inner join f4100 on lxlocn=lmlocn
+ group by lxsrul,etpzon,lmcgrp
+  order by lxsrul,lmcgrp
+
+检查F46821对应的Location LXX中排斥的记录
+select lxsrul,etpzon,lmcgrp,lmpzon
+ from f46821 left join f46095 on lxsrul=etsrul
+  left join f4100 on lxlocn=lmlocn
+ where etpzon<>lmpzon
+ group by lxsrul,etpzon,lmcgrp,lmpzon
+  order by lxsrul,lmcgrp
+
+
+检查表
+  select lxsrul, lmlocn, lmpzon,lmkzon,lmzonr  
+      from f46821
+       left join  f4100 on      LXLOCN=lmlocn
+      left join f46095 on lxsrul=etsrul and lmpzon=etpzon
+
+单位转换系数检查表      
+select ibprp7,ibprp8, imlitm,rtrim(imdsc1)+imdsc2 as itemdesc,
+  umum,umconv/10000000 as rate,umrum,umustr
+       FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\f41002.xls', f41002$)
+    left join f4101d on umitm=imitm
+    left join f4102 on umitm=ibitm and ibmcu='  ZZS0760210'
+    where umustr<>''
+     order by umitm,umustr
+
+缺单位规格清单
+select ibprp7,ibprp8, imlitm,rtrim(imdsc1)+imdsc2 as itemdesc  
+       FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\holts\f41002.xls', f41002$)
+    left join f4101d on umitm=imitm
+    left join f4102 on umitm=ibitm and ibmcu='  ZZS0760210'
+    where imlitm not in 
+     (select 货品号 from OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
+      'Excel 8.0;Database=e:\mis\zhongshan\仓库\货品规格表.xls', sheet1$)
+       )
+     and ibstkt not in ('U','O')
+    group by IBPRP7,IBPRP8,IMLITM,rtrim(imdsc1)+imdsc2 
+     order by imlitm 
+
+更新From
+update f4611 set r2ldfs= (select min(ifldsq) from f4602                 
+  where r2itm=ifitm and r2floc=iflocn and r2flot=iflotn            
+          and r2mcu=ifmcu  )                                       
+    where r2pstb='340' and r2floc =                                
+    (select iflocn from f4602 where ifitm=r2itm and iflotn=r2flot  
+             and ifmcu=r2mcu and r2floc=iflocn
+         group by iflocn )                   
+
+update f4611 set r2ldts= (select min(ifldsq) from f4602                 
+  where r2itm=ifitm and r2floc=iflocn and r2flot=iflotn            
+          and r2mcu=ifmcu  )                                       
+    where r2pstb='340' and r2floc =                                
+    (select iflocn from f4602 where ifitm=r2itm and iflotn=r2flot  
+             and ifmcu=r2mcu and r2floc=iflocn 
+         group by iflocn)                   
+
+select *
+ from f41002 left join f4101 on umitm=imitm
+ where umustr = (select max(umustr) from 
+  f41002 tt where f41002.umitm=tt.umitm)
+   and umustr>'0'    and umrum<>imuom1
+
+
+上载F4600
+------------------------------------------------------------------------
+update h4600 set r1rqsq=r1rqsq*1000, r1qtrq=r1qtrq*100      
+update h4600 set r1pstb='200' , r1itm=
+(select imitm from f4101 where r1litm=imlitm)     
+    where r1rqbt=56
+ 
+insert into f4600 ( R1TYFL,R1OCDE,R1RQBT,R1RQSQ,R1DCTO,                       
+  R1MCU,R1ITM,R1LITM,R1AITM,R1OVRQ,R1MERG,R1QTRQ,           
+ R1UOM,R1LDFS,R1FLOC,R1FLOT,R1LDTS,R1TLOC,R1TLOT,R1SRP1,  
+  R1SRP2,R1SRP3,R1SRP4,R1SRP5,R1DSC1,R1DSC2,R1PSTB,R1TRDJ,
+ R1TREX,R1DTCR, R1TMCR,R1USER,R1PID,R1JOBN,R1UPMJ, R1TDAY)
+select R1TYFL,R1OCDE,R1RQBT,R1RQSQ,R1DCTO,                       
+ R1MCU,R1ITM,R1LITM,R1AITM,R1OVRQ,R1MERG,R1QTRQ,           
+  R1UOM,R1LDFS,R1FLOC,R1FLOT,R1LDTS,R1TLOC,R1TLOT,R1SRP1,  
+  R1SRP2,R1SRP3,R1SRP4,R1SRP5,R1DSC1,R1DSC2,R1PSTB,R1TRDJ,
+ R1TREX,R1DTCR, R1TMCR,R1USER,R1PID,R1JOBN,R1UPMJ, r1tday
+ from h4600 where r1rqbt=55
+
+update f4611 set r2dsc1=(select imdsc1 from f4101d where
+   imlngp='CS' and r2litm=imlitm), r2dsc2=(select imdsc2
+      from f4101d where imlngp=  'CS' and r2litm=imlitm)                        
+  where r2rqbt in (56)
+ 
+update f4611 set r2doco=(select max(ildoco) from f4111 where ildct  
+='OV' and illitm=r2litm and illotn=r2flot )   ,
+  r2rcdj=(select max(iltrdj) from f4111 where ildct  
+='OV' and illitm=r2litm and illotn=r2flot )                        
+  where r2rqbt in (56) and ( r2litm || r2flot ) in                       
+( select (illitm||illotn) from f4111 where ildct='OV' )             
+
+
+维护
+------------------------------------------------------------------------
+
+F4611 中已没有记录, 但F4602 QTRI QTRO仍有数量的清除
+update f4602 set ifqtro=0                                             
+   where  ( ifqtro <>0  )  and  (ifmcu='  ZZS0760210')                
+     and iflocn not in (                                              
+       select r2floc from f4611  where r2pstb in (300,340)            
+         and ifitm=r2itm )                                            
+  and iflocn like '4%'                                             
+
+            
+update f4602 set ifqtri=0                                     
+   where  ( ifqtri  <>0 )  and  (ifmcu='  ZZS0760210')        
+     and iflocn not in (                                      
+       select r2tloc from f4611 where r2pstb in (300,340)     
+         and ifitm=r2itm  )                                   
+ and iflocn like '4%'                                      
+
+F4611 中已没有记录, 但F41021 QTRI QTRO仍有数量的清除
+update  f41021 set  liqtro = 0
+   where  ( liqtro <>0  )  and  (limcu='  ZZS0760210')
+     and lilocn not in (
+       select r2floc from f4611   where r2pstb in (300,340)
+           and liitm=r2itm  )
+    and lilocn like '4%'
+            
+update  f41021 set liqtri = 0 
+   where  ( liqtri  <>0 )  and  (limcu='  ZZS0760210')
+     and lilocn not in (
+       select r2tloc from f4611 where r2pstb in (300,340) 
+         and liitm=r2itm )
+     and lilocn like '4%'
+
+
+--没有库存没有运入没有运出,但仍占空间记录
+update f4602 set ifcpl1=0,ifepl1=0, ifcpl2=0,ifepl2=0,                 
+  ifcpl3=0, ifepl3=0, ifcpl4=0,ifepl4=0,ifcpl5=0,ifepl5=0,             
+   ifweit=0,ifrwet=0,ifcube=0,ifrcub=0,iftqty=0                        
+ where ifmcu='  ZZS0760210' and iflocn like '4%'                      
+  and iftqty=0 and  ifqtro=0 and ifqtri=0                              
+
+--删除空记录
+delete from f4602
+ where ifmcu='  ZZS0760210' 
+  and iftqty=0 and ifqtro=0 and ifqtri=0
+    and iflocn like '4%'
+
+
+F41021已经没有库存,但F4602仍显示有库存,这些库位将不会被分配,用以下命令清除这些错误的数据.
+update f4602 set ifcpl1=0,ifepl1=0, ifcpl2=0,ifepl2=0,
+  ifcpl3=0, ifepl3=0, ifcpl4=0,ifepl4=0,ifcpl5=0,ifepl5=0,
+   ifweit=0,ifrwet=0,ifcube=0,ifrcub=0,iftqty=0 
+ where ifmcu='  ZZS0760210' and iflocn not in (                                
+    select lilocn from f41021                   
+      where  lipqoh<>0  and limcu='  ZZS0760210'
+        and lilocn=iflocn and lilotn=iflotn
+      )  
+  and iftqty <> 0 and iflocn like '4%'
+
+---temp
+update f4602 set  ifcpl1=0,ifepl1=0, ifcpl2=0,ifepl2=0,
+  ifcpl3=0, ifepl3=0, ifcpl4=0,ifepl4=0,ifcpl5=0,ifepl5=0,
+   ifweit=0,ifrwet=0,ifcube=0,ifrcub=0,iftqty=0 
+where iftqty=0 and ifqtri=0 and ifqtro=0 and
+  iflocn = '4310311'
+
+
+--检查有库存但高级仓库为空的记录
+select liitm from f41021 inner join f4602                      
+ on limcu=ifmcu and liitm=ifitm and lilocn=iflocn              
+   and lilotn=iflotn                                           
+ where lipqoh>0 and iftqty=0                                   
+     group by liitm                                            
+
+
+成排解冻货位
+update f4100 set  lmaput='Y', lmapik='Y',lmarpl='Y'              
+ where (lmmcu ='  ZZS0760210' ) and (lmlocn like '43187%')      
+成排更改货位分区
+update f4100 set lmpzon='GC14',lmkzon='GC14',lmzonr='GC14'      
+  ,lmcgrp='LR13'
+ where (lmmcu ='  ZZS0760210' ) and (lmlocn like '43187%')      
+
+
+检查700538 BK异常物料
+select r1itm ,r1litm  from f4600 group by r1itm,r1litm     
+ where r1pstb=220 and r1doco=7000538 and r1dcto='BK'            
+  and r1itm not in (select r2itm from f4611 
+   where r2doco=7000538 and r2dcto='BK'  
+    and r2pstb=340 ) 
+
+update f4600 set r2pstb=200                           
+ where r1doco=7000538 and r1dcto='BK'                 
+     and r2pstb=220                                     
+                      
+
+update F4141 set pjcccd='1', pjcntj=111365,
+   pjtqct=@parameter110 * 100 , 
+    pjtact=@parameter110 * 100 * pjuncs / 10000 
+    where  PJCYNO='@parameter101' and pjlitm='@parameter102' 
+     and pjlocn='@parameter109' and pjlotn='@parameter108'
+ 
+
+
+
+

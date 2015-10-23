@@ -1,0 +1,35 @@
+﻿odbc可以两种用法
+
+SQL code
+
+    EXEC sp_addlinkedserver @server = '链接服务名称', @srvproduct = '', @provider='MSDASQL', @datasrc =[ODBC 数据源的系统 DSN]
+
+
+或者
+
+SQL code
+
+    EXEC sp_addlinkedserver @server = '链接服务名称', @srvproduct = '', @provider='MSDASQL', @provstr=[ODBC 连接字符串]
+
+
+
+[ODBC 数据源的系统 DSN] 可以取控制面板的数据源名称
+[ODBC 连接字符串] 最好在数据源中调试好粘贴过来
+
+
+ 
+--创建链接服务器 
+exec sp_addlinkedsrvlogin  '链接服务名称', 'false ',null, '用户名 ', '密码 ' 
+
+EXEC sp_addlinkedserver @server = 'DB2_LIVDTA_READ', @srvproduct = '', @provider='MSDASQL', @datasrc =[db2_livdta_onlyread]
+exec sp_addlinkedsrvlogin 'DB2_LIVDTA_READ', 'false', null, 'miscs', 'miscs'
+
+--查询示例 
+select * from DB2_LIVDTA_READ.S103HHCM.LIVDTA.F4101
+
+--导入示例 
+select * into 表 from ITSV.数据库名.dbo.表名 
+
+--以后不再使用时删除链接服务器 
+exec sp_dropserver  'DB2_LIVDTA_READ', 'droplogins ' 
+

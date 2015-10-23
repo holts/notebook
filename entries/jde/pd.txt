@@ -1,0 +1,365 @@
+﻿
+在JDE中按货位生成盘点表，删除加工费代码：
+delete   from f4141                                       
+ where pjcyno>552  and  substring(pjlitm,11,1)='*'        
+delete   from f4141                                       
+ where pjcyno>552  and  substring(pjlitm,12,1)='*'        
+
+按盘点号刷新MIS（实时）取有库存清单交仓库盘点。
+
+仓库按下表格式填写盘点数量，将文件传给我上传JDE，注意盘点数量按JDE中的主单位，如果盘点的代码在盘点表上没有，请单独放在另一个sheet, 跟回盘点货位的盘点号。
+
+盘点记录单号	代码		货品名称	入货号		库位		JDE数	实盘数
+604 		RO40109040	多聚甲醛(AR)	20120102	4704504		418	418
+
+
+通过WEB上传盘点资料
+update F4141 set pjtqct=@parameter107*100 , pjtact=@parameter107*pjuncs/100 ,
+pjcntj=113365, pjcccd='1'
+where pjcyno='@parameter101' and pjlitm='@parameter102' and pjlotn='@parameter104' and pjlocn='@parameter105' and pjtqoh=@parameter106 * 100
+
+
+也可以直接上传到H4141，然后更新
+
+UPDATE F4141 SET pjtqct=(select pjtqct from mis/h4141 h4141
+  where f4141.pjcyno=h4141.pjcyno and f4141.pjlocn=h4141.pjlocn
+    and f4141.pjlotn=h4141.pjlotn and f4141.pjlitm=h4141.pjlitm
+    ) ,
+   pjcntj=113363, pjcccd='1'                       
+ where pjCYNO in (select pjCYNO from mis/h4141 h4141 where
+    f4141.pjcyno=h4141.pjcyno and f4141.pjlitm=h4141.pjlitm
+     and f4141.pjlotn=h4141.pjlotn and f4141.pjlocn=h4141.pjlocn
+         )   
+
+UPDATE F4141 SET pjtact=pjtqct*pjuncs / 10000            
+ where pjCYNO in (select pjCYNO from mis/h4141 h4141 where
+    f4141.pjcyno=h4141.pjcyno and f4141.pjlitm=h4141.pjlitm
+     and f4141.pjlotn=h4141.pjlotn and f4141.pjlocn=h4141.pjlocn
+       and f4141.pjmcu=h4141.pjmcu )   
+  and pjcccd='1'
+
+
+ 715 
+ 735 
+ 736 
+ 737 
+ 738 
+ 739 
+ 740 
+ 741 
+ 742 
+ 743 
+ 744 
+ 745 
+ 747 
+748 
+752 
+753 
+754 
+755 
+756 
+758 
+759 
+761 
+762 
+763 
+764 
+765 
+766 
+767
+768
+769
+770
+771
+772
+774
+775
+776
+778
+779
+780
+781
+782
+783
+784
+785
+786
+787
+790
+791 
+792 
+793 
+798 
+799 
+800 
+801 
+802 
+803 
+804 
+807 
+813 
+815 
+816 
+819
+820
+821
+822
+823
+
+
+
+
+通知仓库复查，如果有没成功的，复查出来后提供清单给我手工处理。
+
+insert into f4141(
+ PJCYNO,PJCCCD,PJITM,PJLITM,PJAITM,PJMCU,PJLOCN,PJLOTN,
+ PJSTUN,PJSRP1,PJSRP2,PJSRP3,PJSRP4,PJSRP5,PJGLPT,PJTQOH,
+ PJTAOH,PJTQCT,PJTACT,PJUNCS,PJCNTJ,PJCNTB,PJAISL,PJBIN,
+ PJUSER,PJPID,PJUPMJ,PJJOBN,PJTDAY)
+select  PJCYNO,PJCCCD,PJITM,PJLITM,PJAITM,PJMCU,PJLOCN,
+ '20120102' as PJLOTN,PJSTUN,PJSRP1,PJSRP2,PJSRP3,PJSRP4,
+ PJSRP5,PJGLPT,0 as PJTQOH,0 as PJTAOH,0 as PJTQCT,
+ 0 as PJTACT,PJUNCS,PJCNTJ,PJCNTB,PJAISL,
+ PJBIN,PJUSER,PJPID,PJUPMJ,PJJOBN,PJTDAY
+  from f4141 
+ where pjcyno=604 and pjlitm='RO40109040' 
+   and pjlocn='4704504'
+
+上传完成后，在JDE中补打盘点单状态变为20
+
+在输入窗品输入C，按回车，状态变为30
+
+然后打印差异报表
+
+在查询窗口输入4审核单据，状态变为40
+
+更新，生成分类帐记录PI，生成总帐记录PI
+
+658盘点单在更新时，由于总帐级AAI 4152，4154没有设好，导至只有部分生成了盘点凭证，补上AAI后再跑盘点更新，做了多次分别生成298，339，341，342，344，345， 正常情况下将它们全部过帐就可以了，不能删除重做，因为此时库存已变化。
+
+298,339,341,342,344,345 在f4111中将PI更改为CG, F0911中对应记录删除。
+
+
+用盘点单转IN98批号
+
+PI单的4154 由原来的ZZS0760410.697000.ME 改为 ZZS0760999.221000
+生成当前库存的IN98盘点单
+
+664 665 清除ZZS0760210旧批号IN98库存  生成凭证号 347 PI  348 PI
+
+347 PI 在F4111中更改为CG, F0911中删除
+
+在做旧入货号清零时，很顺利，但做增加新入货号时，系统一直在运行，不知何时完成，而现场又收了一堆货，跑建议会重货位，先冻结这些清了库存的货位让用户跑建议上架
+ update f4100 set lmaput='N',lmapik='N',lmarpl='N'                  
+   where lmmcu='  ZZS0760210'  and  lmlocn in                       
+   (select pjlocn from f4141 where pjcyno=665 and pjlocn like '4%') 
+
+在F41021中加入新的空记录
+insert into f41021 (liitm,limcu,lilocn,lilotn,lipbin,
+ liglpt,lilots, liuser, lipid,lijobn,liupmj,litday)
+select pjitm,pjmcu,pjlocn,pjlotn,'S' as lipbin, pjglpt, 
+ '' as lilots ,'' as liuser, '' as pid,  '' as jobn,
+  113001,182200                                          
+ from f4141 where pjcyno=667                                         
+group by pjitm,pjmcu,pjlocn,pjlotn,pjglpt    
+
+记得在输入界面过状态到20，30，40
+ 
+666 增加ZZS0760210新批号IN98库存  生成凭证号 349 PI
+667                                          352,353,354,355,357,358
+
+更改 f4111中的 PI 349，352，353，354，355，357，358 为CG，总帐中凭证保留并过帐
+
+
+668 清除ZZS0760510旧批号IN98库存  生成凭证号  359 PI
+
+669 增加ZZS0760510新批号IN98库存  生成凭证号  360 PI
+670                                           362 PI
+ 
+
+ZZS0760210 重做转批号
+==================================================
+
+update f4100 set lmaput='N',lmapik='N',lmarpl='N'                  
+   where lmmcu='  ZZS0760210'  and  lmlocn in                       
+   (select pjlocn from f4141 where pjcyno=665 and pjlocn like '4%') 
+
+复制错的库存到671 
+
+insert into f4141(                                          
+ PJCYNO,PJCCCD,PJITM,PJLITM,PJAITM,PJMCU,PJLOCN,PJLOTN,     
+ PJSTUN,PJSRP1,PJSRP2,PJSRP3,PJSRP4,PJSRP5,PJGLPT,PJTQOH,   
+ PJTAOH,PJTQCT,PJTACT,PJUNCS,PJCNTJ,PJCNTB,PJAISL,PJBIN,    
+ PJUSER,PJPID,PJUPMJ,PJJOBN,PJTDAY)
+select 671 as  PJCYNO,PJCCCD,PJITM,PJLITM,PJAITM,PJMCU,
+ PJLOCN,  PJLOTN,PJSTUN,PJSRP1,PJSRP2,PJSRP3,PJSRP4,   
+ PJSRP5,PJGLPT, PJTQOH,  PJTAOH, PJTQCT,         
+      PJTACT,PJUNCS,PJCNTJ,PJCNTB,PJAISL,                   
+ PJBIN,PJUSER,PJPID,PJUPMJ,PJJOBN,PJTDAY                    
+  from f4141 where pjcyno in (666,667)                                           
+update f4141 set pjcccd='1' ,pjtqoh=pjtqct, pjtaoh=pjtact
+ where pjcyno=671
+
+671，反冲库存为 0   过帐凭证为 PI 363，364
+
+更改F4111中PI 363，364 为CG， 总帐中的PI 363，364 保留并过帐
+
+重新上传正确的入货号到672
+insert into f41021 (liitm,limcu,lilocn,lilotn,lipbin,   
+ liglpt,lilots, liuser, lipid,lijobn,liupmj,litday)     
+select pjitm,pjmcu,pjlocn,pjlotn,'S' as lipbin, pjglpt, 
+ '' as lilots ,'' as liuser, '' as pid,  '' as jobn,    
+  113001,182200                                         
+ from f4141 where pjcyno=672  and  pjlotn not in 
+  (select lilotn from f41021 where limcu='  ZZS0760210'
+    and liglpt='IN98' )                          
+group by pjitm,pjmcu,pjlocn,pjlotn,pjglpt               
+
+
+672  过帐凭证为 PI 365 ,366 ,367,368
+
+                                           
+update f4141 set pjcccd='3' ,pjcyno=673                                         
+  from f4141 where pjcyno=672 and pjitm in(select liitm from f41021    
+ where pjmcu=limcu and pjlotn=lilotn and pjlocn=lilocn                 
+      and lipqoh>0 )                                                   
+                                                                    
+
+
+
+673  空号
+
+
+update f4111 set ildct='IA'                             
+ where ildct ='PI'   and ildoc
+  in ( 348, 359,360,362,365,366,367,368 )          
+
+==============================
+
+通过WEB将关联号加在新批号上
+update F4108 set iorlot='@parameter104',ioldsc='@parameter103' where ioMCU='  ZZS0760210' and ioLITM='@parameter102' and iolotn='@parameter105' and ioldsc=''  and iorlot=''
+ 
+
+select * from f4108
+ where iomcu='  ZZS0760210' and iolotn in
+  (select pjlotn from
+     (  select  pjlitm,pjlotn,pjaitm      
+      from mis/h4141                 
+     group by pjlitm,pjlotn,pjaitm   
+  ) as v_core1 where pjlitm=iolitm )
+  
+用以下命令写入对应旧批号
+update f4108 set iorlot=                               
+  (select pjaitm from                                  
+     (  select  pjlitm,pjlotn,pjaitm                   
+      from mis/h4141                                   
+     group by pjlitm,pjlotn,pjaitm                     
+  ) as v_core1 where pjlitm=iolitm and pjlotn=iolotn ) 
+where iomcu='  ZZS0760210'  and iolitm in              
+  (select pjlitm from  mis/h4141 where iolotn=pjlotn ) 
+   and iolotn in                                       
+ (select pjlotn from mis/h4141 where iolitm=pjlitm)    
+     and ioupmj=113003                                 
+    and iorlot='' and iouser='ZZSHOLTS'                
+
+
+复制旧资料
+
+ update f4108 set f4108.ioldsc=(select e.ioldsc
+   from f4108 e where e.iomcu=f4108.iomcu and 
+    f4108.iolitm=e.iolitm  and f4108.iorlot=e.iolotn )
+  where f4108.iorlot<>'' and f4108.iouser='ZZSHOLTS' 
+   and f4108.ioupmj=113003 and f4108.iomcu='  ZZS0760210' 
+
+ update f4108 set f4108.iommej=(select e.iommej 
+   from f4108 e where e.iomcu=f4108.iomcu and 
+    f4108.iolitm=e.iolitm  and f4108.iorlot=e.iolotn )
+  where f4108.iorlot<>'' and f4108.iouser='ZZSHOLTS' 
+   and f4108.ioupmj=113003 and f4108.iomcu='  ZZS0760210' 
+ 
+ update f4108 set f4108.iolots=(select e.iolots 
+   from f4108 e where e.iomcu=f4108.iomcu and 
+    f4108.iolitm=e.iolitm  and f4108.iorlot=e.iolotn )
+  where f4108.iorlot<>'' and f4108.iouser='ZZSHOLTS' 
+   and f4108.ioupmj=113003 and f4108.iomcu='  ZZS0760210' 
+  
+ update f4108 set f4108.iolot1=(select e.iolot1 
+   from f4108 e where e.iomcu=f4108.iomcu and 
+    f4108.iolitm=e.iolitm  and f4108.iorlot=e.iolotn )
+  where f4108.iorlot<>'' and f4108.iouser='ZZSHOLTS' 
+   and f4108.ioupmj=113003 and f4108.iomcu='  ZZS0760210' 
+
+ update f4108 set f4108.ioua06=(select e.ioua06 
+   from f4108 e where e.iomcu=f4108.iomcu and 
+    f4108.iolitm=e.iolitm  and f4108.iorlot=e.iolotn )
+  where f4108.iorlot<>'' and f4108.iouser='ZZSHOLTS' 
+   and f4108.ioupmj=113003 and f4108.iomcu='  ZZS0760210' 
+   
+更新仓库状态      
+update f41021 set  lilots = ( select f4108.iolots from f4108       
+  where f41021.limcu=f4108.iomcu and f41021.liitm=f4108.ioitm      
+    and f41021.lilotn=f4108.iolotn )   
+ where limcu='  ZZS0760210' and liitm in                           
+   (  select f4108.ioitm  from f4108                               
+      where f4108.iorlot<>'' and f4108.iouser='ZZSHOLTS'           
+        and f4108.ioupmj=113003 and f4108.iomcu='  ZZS0760210')    
+ and lilotn in                                                     
+   ( select f4108.iolotn  from f4108                               
+      where f4108.iorlot<>'' and f4108.iouser='ZZSHOLTS'           
+        and f4108.ioupmj=113003 and f4108.iomcu='  ZZS0760210')    
+ and lipqoh<> 0                                                    
+                   
+
+
+============================================
+update f4108 set f4108.iommej=(select e.iommej                
+   from f4108 e where e.iomcu=f4108.iomcu and                 
+    f4108.iolitm=e.iolitm  and f4108.iorlot=e.iolotn )        
+  where iomcu='  ZZS0760510'  and iorlot<>''                  
+      and iouser='ZZSHOLTS'   and iolotn<>iorlot              
+   and  f4108.iolitm||f4108.iorlot in                         
+   (select iolitm||iolotn from f4108                          
+      where iomcu='  ZZS0760510' )                            
+
+update f41021 set  lilots = ( select f4108.iolots from f4108     
+  where f41021.limcu=f4108.iomcu and f41021.liitm=f4108.ioitm    
+    and f41021.lilotn=f4108.iolotn )                             
+ where limcu='  ZZS0760510' and liitm in                         
+   (select ivitm from f4104 where ivxrt='R2' and                 
+      ivmcu='  ZZS0760510'  )                                    
+ and lilotn in                                                   
+   ( select ivcitm from f4104 where ivxrt='R2' and               
+       ivmcu='  ZZS0760510')                                     
+================================================
+
+
+
+select count(*) from  f4108                                
+ where f4108.iomcu='  ZZS0760210' and iolotn<>iorlot       
+   and f4108.iolitm||f4108.iolotn  in                      
+  (select ivlitm||ivcitm from f4104 where ivxrt='R2'       
+    and ivmcu='  ZZS0760210')   and iorlot=''              
+
+
+
+
+select count(*)                                        
+       from mis/h4141                                  
+  where rtrim(pjlitm)||rtrim(pjlotn)  in               
+ (select rtrim(ivlitm)||rtrim(ivcitm) from f4104       
+   where ivxrt='R2' and ivmcu='  ZZS0760210' )         
+
+select count(*)  from (                      
+   select pjitm,pjlitm,pjlotn,pjaitm         
+    from mis/h4141                           
+      group by pjitm,pjlitm,pjlotn,pjaitm    
+   ) as v_t                                  
+
+
+打标签处理
+===============================================================
+update f4611 set r2dsc1=(select imdsc1 from f4101d where imlngp='CS'
+ and r2litm=imlitm), r2dsc2=(select imdsc2 from f4101d where imlngp=
+  'CS' and r2litm=imlitm)                                           
+  where r2rqbt=31                                                   
+

@@ -1,0 +1,48 @@
+﻿.. 这是一个katti开发教程
+
+================================================================================
+katti编程
+================================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+--------------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+--------------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2006/04/12 11:27:46 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+快速开始
+========================================================================
+
+kotti_paster provides "starter" scaffolding for creating a projekt or an addon for Kotti. 
+
+
+You just install the package from PyPi with easy_install. This will install PasteScript and Cheetah. So you may want to create a new virtualenv to install it there:
+
+.. code-block::
+
+scripts> easy_install kotti_paster,kotti_blog,kotti_gallery,kotti_media,kotti_grid
+
+
+The primary job of kotti_paster is to provide a scaffold which allows you to easily generate an addon for Kotti. You do this with the pcreate command in your virtualenv. 
+
+安装完成后用这个工具生成框架
+
+.. code-block::
+
+paster create -t kotti_addon mcl
+

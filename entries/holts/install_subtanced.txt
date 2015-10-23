@@ -1,0 +1,63 @@
+﻿.. 在Windows下安装substance d
+
+========================================================================
+Install substance d
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2014/08/19 12:00:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+安装substance d
+========================================================================
+
+Once you have Python and virtualenv installed, you can do the following:
+
+$ virtualenv --no-site-packages substanced
+$ cd substanced
+
+在windows 2008 sp2下安装substance d, 有些包需要编绎，所以需要建立VC的编绎环境，打开CMD窗口，运行activate启动虚拟环境.
+
+$ scripts/activate
+
+然后在命令行执行：
+
+set DISTUTILS_USE_SDK=1
+set MSSdk=1
+C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat
+
+如果是在WIN7下 并且安装了VC10, 则执行
+C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat
+set VS90COMNTOOLS=%VS100COMNTOOLS%
+
+从官网https://github.com/Pylons/substanced下载源程序，解压到任意文件夹，在CMD窗口进入这个文件夹执行
+python setup.py install
+
+
+运行substance demo
+========================================================================
+
+将官网下载的demos, 存放到substanced目录下，进入下层的blog目录，
+python setup.py develop
+phthon setup.py test -q
+pserve development.ini
+
+运行时出错，找不到locale,  在库中找到subtanced, 在这个目录下建一个空文件夹locale, 再运行程序，一切正常。
+
+

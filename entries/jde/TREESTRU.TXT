@@ -1,0 +1,40 @@
+﻿root node (only once or first of mult)
+select * from f4104 where  IVLITM not in (select ivcitm from f4104)
+
+leaf node (only once or last of mult)
+select * from f4104 where  ivcitm  not in (select ivlitm from f4104)
+
+middle node
+select * from f4104 where ivcitm in (select ivlitm from f4104)
+  and ivlitm in (select ivcitm from f4104)
+
+
+--leaf node
+select  v_f3002.PItemNumber, v_f3002.ParentPUOM, v_f3002.ParentpQty,
+   v_f3002.ItemNumber, v_f3002.PUOM, v_f3002.PQty
+  from v_f3002 
+ where v_f3002.bomty='M' and v_f3002.ParentBU= '  ZZS0760210'
+  and v_f3002.parentpqty=0 and v_f3002.itemnumber  not in
+     (select Pitemnumber from v_f3002 where 
+        v_f3002.bomty='M' and v_f3002.ParentBU= '  ZZS0760210'
+           and v_f3002.parentpqty=0 )
+  
+
+  
+--moddle node
+select  v_f3002.PItemNumber, v_f3002.ParentPUOM, v_f3002.ParentpQty,
+   v_f3002.ItemNumber, v_f3002.PUOM, v_f3002.PQty
+  from v_f3002 
+ where v_f3002.bomty='M' and v_f3002.ParentBU= '  ZZS0760210'
+  and v_f3002.parentpqty=0 and v_f3002.pitemnumber not like '__[89]%'
+   and v_f3002.pitemnumber  not in
+     (select  v_f3002.PItemNumber  from v_f3002 
+        where v_f3002.bomty='M' and v_f3002.ParentBU= '  ZZS0760210'
+          and v_f3002.parentpqty=0 and v_f3002.itemnumber  not in
+             (select Pitemnumber from v_f3002 where 
+                 v_f3002.bomty='M' and v_f3002.ParentBU= '  ZZS0760210'
+                and v_f3002.parentpqty=0 )
+     )
+
+
+
