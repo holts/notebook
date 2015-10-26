@@ -1,5 +1,5 @@
-
-´ÓJDEÏÂÔØÊý¾Ý
+ï»¿
+ä»ŽJDEä¸‹è½½æ•°æ®
 ------------------------------------------------------------------------
 
 select GLKCO,GLDOC,GLDCT,GLDGJ,GLJELN,GLPOST,GLICU,
@@ -13,18 +13,18 @@ from  F0911 left join f0011 on glicu=icicu and glicut = icicut
  where   GLLT = 'AA'  AND GLPOST = 'P' AND 
     GLCO = 90000 AND GLDGJ >= 111100
      and gldct not in ('IQ')
-¹ØÁªµ½Åú¿ØÖÆ±í£¬Èç¹ûµ¥¾ÝÀàÐÍÊÇ¸¶¿î(RC),ÔòÓÃÅú¿ØÖÆ±íµÄÓÃ»§Ìæ»»Æ¾Ö¤ÖÐµÄ×î³õÓÃ»§£¬¹ýÕÊÓÃ»§¾ÍÊÇ×îºó²Ù×÷Æ¾Ö¤µÄÓÃ»§£®
+å…³è”åˆ°æ‰¹æŽ§åˆ¶è¡¨ï¼Œå¦‚æžœå•æ®ç±»åž‹æ˜¯ä»˜æ¬¾(RC),åˆ™ç”¨æ‰¹æŽ§åˆ¶è¡¨çš„ç”¨æˆ·æ›¿æ¢å‡­è¯ä¸­çš„æœ€åˆç”¨æˆ·ï¼Œè¿‡å¸ç”¨æˆ·å°±æ˜¯æœ€åŽæ“ä½œå‡­è¯çš„ç”¨æˆ·ï¼Ž
 
 
-¸üÐÂÓÃ»§Ãû
+æ›´æ–°ç”¨æˆ·å
 ------------------------------------------------------------------------
 
 update f0911 set glbusr = isnull(descchs, gluser)
     from f0911  left join cslistd  on  lid='1' and optionid=gluser
  where gldct not in ('JE','JX','RJ','RC')
-¶ÔÓÚ·Ç×ÜÕÊ»òÏúÊÛµ¥²úÉúµÄÆ¾Ö¤£¬ÉóºËÈË´ÓHBSÖÐ²éÖ±ÊôÖ÷¹ÜÌæ»»£® 
+å¯¹äºŽéžæ€»å¸æˆ–é”€å”®å•äº§ç”Ÿçš„å‡­è¯ï¼Œå®¡æ ¸äººä»ŽHBSä¸­æŸ¥ç›´å±žä¸»ç®¡æ›¿æ¢ï¼Ž 
 
 update f0911 set gluser=gltorg 
   where gldct in ('JE','JX','RJ','RC')
-¶ÔÓÚ·Ç×ÜÕÊ¹¤ÏúÊÛµ¥²úÉúµÄÆ¾Ö¤£¬²Ù×÷ÕßÓÃÆ¾Ö¤ÉÏµÄ×î³õÓÃ»§Ìæ»»£®
+å¯¹äºŽéžæ€»å¸å·¥é”€å”®å•äº§ç”Ÿçš„å‡­è¯ï¼Œæ“ä½œè€…ç”¨å‡­è¯ä¸Šçš„æœ€åˆç”¨æˆ·æ›¿æ¢ï¼Ž
 
