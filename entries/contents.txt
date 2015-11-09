@@ -1,0 +1,47 @@
+﻿.. notebook documentation master file 
+
+构建自己的知识体系结构
+========================================================================
+
+.. 文档信息栏 bibliographic fields :
+
+   :作者: holts 
+   :Email: holts.he@gmail.com
+   :版本: $Revision: 1.00 $ 
+   :日期: $Date: 2015/10/26 16:45:00 $
+   :声明: 不承担由此产生的一切不良后果 
+   :版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+
+知识是个很奇妙的东西，它和时间相关，长年累月的积累是必须的，这些累积起来的知识点就如同一棵棵珍珠，只把它们串成线，织成网，才得以彰显其最大价值，要熟练的在这张网上劳作并持之以恒并不是件容易的事情。
+
+需要一些工具和方法来解决这个难题，我用记事本或 `VIM <http://www.jianshu.com/p/bcbe916f97e1>`_ 写reStructuredText格式的文本文档，记录我感兴趣的事，用 `SPHINX <https://zh-sphinx-doc.readthedocs.org/en/latest/>`_ 管理索引知识结构，写作过程则用 `GIT <http://git-scm.com/book/zh/v2>`_ 做版本管理。
+
+简单来说这就是个笔记本，它记录了文本，图象，声音……　，一切的一切。
+
+Contents
+------------------------------------------------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   rest
+   sphinx
+   radio
+   plone/plone_workflow
+   excel/Excel2007_lock_col
+   mssql/recover_SA_ password (MSSQL2008R2)
+
+Indices and tables
+------------------------------------------------------------------------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
+网上的免费编程中文书籍索引
+------------------------------------------------------------------------
+
+- 国外程序员在 `stackoverflow <http://stackoverflow.com/a/1713/343194>`_ 推荐的程序员必读书籍，`中文版 <http://justjavac.com/other/2012/05/15/qualified-programmer-should-read-what-books.html>`_ 。
+- `stackoverflow <http://stackoverflow.com/q/38210/343194>`_ 上的程序员应该阅读的非编程类书籍有哪些？ `中文版 <https://github.com/justjavac/free-programming-books-zh_CN/blob/master/what-non-programming-books-should-programmers-read.md>`_
+- `github <https://github.com/vhf/free-programming-books>`_ 上的一个流行的编程书籍索引  `中文版 <https://github.com/vhf/free-programming-books/blob/master/free-programming-books-zh.md>`_
+
