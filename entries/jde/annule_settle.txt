@@ -67,7 +67,12 @@ update f30026 set
   where  iemMCU='  ZZS0760210' and ieLEDG='05'
     and iecost='XE' and ielitm in
     (select r1litm from h4600)                          
-
+update f30026 set
+ iexsmc=(select pjuncs from mis/h4141 where pjlitm=ielitm),
+ iexscr=(select pjuncs from mis/h4141 where ielitm=pjlitm)              
+  where  iemMCU='  ZZS0760210' and ieLEDG='05'
+    and iecost='XE' and ielitm in
+    (select pjlitm from mis/h4141)            
 
 2010-01-02 8:30
 计算生产制造费用

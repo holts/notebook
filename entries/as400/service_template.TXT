@@ -78,7 +78,13 @@ Taikoo Place, 979 King’s Road, Quarry Bay, Hong Kong
 Customer Service (hardware): 8205 8233 -> 2  (only basic service: 9-6pm MON-SAT include Public Holiday)
 Software maintenance: 8205-8288  (premium server: 24hrs)  (Priority 1 ? 24 hr,  Priority 2-3 ? 9am- 5:30pm Mon – Fri)
 
-hkpsscsc@hk1.ibm.com
+Customer Service Centre - 
+IBM Solution and Services (Shenzhen)Co.,Ltd.
+
+Internet : hkpsscsc@hk1.ibm.com
+Notes ID : PSS CSC HK/Hong Kong/IBM 
+Tel : 852-8205-8233/8205-8288
+Fax : 852-2249-8405
 
 
 Old req

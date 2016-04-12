@@ -1,9 +1,9 @@
 ﻿
 在JDE中按货位生成盘点表，删除加工费代码：
 delete   from f4141                                       
- where pjcyno>552  and  substring(pjlitm,11,1)='*'        
+ where pjcyno>1056  and  substring(pjlitm,11,1)='*'        
 delete   from f4141                                       
- where pjcyno>552  and  substring(pjlitm,12,1)='*'        
+ where pjcyno>1056  and  substring(pjlitm,12,1)='*'        
 
 按盘点号刷新MIS（实时）取有库存清单交仓库盘点。
 
@@ -19,13 +19,14 @@ pjcntj=113365, pjcccd='1'
 where pjcyno='@parameter101' and pjlitm='@parameter102' and pjlotn='@parameter104' and pjlocn='@parameter105' and pjtqoh=@parameter106 * 100
 
 
+注意上传的数量需要先*100　地点需用connate()转换为字符
 也可以直接上传到H4141，然后更新
 
 UPDATE F4141 SET pjtqct=(select pjtqct from mis/h4141 h4141
   where f4141.pjcyno=h4141.pjcyno and f4141.pjlocn=h4141.pjlocn
     and f4141.pjlotn=h4141.pjlotn and f4141.pjlitm=h4141.pjlitm
     ) ,
-   pjcntj=113363, pjcccd='1'                       
+   pjcntj=115363, pjcccd='1'                       
  where pjCYNO in (select pjCYNO from mis/h4141 h4141 where
     f4141.pjcyno=h4141.pjcyno and f4141.pjlitm=h4141.pjlitm
      and f4141.pjlotn=h4141.pjlotn and f4141.pjlocn=h4141.pjlocn
@@ -37,74 +38,6 @@ UPDATE F4141 SET pjtact=pjtqct*pjuncs / 10000
      and f4141.pjlotn=h4141.pjlotn and f4141.pjlocn=h4141.pjlocn
        and f4141.pjmcu=h4141.pjmcu )   
   and pjcccd='1'
-
-
- 715 
- 735 
- 736 
- 737 
- 738 
- 739 
- 740 
- 741 
- 742 
- 743 
- 744 
- 745 
- 747 
-748 
-752 
-753 
-754 
-755 
-756 
-758 
-759 
-761 
-762 
-763 
-764 
-765 
-766 
-767
-768
-769
-770
-771
-772
-774
-775
-776
-778
-779
-780
-781
-782
-783
-784
-785
-786
-787
-790
-791 
-792 
-793 
-798 
-799 
-800 
-801 
-802 
-803 
-804 
-807 
-813 
-815 
-816 
-819
-820
-821
-822
-823
 
 
 

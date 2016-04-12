@@ -1,21 +1,233 @@
-﻿
-
-2015-12-30
+﻿ 
+2016-04-7
 ------------------------------------------------------------------------
 
-userid: 
-Description of problem:
-RFS操作窗口出进软件到期提示。
-To resolave:
+userid: yun(江晓云) <yun@mentholatum.com.cn>
+Description of problem: 
+ME90617897, ME91417162 这两个代码,  在总帐有3个OV记录,  但是在库存分类帐只有两个记录, 少了92007982 OV 记录.
+To resolve:
+需要新建一张HB订单, 做一次收货操作, 日期请改为2016-03-31日, 如果日期改不了,就用今天的日期做,  注意生成的OV不要过帐,  然后将HB单号和 生成的OV单号发给我.
 
-In order to update the SPC code, the customer will need to follow the steps below:
+我将修正这些数据对应92007982 OV.
+
+update f41021 set lipqoh=lipqoh - 146400        
+ where limcu='  ZGZ0200244' and liitm=31859     
+   and lipqoh=384000                            
+update f41021 set lipqoh=lipqoh - 57600                         
+ where limcu='  ZGZ0200244' and liitm=33140 and lipqoh=96000    
+
+update f4111 set ildoc=92007982,ilan8=92153250,
+ ildoco=92001080,ilicu= 733350,iltrdj=116064,ildgl=116064 
+ where ildct='OV' and ildoc =92008158           
+
+delete  from f4311                           
+ where pddoco =92001118  and pddcto='HB'      
+delete  from f4301                       
+ where phdoco =92001118  and phdcto='HB'  
+delete   from f43121                       
+ where prdoco =92001118  and prdcto='HB'   
+delete   from f0911                     
+ where gldct ='OV' and gldoc = 92008158 
+  and glpost=''                         
+delete from f0011                 
+ where icicu=739868 and icicut='O'
+
+
+2016-03-23
+-------------------------------------------------------------------------
+
+userid: Orange(郑惠嫦) <orange@mentholatum.com.cn>
+Description of problem:
+新增药品总帐级IN15, 设置类似IN54
+To resolve:
+insert into f4095(MLANUM,MLCO ,MLDCTO,MLDCT ,MLGLPT,
+ MLCOST,MLMCU ,MLOBJ ,MLSUB )
+select MLANUM,MLCO ,MLDCTO, MLDCT ,'IN15' as MLGLPT,
+ MLCOST,MLMCU ,MLOBJ ,MLSUB
+ from f4095 where mlglpt='IN54' 
  
-1.            Log in to JDE
-2.            Go to RFSINS  
-3.            Take Option 5
-4.            Copy the text into SPC Code field (021V3KLLAE 34895L8A)
-5.            Press F6 to update.
-6.            Close the Screen
+update f4095 set mlsub='AC15' where mlglpt='IN15' and mlsub ='AC'                     
+update f4095 set mlsub='15'  where mlglpt='IN15'     
+   and mlsub =''  and mlobj=205021  
+update f4095 set mlsub='15'  where mlglpt='IN15'     
+   and mlsub =''  and mlobj=612521
+
+update f4095 set mlsub='AC15'  where mlglpt='IN15'     
+   and mlsub =''  and mlobj=512521  
+update f4095 set mlsub='AC15'  where mlglpt='IN15'     
+   and mlsub =''  and mlobj=502521
+update f4095 set mlsub='AC15'  where mlglpt='IN15'     
+   and mlsub =''  and mlobj=507021 
+ 
+update f4095 set mlsub='AC15'  where mlglpt='IN15'     
+   and mlsub =''  and mlobj=670216
+update f4095 set mlsub='AC15'  where mlglpt='IN15'     
+   and mlsub =''  and mlobj=695216
+update f4095 set mlsub='AC15'  where mlglpt='IN15'     
+   and mlsub =''  and mlobj=670616
+
+update f4095 set mlsub='AC15'  where mlglpt='IN15'     
+   and mlsub =''  and mlobj=782516
+update f4095 set mlsub='AC15'  where mlglpt='IN15'     
+   and mlsub =''  and mlobj=791310
+
+update f4095 set mldcto='W1'      
+ where mlglpt='IN15'  and mldcto='W2'                
+update f4095 set mlmcu='  ZZS0760450'    
+ where mlglpt='IN15' and mlmcu='  ZZS0760410'              
+
+
+2016-03-15
+------------------------------------------------------------------------
+
+userid: Orange(郑惠嫦) <orange@mentholatum.com.cn>
+Description of problem:
+部份Account的英文描述和中文描述有变更
+To resolve:
+用户在prcmodel已录入正确的描述,并将要更改记录的记录上传到F4104, 用prcmodel的描述更新其它bu的描述
+update f0901 set gmdl01 =
+ (select a.gmdl01 from f0901 a where f0901.gmobj=a.gmobj
+   and f0901.gmsub=a.gmsub and a.gmmcu=  '    PRCMODEL' )
+  where gmobj in (select ivmcu from mis/h4104 ) and gmsub in 
+   (select ivcitm from mis/h4104)  and gmmcu <> '    PRCMODEL'                  
+     and gmco in ('90000','91000','92000','93000')                              
+
+
+更新ivitm为对应的AID
+
+update mis/h4104 set ivitm = 
+ ( select gmaid from f0901 where  gmmcu = '    PRCMODEL'  
+     and gmobj = ivmcu  and gmsub =ivcitm
+    )
+
+然后用以下命令更新其它BU的中文描述。
+
+update f0901d	set lkdl01=
+   ( select xx.lkdl01 from f0901d  xx   left join 
+      ( select tt.gmaid, ivitm from f0901 tt left join mis/h4104 on             
+         tt.gmobj||tt.gmsub = trim(ivmcu)||trim(ivcitm)                   
+        where tt.gmco in ('90000','91000','92000','93000')                  
+       and tt.gmobj||tt.gmsub in(select trim(ivmcu)||trim(ivcitm)       
+        from mis/h4104)  and tt.gmmcu  != '    PRCMODEL'                       
+         and tt.gmaid not in (select ivitm from mis/h4104) 
+       ) as v_ref on xx.lkaid=v_ref.ivitm             
+     where xx.lklngp='CS' and xx.lkaid in
+         (select ivitm from mis/h4104)
+           and f0901d.lkaid = v_ref.gmaid 
+    )
+
+ where lklngp='CS' and lkaid in 
+( select  v_ref.gmaid   from f0901d          
+    left join  (
+      select tt.gmaid,ivitm from f0901 tt left join mis/h4104 on             
+        tt.gmobj||tt.gmsub = trim(ivmcu)||trim(ivcitm)                   
+      where tt.gmco in ('90000','91000','92000','93000')                  
+      and tt.gmobj||tt.gmsub in(select trim(ivmcu)||trim(ivcitm)       
+        from mis/h4104)  and tt.gmmcu  != '    PRCMODEL'                       
+         and tt.gmaid not in (select ivitm from mis/h4104) 
+       ) as v_ref on lkaid=v_ref.ivitm             
+  where lklngp='CS' and lkaid in (select ivitm from mis/h4104) )
+
+
+2016-03-01
+------------------------------------------------------------------------
+
+userid: WangChunRui(王春锐) <WangChunRui@mentholatum.com.cn>
+Description of problem:
+ 昨天1900-1930完成回档财务日历操作,红冲凭证后,财务发现内部往来的试算简表FRBJ里没有清零 还是有余额 660142.55 , 
+         查看F0911的MIS的同步记录发现, 之前昨天11点前的应收模块操作是 401500.GZ 结转到 401500.AR 在3月,然后晚上19点红冲时,无法原路冲回, 从401500.GZ红冲到了121000,然后在1930后的凭证也是一次红冲到了121000科目上,形成了2月期间的 内部往来科目401500.AR没有冲平,因为对应凭证在3月. 红冲调整凭证又是坐在121000上的,无法调整在401500.AR 科目上. 
+         财务重新尝试在RC模块和JE操作都无法录入401500.AR 科目提示飘红,只能做一对一正一副的401500.GZ的凭证,过入了2月,但是相抵为零,等于没有效果. 
+To resolve:
+select gban02,gban03 from f0902   where gbobj=121000                        
+  and gbmcu='  ZBJ0100999' and gbfy=16  and gblt  ='AA'                         
+查得结果为:
+767,331,480             66,014,255
+
+update f0902 set gban02=gban02+gban03, gban03=0           
+ where gbobj=121000                                       
+  and gbmcu='  ZBJ0100999' and gbfy=16                    
+ and gblt  ='AA'                                          
+
+select gban02,gban03 from f0902         
+ where gbobj=401500  and  gbsub='AR'    
+  and gbmcu='  ZBJ0100999' and gbfy=16  
+查得结果为:
+66,014,255             66,014,255- 
+
+update f0902 set gban02=gban02+gban03,gban03=0  
+ where gbobj=401500  and  gbsub='AR'            
+  and gbmcu='  ZBJ0100999' and gbfy=16          
+
+select * from f0911   where gldgj=116060 and glpn=3 
+  and glco='93000'  and gldct =  'AE'              
+找到两个相关记录
+AE  31602054
+AE  31602054
+
+update f0911 set glpn=2 where gldgj=116060 and glpn=3     
+  and glco='93000'   and gldct =  'AE'                  
+
+
+
+2016-02-25
+------------------------------------------------------------------------
+
+userid: yun(江晓云) <yun@mentholatum.com.cn>
+Description of problem:
+广州调上海的HB单，单号91000864，客户号出错，由于已收货过账，无法修改。
+麻烦您帮忙修改客户号为91153240
+To resolve:
+
+update f4311 set pdan8='91153240'
+ where pddoco=91000864  and pddcto='HB'
+update f4301 set phan8='91153240'
+ where phdoco=91000864  and phdcto='HB'
+update f43121 set pran8='91153240'
+ where prdoco=91000864 and prdcto='HB'
+
+2016-02-23
+------------------------------------------------------------------------
+
+userid: wen(陈慧雯) <wen@mentholatum.com.cn>
+Description of porblem:
+药品折让订单原用单据类型N8单，进帐科目是折扣科目，现需要改为进帐科目销售收入，类似化妆品SG单（由NV单修改而来）。
+To resolve:
+
+- 增加单据类型SH 药品发票调整（无数量），在菜单G00设定起始编号为9200001
+- 抄N8的工作流到SH（包括所有费用类型）
+- P4211中复制ZN8->ZSH  在菜单 ？？增加 ？？
+- 复制会计指令N8　到SH
+  insert into f4095(MLANUM,MLCO ,MLDCTO,MLDCT ,MLGLPT,
+   MLCOST,MLMCU ,MLOBJ ,MLSUB )
+  select MLANUM,MLCO ,MLDCTO, 'SH' as MLDCT , MLGLPT,
+   MLCOST,MLMCU ,MLOBJ ,MLSUB
+    from f4095 where mldct='N8'
+- 根据下表在4230中更改为销售科目
+
+90000 SH IN11  ò??··￠?±μ÷??  / Rohto Eyedrops              500501
+90000 SH IN12  ò??··￠?±μ÷??  / Nasal Inhalers              500502
+90000 SH IN13  ò??··￠?±μ÷??  / Rohto MPS                   500501
+90000 SH IN14  ò??··￠?±μ÷??  / Nasal Inhalers              500502
+90000 SH IN20  ò??··￠?±μ÷??  / Fever Patch                 501525
+90000 SH IN21  ò??··￠?±μ÷??  / Pain Patch                  501501
+90000 SH IN22  ò??··￠?±μ÷??  / Cherry Chest R              501502
+90000 SH IN23  ò??··￠?±μ÷??  / Ointment                    501503
+90000 SH IN24  ò??··￠?±μ÷??  / Deep Heating R              501504
+90000 SH IN29  ò??··￠?±μ÷??  / WellPatch Heat              501523
+90000 SH IN30  ò??··￠?±μ÷??  / AD CREAM (Drug              501516
+90000 SH IN38  ò??··￠?±μ÷??  / AD Cream (Cosm              501516
+90000 SH IN57  ò??··￠?±μ÷??  / Promedial                   501508
+
+- 在zsogzdrugs 增加菜单15 Adjustment Invoice(Drugs)  SH, 复制P4211 版本ZN8 -> ZSH, 同时在ZSOSHDRUGS增加菜单15 Adjustment invoice(Drugs)  SH 使用版本ZSH
+  
+
+
+
+
+
+
+
+
 
 
 2015-12-28
@@ -28,10 +240,10 @@ To resolve:
 
 参照用户提供差异清单更改总帐凭证
 update f0911 set glaa=14021865                        
- where gldoc=4273621 and gldct='RX' and glpost=''     
+ where gldoc=4273621   and gldct='RX' and glpost=''     
   and glaa=14021865                                   
 update f0311 set rpag=-119105906,rpaap=-119105906  
- where rpdoc =4273621 and rpdct ='RX'              
+ where rpdoc =4273621   and rpdct ='RX'              
     and rpag=-119105914                            
 
 

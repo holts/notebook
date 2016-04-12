@@ -1,4 +1,26 @@
 ﻿
+
+增加预算号, 删除一些付款申请明细
+------------------------------------------------------------------------
+
+select  *  from TLK_PRODUCTRESLIST 
+--update TLK_PRODUCTRESLIST set ITEM_BUDGETNUMBERS ='CPD160024'
+ where ITEM_APPLICATIONNO='SB2015000453' 
+
+
+select * from TLK_PAID_DETAILS where PARENT in   
+ ( select id from TLK_REQUEST_ACCOUNTS where ITEM_APP_ID='FK2016000252' )
+ and ITEM_KEYID in (
+ '11e5-e5d1-0537b355-9f6e-81f1b3866124',
+'11e5-e5d1-07f720c4-9f6e-81f1b3866124',
+'11e5-e5d1-2631ee41-9f6e-81f1b3866124',
+'11e5-e5d1-29a1c06e-9f6e-81f1b3866124',
+'11e5-e5d1-29c0930f-9f6e-81f1b3866124',
+'11e5-e5d1-29dea261-9f6e-81f1b3866124'
+ )
+ 
+
+
 更改已付金额
 ------------------------------------------------------------------------
 
@@ -135,6 +157,7 @@ update TLK_PRODUCTRESLIST set ITEM_PURCHASE='11e2-bdd8-b83b0f3e-9df3-6f381f91527
 
 更改为IT部
 update TLK_SHOPPING_LISTS set ITEM_PURCHASE='11e2-127e-bbec4986-8cc2-8f9267117d58' where ITEM_APPLICATIONNO='GW2015000712'
+update TLK_PRODUCTRESLIST set ITEM_PURCHASE='11e2-127e-bbec4986-8cc2-8f9267117d58' where ITEM_APPLICATIONNO='SB2015000450'
 
 更改为工程部
 update TLK_PROJECT_APPLY set ITEM_PURCHASE='11e2-7fc5-5a5bb35d-a8fb-3369133e885a' 
