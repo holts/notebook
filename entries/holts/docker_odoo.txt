@@ -1,0 +1,113 @@
+﻿.. 用docker搭建odoo开发环境
+
+========================================================================
+Odoo开发环境
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+下载开发环境
+========================================================================
+
+$ docker pull odoo
+
+   docker系统会自动从docker的软件库下载（pull）回odoo的docker镜像软件。接下来怎么使用这个docker/odoo9.0的资源呢（How to use this imag）？
+
+This image requires a running PostgreSQL server.
+Start a PostgreSQL server 
+
+$ docker run -d -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo --name db postgres 
+
+Start an Odoo instance 
+$ docker run -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo
+
+The alias of the container running Postgres must be db for Odoo to be able to connect to the Postgres server.
+
+Stop and restart an Odoo instance 
+$ docker stop odoo 
+$ docker start -a odoo 
+
+Stop and restart a PostgreSQL server
+
+       When a PostgreSQL server is restarted, the Odoo instances linked to that server must be restarted as well because the server address has changed and the link is thus broken.
+
+      Restarting a PostgreSQL server does not affect the created databases.
+
+
+Run Odoo with a custom configuration
+
+      The default configuration file for the server (located at /etc/odoo/openerp-server.conf) can be overriden at startup using volumes. Suppose you have a custom configuration at /path/to/config/openerp-server.conf, then
+$ docker run -v /path/to/config:/etc/odoo -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo
+
+        Please use this configuration template to write your custom configuration as we already set some arguments for running Odoo inside a Docker container.
+
+       You can also directly specify Odoo arguments inline. Those arguments must be given after the keyword -- in the command-line, as follows
+$ docker run -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo -- --db-filter=odoo_db_.*       
+
+ Mount custom addons
+
+      You can mount your own Odoo addons within the Odoo container, at /mnt/extra-addons
+$ docker run -v /path/to/addons:/mnt/extra-addons -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo 
+
+Run multiple Odoo instances 
+$ docker run -p 127.0.0.1:8070:8069 --name odoo2 --link db:db -t odoo 
+$ docker run -p 127.0.0.1:8071:8069 --name odoo3 --link db:db -t odoo
+
+Please note that for plain use of mails and reports functionalities, when the host and container ports differ (e.g. 8070 and 8069), one has to set, in Odoo, Settings->Parameters->System Parameters (requires technical features), web.base.url to the container port (e.g. 127.0.0.1:8069).
+
+
+How to upgrade this image
+========================================================================
+
+Suppose you created a database from an Odoo instance named old-odoo, and you want to access this database from a new Odoo instance named new-odoo, e.g. because you've just downloaded a newer Odoo image.
+
+By default, Odoo 8.0 uses a filestore (located at /var/lib/odoo/filestore/) for attachments. You should restore this filestore in your new Odoo instance by running
+$ docker run --volumes-from old-odoo -p 127.0.0.1:8070:8069 --name new-odoo --link db:db -t odoo
+
+You can also simply prevent Odoo from using the filestore by setting the system parameter ir_attachment.location to db-storage in Settings->Parameters->System Parameters (requires technical features).
+License
+
+View license information for the software contained in this image.
+
+Supported Docker versions
+
+This image is officially supported on Docker version 1.9.0.
+
+Support for older versions (down to 1.6) is provided on a best-effort basis.
+
+Please see the Docker installation documentation for details on how to upgrade your Docker daemon.
+User Feedback Documentation
+
+Documentation for this image is stored in the odoo/ directory of the docker-library/docs GitHub repo. Be sure to familiarize yourself with the repository's README.md file before attempting a pull request.
+
+Issues
+
+If you have any problems with or questions about this image, please contact us through a GitHub issue.
+
+You can also reach many of the official image maintainers via the #docker-library IRC channel on Freenode.
+
+Contributing
+
+You are invited to contribute new features, fixes, or updates, large or small; we are always thrilled to receive pull requests, and do our best to process them as fast as we can.
+
+Before you start to code, we recommend discussing your plans through a GitHub issue, especially for more ambitious contributions. This gives other contributors a chance to point you in the right direction, give you feedback on your design, and help you find out if someone else is working on the same thing.
+
+

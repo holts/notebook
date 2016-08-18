@@ -1,4 +1,194 @@
 ﻿ 
+
+2016-08-01
+------------------------------------------------------------------------
+
+userid: wen(陈慧雯) <wen@mentholatum.com.cn>
+Description of problem:
+附件产品于2016年8月1日(116214) 调价,我已设置好ZGZ0200241,请帮忙把附件品种价格从ZGZ0200241导入以下11个BU：ZGZ0200240、ZGZ0200243、ZGZ0200244、ZGZ0200245、 ZGZ0200248、ZSH0210230、ZSH0210231、ZSH0210232、ZBJ0100250、ZBJ0100251、ZBJ0100252
+To resolve:
+将附件导入临时表h4104
+
+update  f4106  set bpexdj=116213                        
+ where bpmcu in ('  ZGZ0200240','  ZGZ0200243','  ZGZ0200244',
+  '  ZGZ0200245','  ZGZ0200248','  ZSH0210230','  ZSH0210231',
+  '  ZSH0210232','  ZBJ0100250','  ZBJ0100251','  ZBJ0100252')
+  and bplitm in   (select ivlitm from mis/h4104)  
+    and bpexdj>116214          
+
+insert into f4106 (bpitm,bplitm,bpaitm,bpmcu,bplocn,bplotn,
+BPAN8,BPICID,BPLOTG,BPFRMP,BPCRCD,BPUOM,BPEFTJ,
+BPEXDJ,BPUPRC,BPACRD,BPBSCD,BPLEDG,BPFVTR,BPFRMN,BPURCD,
+BPURDT,BPURAT,BPURAB,BPURRF,BPUSER,BPPID,BPJOBN,BPUPMJ,BPTDAY )
+select bpitm,bplitm,bpaitm,'  ZGZ0200240' as bpmcu,bplocn,bplotn,
+ BPAN8,BPICID,BPLOTG,BPFRMP,BPCRCD,BPUOM, BPEFTJ, 
+ BPEXDJ,BPUPRC,BPACRD,BPBSCD,BPLEDG,BPFVTR,BPFRMN,BPURCD,
+ BPURDT,BPURAT,BPURAB,BPURRF,BPUSER,  BPPID,
+   BPJOBN,  BPUPMJ,  BPTDAY
+from f4106 where bpmcu='  ZGZ0200241'  and 
+   bpeftj=116214  and bpicid=0
+and  bplitm in   (select ivlitm from mis/h4104)
+   
+
+2016-07-29
+------------------------------------------------------------------------
+
+userid: ZhengLiHua(郑丽华) <ZhengLiHua@mentholatum.com.cn>
+Description of problem: 
+90043792PV单号在总帐被删除(正确应该在匹配窗口删除), 但在匹配窗口没有看到返还的OV记录,在收货匹配窗口仍然看不到.
+To resolve:
+select * from f0911  where gldoc=90043792 and gldct='PV'  
+select * from f0411 where rpdoc =90043792 and rpdct ='PV'
+
+检查F0411,F0911记录删除，但F43121发现记录匹配类型为2的记录仍然存在,其中有一条记录的类型已经是3, 先将这些要删除的类型为2的PV记录类型改为4备案, 然后将这此改为4的记录找到对应的类型1的UOPN和AOPN加回,同时扣减UPTD, APTD 
+
+update f43121 set prmatc='4'  where prdoc = 90043792                          
+   and prdct = 'PV'    and prmatc in ('2','3')   
+ and pran8=90130416
+
+关联查询寻找关联的OV记录,检查是否正常关联到
+select * from f43121 inner join 
+(
+select a.prdoco,a.prdcto,a.prlnid,a.prnlin,a.prlitm,
+  a.pruptd, a.praptd from f43121 a        
+left join f43121 b on a.prmatc='1'                  
+     and a.prdoco=b.prdoco and a.prdcto=b.prdcto    
+      and a.prlnid=b.prlnid and a.prnlin=b.prnlin   
+    and a.prlitm=b.prlitm                           
+ where a.prdoc ='90043792'  and a.prdct='PV'  
+   and a.prmatc='4'   )    as v_err
+on f43121.prdoco=v_err.prdoco and f43121.prdcto=v_err.prdcto
+ and f43121.prlnid=v_err.prlnid and f43121.prnlin=v_err.prnlin
+  and f43121.prlitm=v_err.prlitm
+ where f43121.prmatc='1' and pran8=90130416
+
+
+update  f43121 set pruopn = pruopn + 
+  (select b.pruptd from f43121 b where b.prmatc='4' and
+  b.prdoc='90043792' and b.prdct='PV' and f43121.prdoco=b.prdoco
+ and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
+  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
+   praopn = praopn + 
+   (select b.praptd from f43121 b where b.prmatc='4' and
+  b.prdoc='90043792' and b.prdct='PV' and f43121.prdoco=b.prdoco
+ and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
+  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
+  pruptd = pruptd -
+  (select b.pruptd from f43121 b where b.prmatc='4' and
+  b.prdoc='90043792' and b.prdct='PV' and f43121.prdoco=b.prdoco
+ and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
+  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
+   praptd = praptd -
+   (select b.praptd from f43121 b where b.prmatc='4' and
+
+  b.prdoc='90043792' and b.prdct='PV' and f43121.prdoco=b.prdoco
+ and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
+  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm )
+
+ where prmatc='1' and prdoco||prdcto||prlnid||prnlin||prlitm  in
+ (select prdoco||prdcto||prlnid||prnlin||prlitm from f43121
+    where prmatc='4' and prdoc='90043792' and prdct='PV')
+   and pran8=90130416
+ 
+
+2016-06-28
+------------------------------------------------------------------------
+
+userid: nancy
+Description of problem:
+80002982SN销售单，第一次设置的ROTHO关联交易订单，销售更新出错2514错（0911 EXA），过总帐出错
+To resolve:
+关联交易设置AAI ,RCRO, 在客户资料总帐级设置RO, 在Account master检查用到的所有科目是否存在，最后查到错误原因是88000029的地址本有些栏位空，补入后正常。
+注意：在做销售更新时，不会生成AE凭证，看不到应收科目 KB.280002，只有在做过总帐时才能看到。
+
+
+2016-06-07
+------------------------------------------------------------------------
+
+userid: zhenglihua（郑丽华）
+Description of problem:
+订单81040612HC，已匹配了3340KG，但在订单收货查询看到未核付数量还有1000KG
+To resolve:
+检查f43121发现，行号相同的记录有两条，其中还有条open数 1000，而另一行的付款数叠加了这1000.
+update f43121 set pruptd=pruopn,praptd=praopn,pruopn=0,praopn=0
+ where prdoco=81040612 and prdcto='HC'            
+  and prlitm='ME40609032'   and prmatc='1'        
+and prlnid=12000  and prnlin=1                   
+ and pruopn=100000
+update f43121 set pruptd=pruptd-100000,praptd=174359
+ where prdoco=81040612 and prdcto='HC'            
+  and prlitm='ME40609032'   and prmatc='1'        
+and prlnid=12000  and prnlin=1                   
+ and pruptd=134000
+
+
+2016-05-31
+------------------------------------------------------------------------
+
+userid: Orange(郑惠嫦) <orange@mentholatum.com.cn>
+Description of problem:
+新增 Hair care 总帐级IN40, 设置类似IN36
+To resolve:
+insert into f4095(MLANUM,MLCO ,MLDCTO,MLDCT ,MLGLPT,
+ MLCOST,MLMCU ,MLOBJ ,MLSUB )
+select MLANUM,MLCO ,MLDCTO, MLDCT ,'IN40' as MLGLPT,
+ MLCOST,MLMCU ,MLOBJ ,MLSUB
+ from f4095 where mlglpt='IN36' and mlco in
+  (90000,91000,92000,93000)
+ 
+update f4095 set mlsub='MEG' where mlglpt='IN40' and mlsub ='BV'
+  and   mlco in  (90000,91000,92000,93000)                    
+update f4095 set mlobj='205031'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=205026
+update f4095 set mlobj='612531'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=612526
+
+update f4095 set mlobj='512531'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=512526
+update f4095 set mlobj='502531'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=502526
+update f4095 set mlobj='507031'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=507026  
+ 
+update f4095 set mlobj='670255'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=670222
+update f4095 set mlobj='670660'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=670622
+update f4095 set mlobj='695255'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=695222
+ 
+update f4095 set mlobj='692530'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=692522
+update f4095 set mlobj='635000'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=635500
+
+update f4095 set mlobj='717527'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=717522
+update f4095 set mlobj='782527'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=782522
+ 
+update f4095 set mlobj='737528'  where mlglpt='IN40' and  mlco in
+   (90000,91000,92000,93000) and mlobj=737522
+
+2016-05-18
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜) <Liuxiaoyu@mentholatum.com.cn>
+Description of problem:
+增加到MAP的运费（原料和包材），类似F2
+To resolve:
+增加总帐级FT3 用户定义码
+G4241－〉2 增加销售单行类型F3，抄F2，注意存货界面是N，总帐级FT3
+G4241 －〉3 增加NX单的F3流程
+增加AAI
+90000 4220 NX FT3  ZZS0760MAP.753509
+90000 4230 NX FT3         753509
+90000 4240 NX FT3  ZZS0760MAP.753509
+
+
+
+
+
 2016-04-7
 ------------------------------------------------------------------------
 
@@ -217,6 +407,11 @@ To resolve:
 90000 SH IN30  ò??··￠?±μ÷??  / AD CREAM (Drug              501516
 90000 SH IN38  ò??··￠?±μ÷??  / AD Cream (Cosm              501516
 90000 SH IN57  ò??··￠?±μ÷??  / Promedial                   501508
+
+DMAAI 4250 4245 也必须设科目
+
+4245 90000 SH ****  ZZS0760999.121000  
+4250 90000 SH ****  ZZS0760999.420110.006
 
 - 在zsogzdrugs 增加菜单15 Adjustment Invoice(Drugs)  SH, 复制P4211 版本ZN8 -> ZSH, 同时在ZSOSHDRUGS增加菜单15 Adjustment invoice(Drugs)  SH 使用版本ZSH
   
