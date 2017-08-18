@@ -856,7 +856,11 @@ select  ETMCU, ETMPUT, ETMPIK,
 ------------------------------------------------------------------------
 select  iblitm, ibprp7,etsrul,etmput,etmpik,etmrpl ,etuom               
    from f46821 inner join f46095 on lxsrul=etsrul and lxmcu=etmcu 
-     inner join f4102 on lxmcu=ibmcu and etmput=ibprp7            
+
+     inner join f4102 on lxmcu=ibmcu and etmput=ibprp7   
+   select * from f4102
+  inner join f46093 on emprp7=ibprp7 and emprp8=ibprp8 and emmcu=ibmcu
+         
   where iblitm in ('ME70501131','MER1902009')
   group by iblitm,ibprp7,etsrul,etmput,etmpik,etmrpl,etuom                                                       
 
@@ -994,7 +998,7 @@ select *
 update h4600 set r1rqsq=r1rqsq*1000, r1qtrq=r1qtrq*100      
 update h4600 set r1pstb='200' , r1itm=
 (select imitm from f4101 where r1litm=imlitm)     
-    where r1rqbt=62
+    where r1rqbt=64
  
 insert into f4600 ( R1TYFL,R1OCDE,R1RQBT,R1RQSQ,R1DCTO,                       
   R1MCU,R1ITM,R1LITM,R1AITM,R1OVRQ,R1MERG,R1QTRQ,           
@@ -1006,18 +1010,18 @@ select R1TYFL,R1OCDE,R1RQBT,R1RQSQ,R1DCTO,
   R1UOM,R1LDFS,R1FLOC,R1FLOT,R1LDTS,R1TLOC,R1TLOT,R1SRP1,  
   R1SRP2,R1SRP3,R1SRP4,R1SRP5,R1DSC1,R1DSC2,R1PSTB,R1TRDJ,
  R1TREX,R1DTCR, R1TMCR,R1USER,R1PID,R1JOBN,R1UPMJ, r1tday
- from h4600 where r1rqbt=62
+ from h4600 where r1rqbt=64
 
 update f4611 set r2dsc1=(select imdsc1 from f4101d where
    imlngp='CS' and r2litm=imlitm), r2dsc2=(select imdsc2
       from f4101d where imlngp=  'CS' and r2litm=imlitm)                        
-  where r2rqbt in (62)
+  where r2rqbt in (64)
  
 update f4611 set r2doco=(select max(ildoco) from f4111 where ildct  
 ='OV' and illitm=r2litm and illotn=r2flot )   ,
   r2rcdj=(select max(iltrdj) from f4111 where ildct  
 ='OV' and illitm=r2litm and illotn=r2flot )                        
-  where r2rqbt in (62) and ( r2litm || r2flot ) in                       
+  where r2rqbt in (64) and ( r2litm || r2flot ) in                       
 ( select (illitm||illotn) from f4111 where ildct='OV' )             
 
 

@@ -1,0 +1,275 @@
+﻿.. hk bip report sql
+
+========================================================================
+HK BIP Report
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+Royalty_calculation
+========================================================================
+ 
+sales by item 
+
+select FinancialYear,Calendaryear,FinancialMonth,BrandName,Itemnumber,ItemDesc,OrderType,Item, Item_Data   from   ( 
+select Calendaryear, decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) as  FinancialYear
+, decode(FinancialMonth,1,11,2,12,FinancialMonth - 2) as FinancialMonth, BrandName,  Itemnumber, 
+ trim(itemnumber) || '   ' || trim(Itemdescription1)||trim(itemdescription2) as ItemDesc, ordertype,
+ sum(Salesamount) as SalesAmount,  sum(quantityorderedpuom)  as QuantityOrderedPuom, count(*) as UnitCost_cnt
+  from hk_mis_localsalesorder 
+  left join hkpddta.f4102 on  ItemNumber = IBAITM AND  ibmcu='         WHE'
+    WHERE  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) in  ( :p_fYear )    and  decode(FinancialMonth,1,11,2,12,FinancialMonth - 2) in ( :p_fMonth ) 
+   and BU in ( :p_BU ) and BrandName in (:p_BrandName)
+      and GlClass in ( :p_GlClass )  and CategoryName in ( :p_CategoryName )
+        and AddressNumber in (:p_AddressNumber)
+     group by Calendaryear, FinancialYear,FinancialMonth,BrandName, ordertype,
+     Itemnumber,  trim(itemnumber) || '   ' || trim(Itemdescription1)||trim(itemdescription2)
+)  unpivot ( Item_Data for Item in(UnitCost_cnt,SalesAmount,QuantityOrderedPuom) )
+
+
+
+select Calendaryear, decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) as  FinancialYear
+, decode(FinancialMonth,1,11,2,12,FinancialMonth - 2) as FinancialMonth,BrandName,CategoryName,GlClass
+,BU, Addressnumber,ibprp6,  Itemnumber,MonthNumber,
+ trim(itemnumber) || '   ' || trim(Itemdescription1)||trim(itemdescription2) as ItemDesc,
+ sum(Salesamount) as SalesAmount,
+  sum(case when IBPRP6='OP1' then salesamount * 0.01 when IBPRP6='RO1' then salesamount * 0.01 When ibprp6='OP3' then salesamount * 0.03 else 0 end)  as RoyaltyAmt
+ from hk_mis_localsalesorder left join hkpddta.f4102 on
+    ItemNumber = IBAITM AND  ibmcu='         WHE'
+    WHERE  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) in  ( :p_fYear )    and  decode(FinancialMonth,1,11,2,12,FinancialMonth - 2) in ( :p_fMonth ) 
+     and BU in ( :p_BU ) and BrandName in (:p_BrandName)
+      and GlClass in ( :p_GlClass )  and CategoryName in ( :p_CategoryName )
+        and AddressNumber in (:p_AddressNumber)
+     group by Calendaryear, FinancialYear,FinancialMonth,BrandName,CategoryName,GlClass
+  ,BU,Addressnumber,ibprp6,  Itemnumber, MonthNumber,trim(itemnumber) || '   ' || trim(Itemdescription1)||trim(itemdescription2)
+having sum(salesamount ) <>0
+  
+
+Sales_by_customers
+========================================================================
+
+SELECT decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) as  FinancialYear
+,  MonthNumber, bu,Category,  GlClass,SubCategory,Ordertype,AddressNumber
+,  trim(addressnumber) || '   '  || trim(name) as shipDesc,
+  sum(SalesAmount)  as SalesAmount  ,sum(totalcost)  as TotalCost
+FROM  hk_mis_localsalesorder 
+ WHERE  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) in  ( :p_fYear )   
+ and   decode(FinancialMonth,1,11,2,12,FinancialMonth - 2) in ( :p_fMonth ) 
+         and GlClass in ( :p_GlClass )  
+ group by decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear)
+ ,MonthNumber,bu,Category,GlClass,SubCategory,Ordertype,
+  AddressNumber,trim(addressnumber) || '   '  || trim(name)
+  having sum(salesamount)  <>0 
+
+Sales_by_item_all_bu_without_sf
+========================================================================
+
+SELECT  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) as  FinancialYear
+ ,MonthNumber,nvl(bu,'') as bu,nvl(Category,'') as Category,nvl(GlClass,'') as GlClass,
+   nvl(SubCategory,'') as SubCategory,nvl(Ordertype,'') as OrderType,ItemNumber,
+  trim(ItemNumber) || '   '  || trim(ItemDescription1) as ItemDescription1
+ ,sum(SalesAmount)  as SalesAmount ,sum(totalcost)  as TotalCost
+FROM  hk_mis_localsalesorder 
+ WHERE  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) in  ( :p_fYear )  
+  and   decode(FinancialMonth,1,11,2,12,FinancialMonth - 2) in ( :p_fMonth ) 
+     and nvl(BU,'') in ( :p_BU ) and nvl(Ordertype,'') in (:p_OrderType)
+      and nvl(GlClass,'') in ( :p_GlClass )  and nvl(Category,'') in ( :p_Category )
+        and nvl(subcategory,'') in (:p_SubCategory)
+     and nvl(ordertype,'') not in ('SF')
+ group by  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear)
+  ,MonthNumber,nvl(bu,''),nvl(Category,''),nvl(GlClass,''),nvl(SubCategory,''),nvl(Ordertype,''),
+  ItemNumber,trim(ItemNumber) || '   '  || trim(ItemDescription1)
+  having sum(salesamount)  <>0  
+
+这个和sales_by_customers基本相同，最大的不同在于 ordertype not in ('SF'),由于SF单的salesamount应为0，加与不加效果相同，但测试以下发现尽管SF为0，但以下测试竟然不同？？
+
+select  sum(salesamount) FROM  hk_mis_localsalesorder
+where   monthnumber=201605 and ordertype  in ('SF')
+
+select  sum(salesamount) FROM  hk_mis_localsalesorder
+where   monthnumber=201605 and ordertype  not in ('SF')
+
+select  sum(salesamount) FROM  hk_mis_localsalesorder
+where   monthnumber=201605
+
+查明原因为ordertype 有空值, 有空值出现在Where中，oracle总是忽略这笔空值
+
+
+Local_Sales_For_Edmond_with_cost
+========================================================================
+ 
+ 
+SELECT  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) as  FinancialYear
+ ,MonthNumber,bu,Category,GlClass,GlClassCategory,CategoryName
+ ,SubCategory,Ordertype,ItemNumber,
+  trim(ItemNumber) || '   '  || trim(ItemDescription1) as ItemDescription1
+ ,sum(SalesAmount)/100 as SalesAmount ,sum(totalcost)/100 as TotalCost
+ ,sum(QuantityOrderedPUOM)/100 as Qty
+,avg(unitcost)/10000 as UnitCost
+FROM  hk_mis_localsalesorder 
+left join hk_UDCglclass ON hk_MIS_LocalSalesOrder.glclass = trim(hk_udcglclass.udc)
+ WHERE  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) in  ( :p_fYear )  and CategoryName in ( :p_CategoryName )
+  and monthnumber in (:p_month)  and Ordertype in (:p_OrderType)
+
+ group by  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear)
+  ,MonthNumber,bu,Category,GlClass,GlClassCategory,CategoryName,SubCategory,Ordertype 
+ , ItemNumber,trim(ItemNumber) || '   '  || trim(ItemDescription1)
+ 
+  having sum(salesamount)/100 <>0  and sum(totalcost)/100 <> 0
+
+
+ -- and   decode(FinancialMonth,1,11,2,12,FinancialMonth - 2) in ( :p_fMonth ) 
+ --  and BU in ( :p_BU )   and GlClass in ( :p_GlClass ) 
+ --      and subcategory in (:p_SubCategory)
+ 
+
+Local_Sales_For_Edmond
+========================================================================
+
+SELECT  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) as  FinancialYear
+ ,MonthNumber,bu,Category,GlClass,GlClassCategory,CategoryName
+ ,SubCategory,Ordertype
+ ,sum(SalesAmount)/100 as SalesAmount ,sum(totalcost)/100 as TotalCost
+ ,sum(QuantityOrderedPUOM)/100 as Qty
+,avg(unitcost)/10000 as UnitCost
+FROM  hk_mis_localsalesorder 
+left join hk_UDCglclass ON hk_MIS_LocalSalesOrder.glclass = trim(hk_udcglclass.udc)
+ WHERE  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear) in  ( :p_fYear )  and CategoryName in ( :p_CategoryName )
+  and monthnumber in (:p_month)  and Ordertype in (:p_OrderType)
+
+ group by  decode(FinancialMonth,1, FinancialYear -1 ,2, FinancialYear-1, FinancialYear)
+  ,MonthNumber,bu,Category,GlClass,GlClassCategory,CategoryName,SubCategory,Ordertype 
+  
+  having sum(salesamount)/100 <>0  and sum(totalcost)/100 <> 0
+
+
+Outstanding_Order
+========================================================================
+
+select BU,Category,CategoryName,SubCategory,GLClass,
+ OrderDate,OrderType,OrderNumber,ItemNumber,Brand,
+sum(salesamount)/100 as SalesAmount 
+FROM hk_MIS_SalesOrder_NotPosted 
+where Orderyear in  ( :p_Year )  
+ group by BU,Category,CategoryName,SubCategory,GLClass,
+ OrderDate,OrderType,OrderNumber,ItemNumber,Brand
+order by orderdate
+
+
+Purchase_analysis
+========================================================================
+
+SELECT the_year,monthnumber, subcategory, prglc as glclass, name,
+ praptd/100 as AmountPaid
+  from hkpddta.f43121 left join hk_address on pran8=addressnumber
+   left join juliandate4hk on prdgl=date_id
+   left join hk_item on prlitm=itemnumber  
+ where prmatc='2'
+  and the_year in (:p_year)
+   and monthnumber in (:p_month)
+  and prglc in (:p_glclass)
+ and subcategory in (:p_subcategory)
+
+IA_Report
+========================================================================
+
+SELECT    ItemLedger.ItemNumber,   ItemLedger.DocumentNumber, ItemLedger.DocumentType, 
+      ItemLedger.TransactionUOM,  ItemLedger.TransactionQuantity, ItemLedger.UnitCost, 
+      trim(Itemdescription1)||trim(itemdescription2) as ItemDesc,
+      Item.PrimaryUOM, TransactionType.TransactionType, Itemledger.GLClass, 
+        ItemLedger.UnitCost * UOMConversion.ConversionFactor , 
+           ItemLedger.TransactionQuantity * UOMConversion.ConversionFactor 
+FROM    hk_ItemLedger ItemLedger 
+  left JOIN  hk_Item Item ON ItemLedger.ItemNumber = Item.ItemNumber 
+ left JOIN juliandate4hk as400date ON   ItemLedger.GLDate = as400date.the_date 
+ left  JOIN hk_transactiontype TransactionType ON  ItemLedger.DocumentType = TransactionType.DocumentType
+ left  JOIN hk_UOM_Conversion UOMConversion ON  ItemLedger.ItemNumberSys = UOMConversion.ItemNumberSys AND 
+                          ItemLedger.TransactionUOM = UOMConversion.UOM
+WHERE       itemledger.documenttype in ( 'IA' )
+ and  ItemLedger.TransactionQuantity <> 0
+ and  as400date.the_year in  ( :p_Year )
+and itemledger.GlClass in ( :p_GlClass )  
+
+
+ItemBalance_with_Expiry_Period
+========================================================================
+
+
+SELECT hk_item.GlClass,  hk_Item.Brand AS Brand,  hk_Item.Category AS Category, 
+    hk_Item.SubCategory AS SubCategory, hk_Item.PrimaryUOM AS PrimaryUOM,
+   hk_itembalance.Itemnumber,hk_itembalance.Location,hk_itembalance.lot,
+    unitcost * QuantityOnHand as  Amount, 
+    case when ((ExpiryDate - sysdate)<0) and (Location <> 'BAD')  then ' Expired'
+when ((ExpiryDate-sysdate)<0) and ( Location='BAD')  then ' BAD'
+when ((ExpiryDate-sysdate)<=180 ) and ( Location<>'BAD') then '06 months'
+when ((ExpiryDate-sysdate)<=180)  and (Location='BAD') then ' BAD'
+when ((ExpiryDate-sysdate)>180) and ((ExpiryDate-sysdate)<=365) and (Location<>'BAD')  then '12 months'
+when ((ExpiryDate-sysdate)>180) and ((ExpiryDate-sysdate)<=365) and  (Location='BAD')  then ' BAD'
+when ((ExpiryDate-sysdate)>365) and ((ExpiryDate-sysdate)<=545)  and  (Location<>'BAD') then '18 months'
+when ((ExpiryDate-sysdate)>365) and ((ExpiryDate-sysdate)<=545)  and ( Location='BAD') then ' BAD'
+when ((ExpiryDate-sysdate)>545) and ((ExpiryDate-sysdate)<=730)  and ( Location<>'BAD') then '24 months'
+when ((ExpiryDate-sysdate)>545) and ((ExpiryDate-sysdate)<=730)  and  (Location='BAD') then  ' BAD'
+when ((ExpiryDate-sysdate)>730) and ((ExpiryDate-sysdate)<=910)  and (Location<>'BAD') then '30 months'
+when ((ExpiryDate-sysdate)>730) and ((ExpiryDate-sysdate)<=910 ) and  (Location='BAD') then  ' BAD'
+when ((ExpiryDate-sysdate)>910) and ((ExpiryDate-sysdate)<=1095 ) and (Location<>'BAD') then '36 months'
+when ((ExpiryDate-sysdate)>910) and ((ExpiryDate-sysdate)<=1095)  and  (Location='BAD') then  ' BAD'
+when ((ExpiryDate-sysdate)>1095)  and (Location<>'BAD')  then '36 months Or Over'
+when ((ExpiryDate-sysdate)>1095)  and (Location='BAD')  then  ' BAD'
+when ((ExpiryDate is null) and  (Location<>'BAD'))  or ((ExpiryDate='')  and ( Location<>'BAD')) then ' Expired'
+when ((ExpiryDate is null) and ( Location='BAD'))  or ((ExpiryDate='')  and  (Location='BAD')) then ' BAD'
+     else 'Other' end  as YearToBeExpired
+ from hk_ItemBalance 
+  left join hk_item on  hk_ItemBalance.ItemNumber = hk_Item.ItemNumber
+  where quantityonhand<>0
+
+
+Invertory_Balance
+========================================================================
+
+SELECT MIS_Item_Balance.Location, MIS_Item_Balance.Lot, MIS_Item_Balance.QuantityOnHand, MIS_Item_Balance.QuantityBackorder, 
+ MIS_Item_Balance.QuantityOnPO, MIS_Item_Balance.QuantityOnCO, MIS_Item_Balance.QuantityHardCommit, 
+ MIS_Item_Balance.QuantitySoftCommit, MIS_Item_Balance.QuantityOnHold, MIS_Item_Balance.ExpiryDate, MIS_Item_Balance.UnitCost, 
+ MIS_Item_Balance.InventoryValue, MIS_Item_Balance.LotStatus, MIS_Item_Balance.BranchPlant, MIS_Item_Balance.BrandName,
+ MIS_Item_Balance.CategoryName, MIS_Item_Balance.LineName, MIS_Item_Balance.SubCategoryName, MIS_Item_Balance.ItemNumber, 
+ MIS_Item_Balance.ItemDescription1, MIS_Item_Balance.ItemDescription2, MIS_Item_Balance.Brand, MIS_Item_Balance.Category, 
+ MIS_Item_Balance.SubCategory, MIS_Item_Balance.Line, MIS_Item_Balance.Line1, MIS_Item_Balance.Line2, MIS_Item_Balance.Line3,
+ MIS_Item_Balance.Country, MIS_Item_Balance.IsBulk, MIS_Item_Balance.IsObsolete, MIS_Item_Balance.IsExport, 
+ MIS_Item_Balance.IsAgencyProduct, MIS_Item_Balance.ItemPriceGroup, MIS_Item_Balance.PrimaryUOM, MIS_Item_Balance.SecondaryUOM,
+ MIS_Item_Balance.PricingUOM, MIS_Item_Balance.GLClass, MIS_Item_Balance.ItemNumberSys, MIS_Item_Balance.ShelfLife
+FROM hk_MIS_ItemBalance MIS_Item_Balance
+where  BrandName in (:p_BrandName) and GlClass in ( :p_GlClass )
+ and Location in (:p_Location) and IsExport in (:p_IsExport)
+  and quantityonhand<>0
+
+
+AR_Summary
+========================================================================
+
+SELECT MIS_AR_Summary_E1.AddressNumber, MIS_AR_Summary_E1.Name, MIS_AR_Summary_E1.BU, MIS_AR_Summary_E1.Class,
+ MIS_AR_Summary_E1.SubClass, MIS_AR_Summary_E1.Territory, MIS_AR_Summary_E1.Type, MIS_AR_Summary_E1.Salesperson,
+ MIS_AR_Summary_E1.CurrencyCode, MIS_AR_Summary_E1.CreditLimit, MIS_AR_Summary_E1.PaymentTerms, 
+ MIS_AR_Summary_E1.InvoicedThisYear, MIS_AR_Summary_E1.InvoicedPriorYear, MIS_AR_Summary_E1.ParentNumber,
+ MIS_AR_Summary_E1.OpenAmount, MIS_AR_Summary_E1.AmountDue, MIS_AR_Summary_E1.FutureDue, MIS_AR_Summary_E1.CurrentAmount, 
+ MIS_AR_Summary_E1.Days1to30, MIS_AR_Summary_E1.Days31to60, MIS_AR_Summary_E1.Days61to90, MIS_AR_Summary_E1.Days91to120,
+ MIS_AR_Summary_E1.Days121to150, MIS_AR_Summary_E1.Days151to180, MIS_AR_Summary_E1.DaysOver180
+FROM  hk_mIS_ARSummary MIS_AR_Summary_E1
+

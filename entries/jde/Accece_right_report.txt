@@ -16,10 +16,10 @@ select uluser as Userid, ulmni as menu ,ulipgm,ulugrp
    FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0',  'Excel 8.0;Database=D:\holts\f0092.xls', f0092$)
 
 delete f00821
-insert f00821(mzmni,mzseln,mzmtoe, mzjtoe,mzopky,mzver)
-  select  mzmni,mzseln, MZMTOE ,mzjtoe,mzopky,mzver 
+insert f00821(mzmni,mzseln,mzmtoe, mzjtoe,mzopky,mzver,mzsbtd)
+  select  mzmni,mzseln, MZMTOE ,mzjtoe,mzopky,mzver ,mzsbtd
    FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 'Excel 8.0;Database=D:\Holts\f00821.xls', f00821$)
-        -- where MZMTOE is not  null
+
 
 //,mzjtoe,mzopky,mzver
 //select  mzmni,mzseln, MZMTOE, mzjtoe  into f00821A
@@ -27,27 +27,30 @@ insert f00821(mzmni,mzseln,mzmtoe, mzjtoe,mzopky,mzver)
 //    group by mzmni,mzseln, MZMTOE,mzjtoe 
          
 delete f0083
-insert f0083(mtmni,mtseln,mtmntx)
-  select  mtmni, mtseln,  mtmntx  
+insert f0083(mtmni,mtseln,mtmntx,mtlngp)
+  select  mtmni, mtseln,  max(mtmntx) as mtmntx  ,isnull(mtlngp,'')
     FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 'Excel 8.0;Database=D:\holts\f0083.xls', f0083$)
-        where isnull(mtlngp,'')=''
+      group by mtmni,mtseln,ISNULL(mtlngp,'')
+
+
 
 生成顶层菜单
 ------------------------------------------------------------------------
 
 delete topmenu
-insert topmenu(userid,name,grp,corp,mtmni,mtseln,mtmntx)
-select  v_usr.UPUPRF as userid, v_usr.uptext as name,  v_usr.grp,
-    SUBSTRING(v_usr.upuprf,1,3) as Corp, mtmni,mtseln,mtmntx 
+insert topmenu(userid,name,grp,corp,mtmni,mtseln,mtmntx,ulipgm,ulugrp)
+select  v_usr.UPUPRF as userid, v_usr.uptext as name,  '' as grp,
+    SUBSTRING(v_usr.upuprf,1,3) as Corp, mtmni,mtseln,mtmntx ,
+     isnull(ulipgm,''),isnull(ulugrp,'')
  from (
-  select  UPUPRF ,uptext, isnull(case when ulipgm='JRFINIT' then 'RFS' else ulugrp end ,'') as grp,ulmni 
+  select  UPUPRF ,uptext, ulipgm,ulugrp ,ulmni
         FROM OPENROWSET('Microsoft.Jet.OLEDB.4.0', 
             'Excel 8.0;Database=D:\holts\user_profile.xls', user_profile$)
               inner join f0092 on upuprf=uluser
      where  upstat='*ENABLED'
- ) as v_usr left join f0083 on v_usr.ulmni = mtmni
+ ) as v_usr left join f0083 on v_usr.ulmni = mtmni and mtlngp=''
 
- 
+update topMenu set grp = substring(name,1,charindex(' ',name))  
     
 
 再刷新MIS报表
@@ -63,11 +66,32 @@ select v_core.grp as dept, v_core.userid, v_core.name, substring(v_core.name,1,5
   left join f00821 on f00821.mzmni = v_core.mtmni  
          and f00821.mzseln = v_core.mtseln
     and MZMTOE is not  null
- left join f0083 v_submenu on f00821.mzmtoe = v_submenu.mtmni
+  left join f0083 v_submenu on f00821.mzmtoe = v_submenu.mtmni
+    and v_submenu.mtlngp=''
 
 
 
+导出到E1
+========================================================================
 
+select v_core.task1, '' as task2, '' as task3, '' as task4, '' as task5, '' as pgm, '' as ver, '' as sbtd ,
+    v_core.corp,v_core.dept,v_core.ulipgm,v_core.ulugrp     
+  from 
+   ( select corp, grp as dept, ulugrp, ulipgm, userid, name, mtmni,mtseln, mtmntx as task1,
+        '' as task2, '' as task3, '' as task4, '' as task5, mtmni as pgm, '' as ver, '' as sbtd
+       from topmenu   where userid like 'ZZS%'
+       
+     union All
+     select corp, grp as dept, ulugrp, ulipgm, userid, name, v_submenu.mtmni,v_submenu.mtseln,
+        '' as task1,  v_submenu.mtmntx as task2, '' as task3, '' as task4, '' as task5,
+         f00821.mzopky as pgm, f00821.mzver as ver, f00821.mzsbtd as sbtd
+       from topmenu  left join f00821 on f00821.mzmni = topmenu.mtmni  
+         and f00821.mzseln = topmenu.mtseln    
+       left join f0083 v_submenu on f00821.mzmni = v_submenu.mtmni
+           and v_submenu.mtseln=f00821.mzseln and v_submenu.mtlngp=''
+        where userid like 'ZZS%'
+     
+         ) as v_core
 
 
 以下旧方法弃用

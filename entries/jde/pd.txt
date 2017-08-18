@@ -25,18 +25,15 @@ where pjcyno='@parameter101' and pjlitm='@parameter102' and pjlotn='@parameter10
 UPDATE F4141 SET pjtqct=(select pjtqct from mis/h4141 h4141
   where f4141.pjcyno=h4141.pjcyno and f4141.pjlocn=h4141.pjlocn
     and f4141.pjlotn=h4141.pjlotn and f4141.pjlitm=h4141.pjlitm
-    ) ,
-   pjcntj=115363, pjcccd='1'                       
+    ) , pjcntj=116363, pjcccd='1'                       
  where pjCYNO in (select pjCYNO from mis/h4141 h4141 where
     f4141.pjcyno=h4141.pjcyno and f4141.pjlitm=h4141.pjlitm
-     and f4141.pjlotn=h4141.pjlotn and f4141.pjlocn=h4141.pjlocn
-         )   
+     and f4141.pjlotn=h4141.pjlotn and f4141.pjlocn=h4141.pjlocn )   
 
 UPDATE F4141 SET pjtact=pjtqct*pjuncs / 10000            
  where pjCYNO in (select pjCYNO from mis/h4141 h4141 where
     f4141.pjcyno=h4141.pjcyno and f4141.pjlitm=h4141.pjlitm
-     and f4141.pjlotn=h4141.pjlotn and f4141.pjlocn=h4141.pjlocn
-       and f4141.pjmcu=h4141.pjmcu )   
+     and f4141.pjlotn=h4141.pjlotn and f4141.pjlocn=h4141.pjlocn )
   and pjcccd='1'
 
 

@@ -1,0 +1,72 @@
+﻿.. Shadowsocks安装说明
+
+========================================================================
+shadowsocks libev 一键安装
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+系统安装
+========================================================================
+
+系统支持：CentOS/Debian/Ubuntu 内存要求：≥128M
+
+关于本脚本：
+一键安装 libev 版的 Shadowsocks 最新版本。该版本的特点是内存占用小（600k左右），低 CPU 消耗，甚至可以安装在基于 OpenWRT 的路由器上。
+
+服务器端口：自己设定（如不设定，默认为 8989）
+密码：自己设定（如不设定，默认为teddysun.com）
+加密方式：自己设定（如不设定，默认为 aes-256-gcm）
+
+客户端下载：
+https://github.com/shadowsocks/shadowsocks-windows/releases
+
+使用方法：
+
+Debian && Ubuntu 使用root用户登录，运行以下命令：
+
+wget --no-check-certificate https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-libev-debian.sh
+chmod +x shadowsocks-libev-debian.sh
+./shadowsocks-libev-debian.sh 2>&1 | tee shadowsocks-libev-debian.log
+
+
+安装完成后，脚本提示如下：
+
+Congratulations, shadowsocks-libev install completed!
+Your Server IP:your_server_ip
+Your Server Port:your_server_port
+Your Password:your_password
+Your Local IP:127.0.0.1
+Your Local Port:1080
+Your Encryption Method:aes-256-cfb
+
+Welcome to visit:http://teddysun.com/357.html
+Enjoy it!
+
+卸载方法：
+使用 root 用户登录，运行以下命令： ./shadowsocks-libev.sh uninstall
+
+使用命令：
+启动：/etc/init.d/shadowsocks start
+停止：/etc/init.d/shadowsocks stop
+重启：/etc/init.d/shadowsocks restart
+查看状态：/etc/init.d/shadowsocks status
+

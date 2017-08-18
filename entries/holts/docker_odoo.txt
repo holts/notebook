@@ -29,15 +29,21 @@ Odoo开发环境
 
 $ docker pull odoo
 
-   docker系统会自动从docker的软件库下载（pull）回odoo的docker镜像软件。接下来怎么使用这个docker/odoo9.0的资源呢（How to use this imag）？
+docker系统会自动从docker的软件库下载（pull）回odoo的docker镜像软件。接下来怎么使用这个docker/odoo10.0 的资源呢（How to use this imag）？
 
-This image requires a running PostgreSQL server.
-Start a PostgreSQL server 
+odoo是使用postgress的数据库，直接使用postgres的images即可
 
-$ docker run -d -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo --name db postgres 
+$ docker run -d -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo --name db postgres:9.4 
 
-Start an Odoo instance 
-$ docker run -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo
+当然加上了restart always之后，重新开机也不用担心不会启用了唷
+
+$ docker run -d -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo --restart always --name db postgres:9.4
+
+Start an Odoo instance  
+
+默认安裝 若您是第一次安裝，建议直接使用預设的安裝即可
+
+$ docker run -p 8069:8069 --name odoo --link db:db -t odoo
 
 The alias of the container running Postgres must be db for Odoo to be able to connect to the Postgres server.
 
@@ -47,25 +53,67 @@ $ docker start -a odoo
 
 Stop and restart a PostgreSQL server
 
-       When a PostgreSQL server is restarted, the Odoo instances linked to that server must be restarted as well because the server address has changed and the link is thus broken.
+When a PostgreSQL server is restarted, the Odoo instances linked to that server must be restarted as well because the server address has changed and the link is thus broken.
 
-      Restarting a PostgreSQL server does not affect the created databases.
-
+Restarting a PostgreSQL server does not affect the created databases.
 
 Run Odoo with a custom configuration
 
-      The default configuration file for the server (located at /etc/odoo/openerp-server.conf) can be overriden at startup using volumes. Suppose you have a custom configuration at /path/to/config/openerp-server.conf, then
-$ docker run -v /path/to/config:/etc/odoo -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo
+客制化设定 当您已经开始使用，並且想要针对odoo，进行一些客制化的环境设定，可以参考下面的安裝方式
 
-        Please use this configuration template to write your custom configuration as we already set some arguments for running Odoo inside a Docker container.
+$ docker run -v e:/dockdatavolume/odoo/to/config:/etc/odoo -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo
 
-       You can also directly specify Odoo arguments inline. Those arguments must be given after the keyword -- in the command-line, as follows
+將您配置文件，放到您的路徑（ e:/dockdatavolume/odoo/to/config）即可，至於如何写，可以参考以下资料设定档范本
+
+[options]
+addons_path = /mnt/extra-addons,/usr/lib/python2.7/dist-packages/odoo/addons
+data_dir = /var/lib/odoo
+auto_reload = True
+; admin_passwd = admin
+; csv_internal_sep = ,
+; db_maxconn = 64
+; db_name = False
+; db_template = template1
+; dbfilter = .*
+; debug_mode = False
+; email_from = False
+; limit_memory_hard = 2684354560
+; limit_memory_soft = 2147483648
+; limit_request = 8192
+; limit_time_cpu = 60
+; limit_time_real = 120
+; list_db = True
+; log_db = False
+; log_handler = [':INFO']
+; log_level = info
+; logfile = None
+; longpolling_port = 8072
+; max_cron_threads = 2
+; osv_memory_age_limit = 1.0
+; osv_memory_count_limit = False
+; smtp_password = False
+; smtp_port = 25
+; smtp_server = localhost
+; smtp_ssl = False
+; smtp_user = False
+; workers = 0
+; xmlrpc = True
+; xmlrpc_interface = 
+; xmlrpc_port = 8069
+; xmlrpcs = True
+; xmlrpcs_interface = 
+; xmlrpcs_port = 8071
+
+
+
+You can also directly specify Odoo arguments inline. Those arguments must be given after the keyword -- in the command-line, as follows
 $ docker run -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo -- --db-filter=odoo_db_.*       
 
- Mount custom addons
+Mount custom addons
 
-      You can mount your own Odoo addons within the Odoo container, at /mnt/extra-addons
-$ docker run -v /path/to/addons:/mnt/extra-addons -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo 
+You can mount your own Odoo addons within the Odoo container, at /mnt/extra-addons
+$ docker run -v e:/dockdatavolume/odoo/to/config:/etc/odoo -v e:/dockdatavolume/odoo/to/addons:/mnt/extra-addons -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo 
+
 
 Run multiple Odoo instances 
 $ docker run -p 127.0.0.1:8070:8069 --name odoo2 --link db:db -t odoo 
@@ -74,40 +122,100 @@ $ docker run -p 127.0.0.1:8071:8069 --name odoo3 --link db:db -t odoo
 Please note that for plain use of mails and reports functionalities, when the host and container ports differ (e.g. 8070 and 8069), one has to set, in Odoo, Settings->Parameters->System Parameters (requires technical features), web.base.url to the container port (e.g. 127.0.0.1:8069).
 
 
+环境变量
+========================================================================
+
+Tweak these environment variables to easily connect to a postgres server:
+
+HOST: The address of the postgres server. If you used a postgres container, set to the name of the container. Defaults to db.
+
+PORT: The port the postgres server is listening to. Defaults to 5432.
+
+USER: The postgres role with which Odoo will connect. If you used a postgres container, set to the same value as POSTGRES_USER. Defaults to odoo.
+
+PASSWORD: The password of the postgres role with which Odoo will connect. If you used a postgres container, set to the same value as POSTGRES_PASSWORD. Defaults to odoo.
+
+Docker Compose examples
+========================================================================
+
+The simplest docker-compose.yml file would be:
+
+version: '2'
+services:
+  web:
+    image: odoo:10.0
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+  db:
+    image: postgres:9.4
+    environment:
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+
+If the default postgres credentials does not suit you, tweak the environment variables:
+
+version: '2'
+services:
+  web:
+    image: odoo:10.0
+    depends_on:
+      - mydb
+    ports:
+      - "8069:8069"
+    environment:
+    - HOST=mydb
+    - USER=odoo
+    - PASSWORD=myodoo
+  mydb:
+    image: postgres:9.4
+    environment:
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=myodoo
+
+Here's a last example showing you how to mount custom addons, how to use a custom configuration file and how to use volumes for the Odoo and postgres data dir:
+
+version: '2'
+services:
+  web:
+    image: odoo:10.0
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - ./config:/etc/odoo
+      - ./addons:/mnt/extra-addons
+  db:
+    image: postgres:9.4
+    environment:
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
+volumes:
+  odoo-web-data:
+  odoo-db-data:
+
+To start your Odoo instance, go in the directory of the docker-compose.yml file you created from the previous examples and type:
+
+docker-compose up -d
+
+
+
 How to upgrade this image
 ========================================================================
+
+Odoo images are updated on a regular basis to make them use recent releases (a new release of each version of Odoo is built every night). Please be aware that what follows is about upgrading from an old release to the latest one provided of the same major version, as upgrading from a major version to another is a much more complex process requiring elaborated migration scripts (see Odoo Enterprise Upgrade page or this community project which aims to write those scripts).
 
 Suppose you created a database from an Odoo instance named old-odoo, and you want to access this database from a new Odoo instance named new-odoo, e.g. because you've just downloaded a newer Odoo image.
 
 By default, Odoo 8.0 uses a filestore (located at /var/lib/odoo/filestore/) for attachments. You should restore this filestore in your new Odoo instance by running
-$ docker run --volumes-from old-odoo -p 127.0.0.1:8070:8069 --name new-odoo --link db:db -t odoo
+
+$ docker run --volumes-from old-odoo -p 8070:8069 --name new-odoo --link db:db -t odoo
 
 You can also simply prevent Odoo from using the filestore by setting the system parameter ir_attachment.location to db-storage in Settings->Parameters->System Parameters (requires technical features).
-License
-
-View license information for the software contained in this image.
-
-Supported Docker versions
-
-This image is officially supported on Docker version 1.9.0.
-
-Support for older versions (down to 1.6) is provided on a best-effort basis.
-
-Please see the Docker installation documentation for details on how to upgrade your Docker daemon.
-User Feedback Documentation
-
-Documentation for this image is stored in the odoo/ directory of the docker-library/docs GitHub repo. Be sure to familiarize yourself with the repository's README.md file before attempting a pull request.
-
-Issues
-
-If you have any problems with or questions about this image, please contact us through a GitHub issue.
-
-You can also reach many of the official image maintainers via the #docker-library IRC channel on Freenode.
-
-Contributing
-
-You are invited to contribute new features, fixes, or updates, large or small; we are always thrilled to receive pull requests, and do our best to process them as fast as we can.
-
-Before you start to code, we recommend discussing your plans through a GitHub issue, especially for more ambitious contributions. This gives other contributors a chance to point you in the right direction, give you feedback on your design, and help you find out if someone else is working on the same thing.
-
 
