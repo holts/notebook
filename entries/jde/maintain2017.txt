@@ -1,32 +1,614 @@
 ﻿
-
-
-2017-08-07
-------------------------------------------------------------------------
-
-userid: yejinping（叶金平） <yejinping@mentholatum.com.cn>
-Description of problem:
-F4104 关键字重复 （IVITM, IVXRT, IVAN8, IVCITM, IVEXDJ），此5个字段为唯一关键字
-To resolve:
-
-insert into f4104 (IVAN8,IVXRT,IVITM,IVEXDJ,IVEFTJ,
-IVMCU,IVCITM,IVDSC1,IVDSC2,IVALN,IVLITM,IVAITM,IVURCD,
-IVURDT,IVURAT,IVURAB,IVURRF,IVUSER,IVPID,IVJOBN,IVUPMJ,IVTDAY )
-select IVAN8,'R3' as IVXRT,IVITM,IVEXDJ, max(IVEFTJ),
- max(IVMCU),IVCITM, max(IVDSC1), max(IVDSC2), max(IVALN),
-  IVLITM,IVAITM,max(IVURCD),max(IVURDT),max(IVURAT),max(IVURAB),
- max(IVURRF),max(IVUSER),max(IVPID),max(IVJOBN),max(IVUPMJ),
-   max(IVTDAY) from f4104 where ivxrt='R2'
- group by  IVAN8, IVITM,IVEXDJ, IVCITM,  IVLITM,IVAITM
-
-
-
-2017-07-28
+2017-12-27
 ------------------------------------------------------------------------
 
 
 userid: shenXiao(沈潇) <shenXiao@mentholatum.com.cn>
-Description of problem: 
+Description of problem:
+广州调上海的HB单，单号91001421， (NW92001607) 客户号出错，由于已收货过账，无法修改。
+麻烦您帮忙修改客户号为91153240
+To resolve:
+
+update f4311 set pdan8='91153240'
+ where pddoco=91001420  and pddcto='HB'
+update f4301 set phan8='91153240'
+ where phdoco=91001420  and phdcto='HB'
+update f43121 set pran8='91153240'
+ where prdoco=91001420 and prdcto='HB'
+
+
+2017-12-26
+------------------------------------------------------------------------
+
+userid: YeMeiLian(叶美莲) <yemeilian@mentholatum.com.cn>
+Description of problem:
+新增和删除Ｍ型ＢＯＭ
+To resolve:
+下载F3003中IRTRT=M类型记录备份，然后在复制的F3003 Excel文件中，将IRKITL,IRKITA替换成要删除除的代码，将用户提供删除表中的操作序号*100后替换IROPSQ, 将用户提供的工作中心前面加两个空格后替换IRMCU, 将用户提供的批量*100后替换IRBQTY，将制作好的删除表F3003上传到MIS/H3003
+
+
+上传后先删除(实际上是更改单类型为XX，最后用户检查正常后再删)有批量的记录
+select * from f3003 
+ where  irtrt='M' and irmmcu='  ZZS0760210'
+   and  iropsq || irkitl || irbqty in
+ ( select iropsq || irkitl || irbqty   from mis/h3003
+    where irtrt='M' and irmmcu='  ZZS0760210'
+      group by  iropsq || irkitl || irbqty )
+
+update f3003 set irtrt='xx'
+ where  irtrt='M' and irmmcu='  ZZS0760210'
+   and  iropsq || irkitl || irbqty in
+ ( select iropsq || irkitl || irbqty   from mis/h3003
+    where irtrt='M' and irmmcu='  ZZS0760210'
+      group by  iropsq || irkitl || irbqty )
+
+删除批量为0的记录
+update mis/h3003 set irbqty=0
+select * from f3003 
+ where  irtrt='M' and irmmcu='  ZZS0760210'
+   and  iropsq || irkitl || irbqty in
+ ( select iropsq || irkitl || irbqty   from mis/h3003
+    where irtrt='M' and irmmcu='  ZZS0760210'
+      group by  iropsq || irkitl || irbqty )
+
+update f3003 set irtrt='xx'
+ where  irtrt='M' and irmmcu='  ZZS0760210'
+   and  iropsq || irkitl || irbqty in
+ ( select iropsq || irkitl || irbqty   from mis/h3003
+    where irtrt='M' and irmmcu='  ZZS0760210'
+      group by  iropsq || irkitl || irbqty )
+
+
+制作新增记录，工作中心码->irmcu,批量*100 -> irbqty, 系号*100 -> iropsq , 人工*100 -> irrunl ,队伍规范*10 -> irsetc 时间期准 -> imtimb, 单位->iruom, 制作好后上传到mis/h3003
+
+更改外发加工标志
+update mis/h3003 set ircost='',irpoy='',irvend=0                        
+ where ircost='D1' and irpoy='Y' and irtrt='M'     
+ 
+update mis/h3003 set irkit = (select imitm
+  from f4101 where irkitl=imlitm) 
+
+update mis/h3003 set irdsc1 = (select ljdl01        
+  from f0006d where ljlngp='CS' and  irmcu=ljmcu)  
+
+
+再次检查是否已有记录，如有更改类型，待以后删除
+update f3003 set irtrt='xy'
+ where  irtrt='M' and irmmcu='  ZZS0760210'
+   and  iropsq || irkitl || irbqty in
+ ( select iropsq || irkitl || irbqty   from mis/h3003
+    where irtrt='M' and irmmcu='  ZZS0760210'
+      group by  iropsq || irkitl || irbqty )
+
+
+插入有批量的记录
+insert into f3003 (IRTRT,IRKIT,IRKITL,IRKITA ,IRMMCU,IRALD ,
+IRDSC1 ,IRLINE,IRMCU,IROPSQ ,IREFFF,IREFFT ,IRBFPF ,IRLAMC ,
+IRTIMB,IROPSR,IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,
+IRSETC,IRMOVD,IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,
+IRAPID ,IRSHNO,IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,
+IRCOST ,IROMCU,IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,
+IRURRF,IRURAB,IRUSER,IRPID ,IRUPMJ,IRTDAY,IRJOBN)
+select IRTRT,IRKIT,IRKITL,IRKITA,IRMMCU,IRALD,IRDSC1 ,IRLINE ,
+ IRMCU,IROPSQ,IREFFF,IREFFT,IRBFPF,IRLAMC ,IRTIMB,IROPSR ,
+IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,IRSETC,IRMOVD,
+IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,IRAPID ,IRSHNO ,
+IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,IRCOST ,IROMCU,
+IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,IRURRF,IRURAB,
+'UPDATE',IRPID ,117360,IRTDAY,IRJOBN
+
+from mis/h3003  where irtrt || irkitl || iropsq || irbqty
+  not in   (select irtrt || irkitl || iropsq || irbqty   
+       from f3003  where irtrt='M' and irbqty>0
+     group by   irtrt || irkitl || iropsq || irbqty  ) 
+	
+
+更改批量为0的记录
+update mis/h3003 set irbqty=0
+
+update f3003 set irtrt='xy'
+ where  irtrt='M' and irmmcu='  ZZS0760210'
+   and  iropsq || irkitl || irbqty in
+ ( select iropsq || irkitl || irbqty   from mis/h3003
+    where irtrt='M' and irmmcu='  ZZS0760210'
+      group by  iropsq || irkitl || irbqty )
+             
+
+插入批量为0的记录
+insert into f3003 (IRTRT,IRKIT,IRKITL,IRKITA ,IRMMCU,IRALD ,
+IRDSC1 ,IRLINE,IRMCU,IROPSQ ,IREFFF,IREFFT ,IRBFPF ,IRLAMC ,
+IRTIMB,IROPSR,IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,
+IRSETC,IRMOVD,IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,
+IRAPID ,IRSHNO,IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,
+IRCOST ,IROMCU,IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,
+IRURRF,IRURAB,IRUSER,IRPID ,IRUPMJ,IRTDAY,IRJOBN)
+select IRTRT,IRKIT,IRKITL,IRKITA,IRMMCU,IRALD,IRDSC1 ,IRLINE ,
+IRMCU,IROPSQ,IREFFF,IREFFT,IRBFPF,IRLAMC ,IRTIMB,IROPSR ,
+0 as IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,IRSETC,IRMOVD,
+IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,IRAPID ,IRSHNO ,
+IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,IRCOST ,IROMCU,
+IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,IRURRF,IRURAB,
+'UPDATE',IRPID ,117360,IRTDAY,IRJOBN
+
+from mis/h3003  where irtrt || irkitl || iropsq  
+  not in   (select irtrt || irkitl || iropsq    
+       from f3003  where irtrt='M' and irbqty=0
+     group by   irtrt || irkitl || iropsq   ) 
+                  
+对新增的重复记录，需要用户重新整理后上传。
+
+
+2017-12-21
+------------------------------------------------------------------------
+
+
+userid: Orange(郑惠嫦) <orange@mentholatum.com.cn>
+Description of problem:
+新增 其他购进产品  总帐级IN60, 设置类似IN36
+To resolve:
+查系统表中，HK已加了记录，只是MCL没有记录, 而且这个都是外购，本产不生产，所以关于生产的不需要加
+insert into f4095(MLANUM,MLCO ,MLDCTO,MLDCT ,MLGLPT,
+ MLCOST,MLMCU ,MLOBJ ,MLSUB )
+select MLANUM,MLCO ,MLDCTO, MLDCT ,'IN60' as MLGLPT,
+ MLCOST,MLMCU ,MLOBJ ,MLSUB
+ from f4095 where mlglpt='IN36' and mlco in
+  (90000,91000,92000,93000)
+    and mlanum > 4000
+ 
+update f4095 set mlobj='205032' where mlglpt='IN60' 
+  and   mlco in  (90000,91000,92000,93000)    
+    and mlanum > 4000 and mlobj='205026'    
+      
+
+2017-11-29
+------------------------------------------------------------------------
+
+userid:linjiaxian(林嘉贤) <linjiaxian@mentholatum.com.cn>
+Description of problem:
+WS工单90061481预过98出错, 提示 3120  3220  3260 IV IN45 没有设置会计指令，但同样的工单90061482 则没有问题，IN45这个总帐级的所有单都没有问题
+To resolve:
+检查发现有igcost的一行为空
+select * from f3102                        
+ where igdoco in (90061482, 90061481)      
+  and igpart='P' and igcost=''             
+
+和正常单比对这行少了D1，增加D1后过帐正常
+update f3102 set igcost='D1'          
+ where igdoco in (          90061481) 
+  and igpart='P' and igcost=''        
+
+
+
+2017-11-22
+------------------------------------------------------------------------
+
+userid: Liuxiaoyu(刘晓瑜) <Liuxiaoyu@mentholatum.com.cn>
+Description of problem:
+增加 FREIGHT - OCEAN-NI，类似F2
+To resolve:
+增加总帐级FT4 用户定义码
+G4241－〉2 增加销售单行类型F4，抄F2，注意存货界面是N，总帐级FT4
+G4241 －〉3 增加NX单的F4流程
+增加AAI
+90000 4220 NX FT4  ZZS0760JPN.750502
+90000 4230 NX FT4         750502
+90000 4240 NX FT4  ZZS0760JPN.750502
+
+
+2017-11-1
+------------------------------------------------------------------------
+
+userid: zhenglihua（郑丽华） <zhenglihua@mentholatum.com.cn>
+Description of problem:
+90239332 OV 做了PV后杀单，数量2000没有还回
+To resolve:
+原PV单号90048453已被用掉，在总帐被删除(正确应该在匹配窗口删除), 但在匹配窗口没有看到返还的OV记录,在收货匹配窗口仍然看不到.
+To resolve:
+select * from f0911  where gldoc=90048453 and gldct='PV'  
+select * from f0411 where rpdoc=90048453 and rpdct ='PV'
+
+检查F0411,F0911记录可以看到公司的记录，但已是其它单使用的记录，但F43121发现记录匹配类型为2的记录不存在, 而是有一些类型为3的记录。
+正常应将这些为3的记录找到对应的类型1的UOPN和AOPN加回,同时扣减UPTD, APTD 
+
+但由于用户说只是一条记录有问题少两千，所以直接更新哪条OV记录
+
+update f43121 set pruopn = pruopn + 200000, praopn = 4200423
+ where prdoc = 90239332 and prdct = 'OV'  and prmatc in ('1')   
+ and pran8=90130497  and prdoco=81055837 and prdcto='HC'
+   and pruopn = 782900
+
+
+
+
+
+2017-10-13
+------------------------------------------------------------------------
+
+userid: yejinping（叶金平） <yejinping@mentholatum.com.cn>
+Description of problem:
+补全缺失的Item Profile
+To resolve:
+
+insert into f46010( ipmcu, ipitm, ipmlit, ipmlot, ipsplp,
+  ipptph, ippkph, iprpph, ipdltn, ipvloc,  iphloc, ippput,
+  ipppik, iplcod, ipjobn,ipupmj )
+select '  ZZS0760210',imitm,'Y','Y','Y','I','I','I','O','V',
+ 'H','R','D','', 'UPDATE',117300
+from f4101 where imitm not in (select ipitm from f46010)
+
+
+2017-10-12
+------------------------------------------------------------------------
+
+userid: yejinping（叶金平） <yejinping@mentholatum.com.cn>
+Description of probledm:
+F4102中的分类码值在F0005表中没有对应值，这些数据导入E1时出错
+To resolve:
+以下代码在F0005中补入缺省的值
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','01','       '||abac01,abac01,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac01 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='01')
+ group by abac01
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','02','       '||abac02,abac02,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac02 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='02')
+ group by abac02
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','03','       '||abac03,abac03,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac03 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='03')
+ group by abac03
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','04','       '||abac04,abac04,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac04 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='04')
+ group by abac04
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','05','       '||abac05,abac05,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac05 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='05')
+ group by abac05
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','06','       '||abac06,abac06,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac06 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='06')
+ group by abac06
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','07','       '||abac07,abac07,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac07 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='07')
+ group by abac07
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','08','       '||abac08,abac08,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac08 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='08')
+ group by abac08
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','09','       '||abac09,abac09,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac09 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='09')
+ group by abac09
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','10','       '||abac10,abac10,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac10 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='10')
+ group by abac10
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','11','       '||abac11,abac11,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac11 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='11')
+ group by abac11
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','12','       '||abac12,abac12,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac12 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='12')
+ group by abac12
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','13','       '||abac13,abac13,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac13 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='13')
+ group by abac13
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','14','       '||abac14,abac14,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac14 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='14')
+ group by abac14
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','15','       '||abac15,abac15,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac15 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='15')
+ group by abac15
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','16','       '||abac16,abac16,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac16 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='16')
+ group by abac16
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','17','       '||abac17,abac17,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac17 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='17')
+ group by abac17
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','18','       '||abac18,abac18,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac18 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='18')
+ group by abac18
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','19','       '||abac19,abac19,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac19 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='19')
+ group by abac19
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','20','       '||abac20,abac20,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac20 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='20')
+ group by abac20
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','21','       '||abac21,abac21,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac21 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='21')
+ group by abac21
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','22','       '||abac22,abac22,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac22 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='22')
+ group by abac22
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','23','       '||abac23,abac23,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac23 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='23')
+ group by abac23
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','24','       '||abac24,abac24,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac24 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='24')
+ group by abac24
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','25','       '||abac25,abac25,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac25 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='25')
+ group by abac25
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','26','       '||abac26,abac26,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac26 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='26')
+ group by abac26
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','27','       '||abac27,abac27,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac27 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='27')
+ group by abac27
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','28','       '||abac28,abac28,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac28 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='28')
+ group by abac28
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','29','       '||abac29,abac29,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac29 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='29')
+ group by abac29
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '01','30','       '||abac30,abac30,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f0101 where abac30 not in 
+   (select ltrim(drky) from f0005 where drsy='01' and drrt='30')
+ group by abac30
+
+
+2017-10-11
+------------------------------------------------------------------------
+
+userid: yejinping（叶金平） <yejinping@mentholatum.com.cn>
+Description of probledm:
+F4102中的分类码值在F0005表中没有对应值，这些数据导入E1时出错
+To resolve:
+以下代码在F0005中补入缺省的值
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '41','S1','       '||ibsrp1,ibsrp1,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f4102 where ibsrp1 not in 
+   (select ltrim(drky) from f0005 where drsy='41' and drrt='S1')
+ group by ibsrp1
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '41','S2','       '||ibsrp2,ibsrp2,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f4102 where ibsrp2 not in 
+   (select ltrim(drky)  from f0005 where drsy='41' and drrt='S2')
+ group by ibsrp2
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '41','S3','       '||ibsrp3,ibsrp3,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f4102 where ibsrp3 not in 
+   (select ltrim(drky)  from f0005 where drsy='41' and drrt='S3')
+ group by ibsrp3
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '41','S4','       '||ibsrp4,ibsrp4,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f4102 where ibsrp4 not in 
+   (select ltrim(drky)  from f0005 where drsy='41' and drrt='S4')
+ group by ibsrp4
+ 
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '41','S5','       '||ibsrp5,ibsrp5,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f4102 where ibsrp5 not in 
+   (select ltrim(drky)  from f0005 where drsy='41' and drrt='S5')
+ group by ibsrp5
+ 
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '41','06','    '||ibsrp6,ibsrp6,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f4102 where ibsrp6 not in 
+   (select ltrim(drky)  from f0005 where drsy='41' and drrt='06')
+ group by ibsrp6
+ 
+insert into f0005 (DRSY,DRRT,DRKY,DRDL01,DRDL02,DRSPHD,
+ DRUDCO,DRHRDC,DRUSER,DRPID,DRUPMJ,DRJOBN,DRUPMT )
+select '41','07','    '||ibsrp7,ibsrp7,'','','','N',
+  'UPDATA','UPDATA',117280,'UPDATA',1354
+ from f4102 where ibsrp7 not in 
+   (select ltrim(drky)  from f0005 where drsy='41' and drrt='07')
+ group by ibsrp7
+
+insert into f0005 (DRSY,DRRT,DRKY,DRDL5133PV单号在总帐被删除(正确应该在匹配窗口删除), 但在匹配窗口没有看到返还的OV记录,在收货匹配窗口仍然看不到.
+To resolve:
+select * from f0911  where gldoc5133 and gldct='PV'  
+select * from f0411 where rpdoc =5133 and rpdct ='PV'
+
+检查F0411,F0911记录可以看到公司92000和00006的记录，但没有上海公司91000的记录，用户所述是已删除，但F43121发现记录匹配类型为2的记录仍然存在,  先将这些要删除的类型为2的PV记录类型改为4备案, 然后将这此改为4的记录找到对应的类型1的UOPN和AOPN加回,同时扣减UPTD, APTD 
+
+update f43121 set prmatc='4'  where prdoc = 5133                          
+   and prdct = 'PV'    and prmatc in ('2','3')   
+ and pran8=91130001  and prdoco=91006062 and prdcto='HA'
+共22条记录
+
+关联查询寻找关联的OV记录,检查是否正常关联到
+select * from f43121 inner join 
+(
+select a.prdoco,a.prdcto,a.prlnid,a.prnlin,a.prlitm,
+  a.pruptd, a.praptd from f43121 a        
+left join f43121 b on a.prmatc='1'                  
+     and a.prdoco=b.prdoco and a.prdcto=b.prdcto    
+      and a.prlnid=b.prlnid and a.prnlin=b.prnlin   
+    and a.prlitm=b.prlitm                           
+ where a.prdoc ='5133'  and a.prdct='PV'  
+   and a.prmatc='4'   )    as v_err
+on f43121.prdoco=v_err.prdoco and f43121.prdcto=v_err.prdcto
+ and f43121.prlnid=v_err.prlnid and f43121.prnlin=v_err.prnlin
+  and f43121.prlitm=v_err.prlitm
+ where f43121.prmatc='1' and pran8=91130001
+
+
+update  f43121 set pruopn = pruopn + 
+  (select b.pruptd from f43121 b where b.prmatc='4' and
+  b.prdoc='5133' and b.prdct='PV' and f43121.prdoco=b.prdoco
+ and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
+  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
+   praopn = praopn + 
+   (select b.praptd from f43121 b where b.prmatc='4' and
+  b.prdoc='5133' and b.prdct='PV' and f43121.prdoco=b.prdoco
+ and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
+  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
+  pruptd = pruptd -
+  (select b.pruptd from f43121 b where b.prmatc='4' and
+  b.prdoc='5133' and b.prdct='PV' and f43121.prdoco=b.prdoco
+ and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
+  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
+   praptd = praptd -
+   (select b.praptd from f43121 b where b.prmatc='4' and
+
+  b.prdoc='5133' and b.prdct='PV' and f43121.prdoco=b.prdoco
+ and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
+  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm )
+
+ where prmatc='1' and prdoco||prdcto||prlnid||prnlin||prlitm  in
+ (select prdoco||prdcto||prlnid||prnlin||prlitm from f43121
+    where prmatc='4' and prdoc='5133' and prdct='PV')
+   and pran8=91130001
+ 
+
 5133PV单号在总帐被删除(正确应该在匹配窗口删除), 但在匹配窗口没有看到返还的OV记录,在收货匹配窗口仍然看不到.
 To resolve:
 select * from f0911  where gldoc5133 and gldct='PV'  
@@ -385,1712 +967,4 @@ update f0311 set rpag=57652    ,  rpaap=57652
   and rpag=57651                                          
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-2016-12-26
-------------------------------------------------------------------------
-
-userid: zengchunping(曾春平) <zengchunping@mentholatum.com.cn>
-Description of problem:
-新增和删除Ｍ型ＢＯＭ
-To resolve:
-下载F3003中M类型记录备份，然后在复制的F3003文件中，将IRKITL,IRKITA替换成要删除除的代码，IRBQTY用批量替换后上传到MIS/H3003
-update mis/h3003 set irbqty = irbqty * 100
-
-上传后先删除有批量的记录
-select * from f3003 
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and  irkitl || irbqty in
- ( select irkitl || irbqty   from mis/h3003
-    where irtrt='M' and irmmcu='  ZZS0760210'
-      group by  irkitl || irbqty )
-
-update f3003 set irtrt='xx'
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and  irkitl || irbqty in
- ( select irkitl || irbqty   from mis/h3003
-    where irtrt='M' and irmmcu='  ZZS0760210'
-      group by  irkitl || irbqty )
-
-删除批量为0的记录
-select * from f3003 
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and irbqty=0 and irkitl in
- ( select irkitl  from mis/h3003
-   where irtrt='M' and irmmcu='  ZZS0760210'
-    group by  irkitl )
-
-update f3003 set irtrt='xx'
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and irbqty=0 and irkitl in
- ( select irkitl  from mis/h3003
-   where irtrt='M' and irmmcu='  ZZS0760210'
-    group by  irkitl )
-
-更改外发加工标志
-update mis/h3003 set ircost='',irpoy='',irvend=0                        
- where ircost='D1' and irpoy='Y' and irtrt='M'      
-
-制作新增记录，工作中心码->irmcu,批量*100 -> irbqty, 系号*100 -> iropsq , 人工*100 -> irrunl ,队伍规范*10 -> irsetc 时间期准 -> imtimb, 单位->iruom, 制作好后上传到mis/h3003, 再次检查是否已有记录，如有更改类型，待以后删除
-update f3003 set irtrt='xy'
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and  irkitl || irbqty in
- ( select irkitl || irbqty from mis/h3003
-   where irtrt='M' and irmmcu='  ZZS0760210'
-    group by  irkitl || irbqty )
-update f3003 set irtrt='xy'
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and irbqty=0 and irkitl in
- ( select irkitl  from mis/h3003
-   where irtrt='M' and irmmcu='  ZZS0760210'
-    group by  irkitl )
-
-
-update mis/h3003 set irkit = (select imitm
-  from f4101 where irkitl=imlitm), irmcu='  '||irmcu
-
-update mis/h3003 set irdsc1 = (select ljdl01        
-  from f0006d where ljlngp='CS' and  irmcu=ljmcu)               
-
-插入批量为0的记录
-insert into f3003 (IRTRT,IRKIT,IRKITL,IRKITA ,IRMMCU,IRALD ,
-IRDSC1 ,IRLINE,IRMCU,IROPSQ ,IREFFF,IREFFT ,IRBFPF ,IRLAMC ,
-IRTIMB,IROPSR,IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,
-IRSETC,IRMOVD,IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,
-IRAPID ,IRSHNO,IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,
-IRCOST ,IROMCU,IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,
-IRURRF,IRURAB,IRUSER,IRPID ,IRUPMJ,IRTDAY,IRJOBN)
-select IRTRT,IRKIT,IRKITL,IRKITA,IRMMCU,IRALD,IRDSC1 ,IRLINE ,
-IRMCU,IROPSQ,IREFFF,IREFFT,IRBFPF,IRLAMC ,IRTIMB,IROPSR ,
-0 as IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,IRSETC,IRMOVD,
-IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,IRAPID ,IRSHNO ,
-IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,IRCOST ,IROMCU,
-IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,IRURRF,IRURAB,
-'UPDATE',IRPID ,116360,IRTDAY,IRJOBN
-
-from mis/h3003  where irtrt || irkitl || iropsq  
-  not in   (select irtrt || irkitl || iropsq    
-       from f3003  where irtrt='M' and irbqty=0
-     group by   irtrt || irkitl || iropsq   ) 
-                  
-
-插入有批量的记录
-insert into f3003 (IRTRT,IRKIT,IRKITL,IRKITA ,IRMMCU,IRALD ,
-IRDSC1 ,IRLINE,IRMCU,IROPSQ ,IREFFF,IREFFT ,IRBFPF ,IRLAMC ,
-IRTIMB,IROPSR,IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,
-IRSETC,IRMOVD,IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,
-IRAPID ,IRSHNO,IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,
-IRCOST ,IROMCU,IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,
-IRURRF,IRURAB,IRUSER,IRPID ,IRUPMJ,IRTDAY,IRJOBN)
-select IRTRT,IRKIT,IRKITL,IRKITA,IRMMCU,IRALD,IRDSC1 ,IRLINE ,
- IRMCU,IROPSQ,IREFFF,IREFFT,IRBFPF,IRLAMC ,IRTIMB,IROPSR ,
-IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,IRSETC,IRMOVD,
-IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,IRAPID ,IRSHNO ,
-IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,IRCOST ,IROMCU,
-IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,IRURRF,IRURAB,
-'UPDATE',IRPID ,116360,IRTDAY,IRJOBN
-
-from mis/h3003  where irtrt || irkitl || iropsq || irbqty
-  not in   (select irtrt || irkitl || iropsq || irbqty   
-       from f3003  where irtrt='M' and irbqty>0
-     group by   irtrt || irkitl || iropsq || irbqty  ) 
-                  
-
-对新增的重复记录，需要用户重新整理后上传。
-
-2016-11-28
-------------------------------------------------------------------------
-
-userid: CWB <CWB@mentholatum.com.cn>
-Description of problem:
-批量更新成品的标示量。
-To resolve:
-将标示量*100后放入　ivan8, 上传后更新
-update f4102 set ibmult= (select ivan8  from mis/h4104 where iblitm=      
-  ivlitm )   where                                                       
-       ibmcu='  ZZS0760510'                                              
-                                                                      
- and iblitm in (select ivlitm from  mis/h4104)                           
-                   and ibmult=0                                          
-
-
-2016-11-18
-------------------------------------------------------------------------
-
-userid: yun(江晓云) <yun@mentholatum.com.cn>
-Description of problem:
-订单号为90000727 NJ，正常情况下，NJ订单是走“销售收入”，但此单却入了“销售退货”。
-To resolve:
-可冲红此单走“销售退货”，重开入回“销售收入”
-正常开单系统会自动带出单价，如果用户修改了单价，系统会跑 4270 单价调整，这个是指向销售退货科目的。
-
-
-
-2016-10-27
-------------------------------------------------------------------------
-
-userid: Liuxiaoyu(刘晓瑜) <Liuxiaoyu@mentholatum.com.cn>
-Description of problem:
-销售日记账查询（90000003SH，为正确）,做了销售更新，没有生成AR，没有生成存货记录，只生成了总帐凭证，凭证类型是G， 正常凭证类型是I
-To resolve:
-update f4211 set sdnxtr=620 , sdlttr=582        
- where sddoco=90000003 and sddcto='SH'          
-让用户过帐后，仍然错误，只好让用户将生成的总帐凭证先删除
-
-检查之前用户销售预览更新的凭证，其合计发票金额为0，
-以为是发票操作出错，更改状态重做发票
-update f4211 set sdnxtr=580 , sdlttr=535        
- where sddoco=90000003 and sddcto='SH' 
-
-仍然错误，检查销售单，发现销售单表头上的金额竟然是正数，拆扣单不是应该是负数吗？
-
-更改销售单状态到582，让用作废这张单及生成的相关总帐凭证，让用户重新开销售单。
-
-重新开单后仍然只生成总帐记录，且销售更新后，销售单表头上的金额被清零。
-update f4211 set sdnxtr=620 , sdlttr=582        
- where sddoco=90000005 and sddcto='SH'  
-
-检查P42800  版本ZFZSNARBJ 选项14设的是 1 ，而其它销售单这里是空的，更改为空后让用户重新开销售单，一切正常 。
-
- 
-
-
-2016-09-14
-------------------------------------------------------------------------
-
-userid: holts@menthoulatum.com.cn
-Description of problem:
-P48013程序和批记录绑定后，用户在P48013修改任意栏位，基批记录F4108中的效期和状态将会重新初始化
-To resolve:
-修改程序，切断这两个栏位的初始化动作
-从XJSRC73D\JDESRC复制P48013、J48013到MIS\JDESRC, 更改它们的名为P5548013、J5548013, 更改P5548013的 763.2，764.8，765.3，768.9行，同时更改J5548013，将其中的所有P48013用P5548013替换
-
-将编绎好的程序复制到MODTEST，同时在G81－〉5 复制DW参数，将保存在LIVCOM听的P48013版本参数复制到P5548013中，测试环境和正式环境都复制。
-
-在菜单测试环境 设置菜单 ZSFC－〉3 ，并测试程序
-
-测试通过后，将编绎好的程序移到XJDEMOD，同时查找需更改的菜单 select * from f00821 where mzhsky='P48013'
-                                               更改   
-G3111            2   J48013       0    P48013  No
-G3113            2   J48013       0    P48013  No
-CSFCTEST         2   J48013       0    P48013 
-ZSF              2   J48013       0    P48013 
-ZSF1             2   J48013       0    P48013 
-CSFCTEST4        2   J48013       0    P48013 
-CSFCTEST5        2   J48013       0    P48013 
-CSFCTESTC        2   J48013       0    P48013 
-CSFCTEST6        2   J48013       0    P48013 
-CSFCTESTP        2   J48013       0    P48013 
-CSFCTEST7        1   J48013       0    P48013 
-CSFCTEST68       2   J48013       0    P48013 
-CSFCTEST8        2   J48013       0    P48013 
-CSFCTEST3        2   J48013       0    P48013 
-HKSF             2   J48013       0    P48013  no
-ZSFC             2   J48013       0    P48013
-MAPDRPSF         1   J48013       0    P48013  no
-CSFCTESTC2       2   J48013       0    P48013
-CSFCTESTC3       2   J48013       0    P48013
-CSFCTESTC4       2   J48013       0    P48013
-CSFCTESTC5       2   J48013       0    P48013
-CSFCTESTC6       2   J48013       0    P48013
-CSFCTEST9        2   J48013       0    P48013
-CSFCTESTC7       2   J48013       0    P48013
-WOENTRY          2   J48013       0    P48013
-WOENTRY          3   J48013       0    P48013
-CSFCTEST10       2   J48013       0    P48013
-CSFCTEST11       2   J48013       0    P48013
-CSFCTESTPS       2   J48013       0    P48013 
-ZSFJ             2   J48013       0    P48013 
-CSFCTESTC8       2   J48013       0    P48013 
-GPO              9   J48013       0    P48013 
-CSFC2            2   J48013       0    P48013 
-ZZSWSH           7   J48013       0    P48013 
-ZZSTL            2   J48013       0    P48013 
-ZSPMC4           2   J48013       0    P48013 
-ZSPMC5           7   J48013       0    P48013 
-CSFCTESTP1       2   J48013       0    P48013 
-ZSPD1            2   J48013       0    P48013 
-
-
-
-
-
-2016-08-01
-------------------------------------------------------------------------
-
-userid: wen(陈慧雯) <wen@mentholatum.com.cn>
-Description of problem:
-附件产品于2016年8月1日(116214) 调价,我已设置好ZGZ0200241,请帮忙把附件品种价格从ZGZ0200241导入以下11个BU：ZGZ0200240、ZGZ0200243、ZGZ0200244、ZGZ0200245、 ZGZ0200248、ZSH0210230、ZSH0210231、ZSH0210232、ZBJ0100250、ZBJ0100251、ZBJ0100252
-To resolve:
-将附件导入临时表h4104
-
-update  f4106  set bpexdj=116213                        
- where bpmcu in ('  ZGZ0200240','  ZGZ0200243','  ZGZ0200244',
-  '  ZGZ0200245','  ZGZ0200248','  ZSH0210230','  ZSH0210231',
-  '  ZSH0210232','  ZBJ0100250','  ZBJ0100251','  ZBJ0100252')
-  and bplitm in   (select ivlitm from mis/h4104)  
-    and bpexdj>116214          
-
-insert into f4106 (bpitm,bplitm,bpaitm,bpmcu,bplocn,bplotn,
-BPAN8,BPICID,BPLOTG,BPFRMP,BPCRCD,BPUOM,BPEFTJ,
-BPEXDJ,BPUPRC,BPACRD,BPBSCD,BPLEDG,BPFVTR,BPFRMN,BPURCD,
-BPURDT,BPURAT,BPURAB,BPURRF,BPUSER,BPPID,BPJOBN,BPUPMJ,BPTDAY )
-select bpitm,bplitm,bpaitm,'  ZGZ0200240' as bpmcu,bplocn,bplotn,
- BPAN8,BPICID,BPLOTG,BPFRMP,BPCRCD,BPUOM, BPEFTJ, 
- BPEXDJ,BPUPRC,BPACRD,BPBSCD,BPLEDG,BPFVTR,BPFRMN,BPURCD,
- BPURDT,BPURAT,BPURAB,BPURRF,BPUSER,  BPPID,
-   BPJOBN,  BPUPMJ,  BPTDAY
-from f4106 where bpmcu='  ZGZ0200241'  and 
-   bpeftj=116214  and bpicid=0
-and  bplitm in   (select ivlitm from mis/h4104)
-   
-
-2016-07-29
-------------------------------------------------------------------------
-
-userid: ZhengLiHua(郑丽华) <ZhengLiHua@mentholatum.com.cn>
-Description of problem: 
-90043792PV单号在总帐被删除(正确应该在匹配窗口删除), 但在匹配窗口没有看到返还的OV记录,在收货匹配窗口仍然看不到.
-To resolve:
-select * from f0911  where gldoc=90043792 and gldct='PV'  
-select * from f0411 where rpdoc =90043792 and rpdct ='PV'
-
-检查F0411,F0911记录删除，但F43121发现记录匹配类型为2的记录仍然存在,其中有一条记录的类型已经是3, 先将这些要删除的类型为2的PV记录类型改为4备案, 然后将这此改为4的记录找到对应的类型1的UOPN和AOPN加回,同时扣减UPTD, APTD 
-
-update f43121 set prmatc='4'  where prdoc = 90043792                          
-   and prdct = 'PV'    and prmatc in ('2','3')   
- and pran8=90130416
-
-关联查询寻找关联的OV记录,检查是否正常关联到
-select * from f43121 inner join 
-(
-select a.prdoco,a.prdcto,a.prlnid,a.prnlin,a.prlitm,
-  a.pruptd, a.praptd from f43121 a        
-left join f43121 b on a.prmatc='1'                  
-     and a.prdoco=b.prdoco and a.prdcto=b.prdcto    
-      and a.prlnid=b.prlnid and a.prnlin=b.prnlin   
-    and a.prlitm=b.prlitm                           
- where a.prdoc ='90043792'  and a.prdct='PV'  
-   and a.prmatc='4'   )    as v_err
-on f43121.prdoco=v_err.prdoco and f43121.prdcto=v_err.prdcto
- and f43121.prlnid=v_err.prlnid and f43121.prnlin=v_err.prnlin
-  and f43121.prlitm=v_err.prlitm
- where f43121.prmatc='1' and pran8=90130416
-
-
-update  f43121 set pruopn = pruopn + 
-  (select b.pruptd from f43121 b where b.prmatc='4' and
-  b.prdoc='90043792' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
-   praopn = praopn + 
-   (select b.praptd from f43121 b where b.prmatc='4' and
-  b.prdoc='90043792' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
-  pruptd = pruptd -
-  (select b.pruptd from f43121 b where b.prmatc='4' and
-  b.prdoc='90043792' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
-   praptd = praptd -
-   (select b.praptd from f43121 b where b.prmatc='4' and
-
-  b.prdoc='90043792' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm )
-
- where prmatc='1' and prdoco||prdcto||prlnid||prnlin||prlitm  in
- (select prdoco||prdcto||prlnid||prnlin||prlitm from f43121
-    where prmatc='4' and prdoc='90043792' and prdct='PV')
-   and pran8=90130416
- 
-
-2016-06-28
-------------------------------------------------------------------------
-
-userid: nancy
-Description of problem:
-80002982SN销售单，第一次设置的ROTHO关联交易订单，销售更新出错2514错（0911 EXA），过总帐出错
-To resolve:
-关联交易设置AAI ,RCRO, 在客户资料总帐级设置RO, 在Account master检查用到的所有科目是否存在，最后查到错误原因是88000029的地址本有些栏位空，补入后正常。
-注意：在做销售更新时，不会生成AE凭证，看不到应收科目 KB.280002，只有在做过总帐时才能看到。
-
-
-2016-06-07
-------------------------------------------------------------------------
-
-userid: zhenglihua（郑丽华）
-Description of problem:
-订单81040612HC，已匹配了3340KG，但在订单收货查询看到未核付数量还有1000KG
-To resolve:
-检查f43121发现，行号相同的记录有两条，其中还有条open数 1000，而另一行的付款数叠加了这1000.
-update f43121 set pruptd=pruopn,praptd=praopn,pruopn=0,praopn=0
- where prdoco=81040612 and prdcto='HC'            
-  and prlitm='ME40609032'   and prmatc='1'        
-and prlnid=12000  and prnlin=1                   
- and pruopn=100000
-update f43121 set pruptd=pruptd-100000,praptd=174359
- where prdoco=81040612 and prdcto='HC'            
-  and prlitm='ME40609032'   and prmatc='1'        
-and prlnid=12000  and prnlin=1                   
- and pruptd=134000
-
-
-2016-05-31
-------------------------------------------------------------------------
-
-userid: Orange(郑惠嫦) <orange@mentholatum.com.cn>
-Description of problem:
-新增 Hair care 总帐级IN40, 设置类似IN36
-To resolve:
-insert into f4095(MLANUM,MLCO ,MLDCTO,MLDCT ,MLGLPT,
- MLCOST,MLMCU ,MLOBJ ,MLSUB )
-select MLANUM,MLCO ,MLDCTO, MLDCT ,'IN40' as MLGLPT,
- MLCOST,MLMCU ,MLOBJ ,MLSUB
- from f4095 where mlglpt='IN36' and mlco in
-  (90000,91000,92000,93000)
- 
-update f4095 set mlsub='MEG' where mlglpt='IN40' and mlsub ='BV'
-  and   mlco in  (90000,91000,92000,93000)                    
-update f4095 set mlobj='205031'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=205026
-update f4095 set mlobj='612531'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=612526
-
-update f4095 set mlobj='512531'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=512526
-update f4095 set mlobj='502531'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=502526
-update f4095 set mlobj='507031'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=507026  
- 
-update f4095 set mlobj='670255'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=670222
-update f4095 set mlobj='670660'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=670622
-update f4095 set mlobj='695255'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=695222
- 
-update f4095 set mlobj='692530'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=692522
-update f4095 set mlobj='635000'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=635500
-
-update f4095 set mlobj='717527'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=717522
-update f4095 set mlobj='782527'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=782522
- 
-update f4095 set mlobj='737528'  where mlglpt='IN40' and  mlco in
-   (90000,91000,92000,93000) and mlobj=737522
-
-2016-05-18
-------------------------------------------------------------------------
-
-userid: Liuxiaoyu(刘晓瑜) <Liuxiaoyu@mentholatum.com.cn>
-Description of problem:
-增加到MAP的运费（原料和包材），类似F2
-To resolve:
-增加总帐级FT3 用户定义码
-G4241－〉2 增加销售单行类型F3，抄F2，注意存货界面是N，总帐级FT3
-G4241 －〉3 增加NX单的F3流程
-增加AAI
-90000 4220 NX FT3  ZZS0760MAP.753509
-90000 4230 NX FT3         753509
-90000 4240 NX FT3  ZZS0760MAP.753509
-
-
-
-
-
-2016-04-7
-------------------------------------------------------------------------
-
-userid: yun(江晓云) <yun@mentholatum.com.cn>
-Description of problem: 
-ME90617897, ME91417162 这两个代码,  在总帐有3个OV记录,  但是在库存分类帐只有两个记录, 少了92007982 OV 记录.
-To resolve:
-需要新建一张HB订单, 做一次收货操作, 日期请改为2016-03-31日, 如果日期改不了,就用今天的日期做,  注意生成的OV不要过帐,  然后将HB单号和 生成的OV单号发给我.
-
-我将修正这些数据对应92007982 OV.
-
-update f41021 set lipqoh=lipqoh - 146400        
- where limcu='  ZGZ0200244' and liitm=31859     
-   and lipqoh=384000                            
-update f41021 set lipqoh=lipqoh - 57600                         
- where limcu='  ZGZ0200244' and liitm=33140 and lipqoh=96000    
-
-update f4111 set ildoc=92007982,ilan8=92153250,
- ildoco=92001080,ilicu= 733350,iltrdj=116064,ildgl=116064 
- where ildct='OV' and ildoc =92008158           
-
-delete  from f4311                           
- where pddoco =92001118  and pddcto='HB'      
-delete  from f4301                       
- where phdoco =92001118  and phdcto='HB'  
-delete   from f43121                       
- where prdoco =92001118  and prdcto='HB'   
-delete   from f0911                     
- where gldct ='OV' and gldoc = 92008158 
-  and glpost=''                         
-delete from f0011                 
- where icicu=739868 and icicut='O'
-
-
-2016-03-23
--------------------------------------------------------------------------
-
-userid: Orange(郑惠嫦) <orange@mentholatum.com.cn>
-Description of problem:
-新增药品总帐级IN15, 设置类似IN54
-To resolve:
-insert into f4095(MLANUM,MLCO ,MLDCTO,MLDCT ,MLGLPT,
- MLCOST,MLMCU ,MLOBJ ,MLSUB )
-select MLANUM,MLCO ,MLDCTO, MLDCT ,'IN15' as MLGLPT,
- MLCOST,MLMCU ,MLOBJ ,MLSUB
- from f4095 where mlglpt='IN54' 
- 
-update f4095 set mlsub='AC15' where mlglpt='IN15' and mlsub ='AC'                     
-update f4095 set mlsub='15'  where mlglpt='IN15'     
-   and mlsub =''  and mlobj=205021  
-update f4095 set mlsub='15'  where mlglpt='IN15'     
-   and mlsub =''  and mlobj=612521
-
-update f4095 set mlsub='AC15'  where mlglpt='IN15'     
-   and mlsub =''  and mlobj=512521  
-update f4095 set mlsub='AC15'  where mlglpt='IN15'     
-   and mlsub =''  and mlobj=502521
-update f4095 set mlsub='AC15'  where mlglpt='IN15'     
-   and mlsub =''  and mlobj=507021 
- 
-update f4095 set mlsub='AC15'  where mlglpt='IN15'     
-   and mlsub =''  and mlobj=670216
-update f4095 set mlsub='AC15'  where mlglpt='IN15'     
-   and mlsub =''  and mlobj=695216
-update f4095 set mlsub='AC15'  where mlglpt='IN15'     
-   and mlsub =''  and mlobj=670616
-
-update f4095 set mlsub='AC15'  where mlglpt='IN15'     
-   and mlsub =''  and mlobj=782516
-update f4095 set mlsub='AC15'  where mlglpt='IN15'     
-   and mlsub =''  and mlobj=791310
-
-update f4095 set mldcto='W1'      
- where mlglpt='IN15'  and mldcto='W2'                
-update f4095 set mlmcu='  ZZS0760450'    
- where mlglpt='IN15' and mlmcu='  ZZS0760410'              
-
-
-2016-03-15
-------------------------------------------------------------------------
-
-userid: Orange(郑惠嫦) <orange@mentholatum.com.cn>
-Description of problem:
-部份Account的英文描述和中文描述有变更
-To resolve:
-用户在prcmodel已录入正确的描述,并将要更改记录的记录上传到F4104, 用prcmodel的描述更新其它bu的描述
-update f0901 set gmdl01 =
- (select a.gmdl01 from f0901 a where f0901.gmobj=a.gmobj
-   and f0901.gmsub=a.gmsub and a.gmmcu=  '    PRCMODEL' )
-  where gmobj in (select ivmcu from mis/h4104 ) and gmsub in 
-   (select ivcitm from mis/h4104)  and gmmcu <> '    PRCMODEL'                  
-     and gmco in ('90000','91000','92000','93000')                              
-
-
-更新ivitm为对应的AID
-
-update mis/h4104 set ivitm = 
- ( select gmaid from f0901 where  gmmcu = '    PRCMODEL'  
-     and gmobj = ivmcu  and gmsub =ivcitm
-    )
-
-然后用以下命令更新其它BU的中文描述。
-
-update f0901d	set lkdl01=
-   ( select xx.lkdl01 from f0901d  xx   left join 
-      ( select tt.gmaid, ivitm from f0901 tt left join mis/h4104 on             
-         tt.gmobj||tt.gmsub = trim(ivmcu)||trim(ivcitm)                   
-        where tt.gmco in ('90000','91000','92000','93000')                  
-       and tt.gmobj||tt.gmsub in(select trim(ivmcu)||trim(ivcitm)       
-        from mis/h4104)  and tt.gmmcu  != '    PRCMODEL'                       
-         and tt.gmaid not in (select ivitm from mis/h4104) 
-       ) as v_ref on xx.lkaid=v_ref.ivitm             
-     where xx.lklngp='CS' and xx.lkaid in
-         (select ivitm from mis/h4104)
-           and f0901d.lkaid = v_ref.gmaid 
-    )
-
- where lklngp='CS' and lkaid in 
-( select  v_ref.gmaid   from f0901d          
-    left join  (
-      select tt.gmaid,ivitm from f0901 tt left join mis/h4104 on             
-        tt.gmobj||tt.gmsub = trim(ivmcu)||trim(ivcitm)                   
-      where tt.gmco in ('90000','91000','92000','93000')                  
-      and tt.gmobj||tt.gmsub in(select trim(ivmcu)||trim(ivcitm)       
-        from mis/h4104)  and tt.gmmcu  != '    PRCMODEL'                       
-         and tt.gmaid not in (select ivitm from mis/h4104) 
-       ) as v_ref on lkaid=v_ref.ivitm             
-  where lklngp='CS' and lkaid in (select ivitm from mis/h4104) )
-
-
-2016-03-01
-------------------------------------------------------------------------
-
-userid: WangChunRui(王春锐) <WangChunRui@mentholatum.com.cn>
-Description of problem:
- 昨天1900-1930完成回档财务日历操作,红冲凭证后,财务发现内部往来的试算简表FRBJ里没有清零 还是有余额 660142.55 , 
-         查看F0911的MIS的同步记录发现, 之前昨天11点前的应收模块操作是 401500.GZ 结转到 401500.AR 在3月,然后晚上19点红冲时,无法原路冲回, 从401500.GZ红冲到了121000,然后在1930后的凭证也是一次红冲到了121000科目上,形成了2月期间的 内部往来科目401500.AR没有冲平,因为对应凭证在3月. 红冲调整凭证又是坐在121000上的,无法调整在401500.AR 科目上. 
-         财务重新尝试在RC模块和JE操作都无法录入401500.AR 科目提示飘红,只能做一对一正一副的401500.GZ的凭证,过入了2月,但是相抵为零,等于没有效果. 
-To resolve:
-select gban02,gban03 from f0902   where gbobj=121000                        
-  and gbmcu='  ZBJ0100999' and gbfy=16  and gblt  ='AA'                         
-查得结果为:
-767,331,480             66,014,255
-
-update f0902 set gban02=gban02+gban03, gban03=0           
- where gbobj=121000                                       
-  and gbmcu='  ZBJ0100999' and gbfy=16                    
- and gblt  ='AA'                                          
-
-select gban02,gban03 from f0902         
- where gbobj=401500  and  gbsub='AR'    
-  and gbmcu='  ZBJ0100999' and gbfy=16  
-查得结果为:
-66,014,255             66,014,255- 
-
-update f0902 set gban02=gban02+gban03,gban03=0  
- where gbobj=401500  and  gbsub='AR'            
-  and gbmcu='  ZBJ0100999' and gbfy=16          
-
-select * from f0911   where gldgj=116060 and glpn=3 
-  and glco='93000'  and gldct =  'AE'              
-找到两个相关记录
-AE  31602054
-AE  31602054
-
-update f0911 set glpn=2 where gldgj=116060 and glpn=3     
-  and glco='93000'   and gldct =  'AE'                  
-
-
-
-2016-02-25
-------------------------------------------------------------------------
-
-userid: yun(江晓云) <yun@mentholatum.com.cn>
-Description of problem:
-广州调上海的HB单，单号91000864，客户号出错，由于已收货过账，无法修改。
-麻烦您帮忙修改客户号为91153240
-To resolve:
-
-update f4311 set pdan8='91153240'
- where pddoco=91000864  and pddcto='HB'
-update f4301 set phan8='91153240'
- where phdoco=91000864  and phdcto='HB'
-update f43121 set pran8='91153240'
- where prdoco=91000864 and prdcto='HB'
-
-2016-02-23
-------------------------------------------------------------------------
-
-userid: wen(陈慧雯) <wen@mentholatum.com.cn>
-Description of porblem:
-药品折让订单原用单据类型N8单，进帐科目是折扣科目，现需要改为进帐科目销售收入，类似化妆品SG单（由NV单修改而来）。
-To resolve:
-
-- 增加单据类型SH 药品发票调整（无数量），在菜单G00设定起始编号为9200001
-- 抄N8的工作流到SH（包括所有费用类型）
-- P4211中复制ZN8->ZSH  在菜单 ？？增加 ？？
-- 复制会计指令N8　到SH
-  insert into f4095(MLANUM,MLCO ,MLDCTO,MLDCT ,MLGLPT,
-   MLCOST,MLMCU ,MLOBJ ,MLSUB )
-  select MLANUM,MLCO ,MLDCTO, 'SH' as MLDCT , MLGLPT,
-   MLCOST,MLMCU ,MLOBJ ,MLSUB
-    from f4095 where mldct='N8'
-- 根据下表在4230中更改为销售科目
-
-90000 SH IN11  ò??··￠?±μ÷??  / Rohto Eyedrops              500501
-90000 SH IN12  ò??··￠?±μ÷??  / Nasal Inhalers              500502
-90000 SH IN13  ò??··￠?±μ÷??  / Rohto MPS                   500501
-90000 SH IN14  ò??··￠?±μ÷??  / Nasal Inhalers              500502
-90000 SH IN20  ò??··￠?±μ÷??  / Fever Patch                 501525
-90000 SH IN21  ò??··￠?±μ÷??  / Pain Patch                  501501
-90000 SH IN22  ò??··￠?±μ÷??  / Cherry Chest R              501502
-90000 SH IN23  ò??··￠?±μ÷??  / Ointment                    501503
-90000 SH IN24  ò??··￠?±μ÷??  / Deep Heating R              501504
-90000 SH IN29  ò??··￠?±μ÷??  / WellPatch Heat              501523
-90000 SH IN30  ò??··￠?±μ÷??  / AD CREAM (Drug              501516
-90000 SH IN38  ò??··￠?±μ÷??  / AD Cream (Cosm              501516
-90000 SH IN57  ò??··￠?±μ÷??  / Promedial                   501508
-
-DMAAI 4250 4245 也必须设科目
-
-4245 90000 SH ****  ZZS0760999.121000  
-4250 90000 SH ****  ZZS0760999.420110.006
-
-- 在zsogzdrugs 增加菜单15 Adjustment Invoice(Drugs)  SH, 复制P4211 版本ZN8 -> ZSH, 同时在ZSOSHDRUGS，ZSOBJDRUGS增加菜单15 Adjustment invoice(Drugs)  SH 使用版本ZSH
-  
-
-
-
-
-
-
-
-
-
-
-2015-12-28
-------------------------------------------------------------------------
-
-userid: Liuxiaoyu(刘晓瑜) <Liuxiaoyu@mentholatum.com.cn>
-Description of problem:
-4273631RX的总帐凭证金额修改，同时应收系统的总金额需由-1191059.14　改为-1,191,059.06
-To resolve:
-
-参照用户提供差异清单更改总帐凭证
-update f0911 set glaa=14021865                        
- where gldoc=4273621   and gldct='RX' and glpost=''     
-  and glaa=14021865                                   
-update f0311 set rpag=-119105906,rpaap=-119105906  
- where rpdoc =4273621   and rpdct ='RX'              
-    and rpag=-119105914                            
-
-
-userid: huangyingting(黄颖婷) <huangyingting@mentholatum.com.cn>
-Desctription of problem:
-一些30状态的工单标识为“1”
-To resolve:
-update f4801 set wasprt=''         
- where wasrst='30' and wasprt='1'  
-
-
-
-2015-12-23
-------------------------------------------------------------------------
-
-userid: zengchunping(曾春平) <zengchunping@mentholatum.com.cn>
-Description of problem:
-2015年需修订ROUTING的清单已整理成附件，分为两个sheet，请帮忙按以下步骤处理相关内容：
-1、	对《需删除的routing》表，请帮忙删除对应的空批量和整批量的routing；
-2、	对《需新增的routing》表，请帮忙增加对应的空批量和整批量的routing。
-上传Routing资料,
-To resolve:
-
-
-update f3003  set irrunl = (select irrunl from
-  mis/h3003 where f3003.irtrt=h3003.irtrt
-    and f3003.irkitl=h3003.irkitl
-      and f3003.iropsq=h3003.iropsq )  ,
-   irsetc =  (select irsetc from
-  mis/h3003 where f3003.irtrt=h3003.irtrt
-    and f3003.irkitl=h3003.irkitl
-      and f3003.iropsq=h3003.iropsq )                                
-  where irtrt || irkitl || iropsq   in                
-  (select irtrt || irkitl || iropsq  from mis/h3003)    
-
-select count(*) from   mis/h3003                              
-  where irtrt || irkitl || iropsq || irbqty   in              
- (select irtrt || irkitl || iropsq || irbqty from f3003)  
-
-
-下载f3003数据备份，然后将用户提供的数据贴入下载表中制作上传资料，用户提供的数据包括删除和新增两个ｓｈｅｅｔ,
-
-先将删除的代码和批量两个栏位用来制作上传文件，上传后先删除有批量的记录
-select * from f3003 
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and  irkitl || irbqty in
- ( select irkitl || irbqty  from mis/h3003
-    where irtrt='M' and irmmcu='  ZZS0760210'
-      group by  irkitl || irbqty )
-
-update f3003 set irtrt='xx'
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and  irkitl || irbqty in
- ( select irkitl || irbqty  from mis/h3003
-    where irtrt='M' and irmmcu='  ZZS0760210'
-      group by  irkitl || irbqty )
-
-删除批量为0的记录
-select * from f3003 
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and irbqty=0 and irkitl in
- ( select irkitl  from mis/h3003
-   where irtrt='M' and irmmcu='  ZZS0760210'
-    group by  irkitl )
-
-update f3003 set irtrt='xx'
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and irbqty=0 and irkitl in
- ( select irkitl  from mis/h3003
-   where irtrt='M' and irmmcu='  ZZS0760210'
-    group by  irkitl )
-
-
-
-制作新增记录，批量*100 -> irbqty, 系号*100 -> iropsq , 人工*100 -> irrunl ,队伍规范*10 -> irsetl 时间期准 -> imtimb, 制作好后上传到mis/h3003, 再次检查是否已有记录，如有更改类型，待以后删除
-update f3003 set irtrt='xy'
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and  irkitl || irbqty in
- ( select irkitl || irbqty from mis/h3003
-   where irtrt='M' and irmmcu='  ZZS0760210'
-    group by  irkitl || irbqty )
-update f3003 set irtrt='xy'
- where  irtrt='M' and irmmcu='  ZZS0760210'
-  and irbqty=0 and irkitl in
- ( select irkitl  from mis/h3003
-   where irtrt='M' and irmmcu='  ZZS0760210'
-    group by  irkitl )
-
-
-update mis/h3003 set irkit = (select imitm
-  from f4101 where irkitl=imlitm)
-
-update mis/h3003 set irdsc1 = (select ljdl01        
-  from f0006d where ljlngp='CS' and  '  '||irmcu=ljmcu)               
-
-插入批量为0的记录
-insert into f3003 (IRTRT,IRKIT,IRKITL,IRKITA ,IRMMCU,IRALD ,
-IRDSC1 ,IRLINE,IRMCU,IROPSQ ,IREFFF,IREFFT ,IRBFPF ,IRLAMC ,
-IRTIMB,IROPSR,IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,
-IRSETC,IRMOVD,IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,
-IRAPID ,IRSHNO,IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,
-IRCOST ,IROMCU,IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,
-IRURRF,IRURAB,IRUSER,IRPID ,IRUPMJ,IRTDAY,IRJOBN)
-select IRTRT,IRKIT,IRKITL,IRKITA,IRMMCU,IRALD,IRDSC1 ,IRLINE ,
-'  '||IRMCU,IROPSQ,IREFFF,IREFFT,IRBFPF,IRLAMC ,IRTIMB,IROPSR ,
-0 as IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,IRSETC,IRMOVD,
-IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,IRAPID ,IRSHNO ,
-IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,IRCOST ,IROMCU,
-IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,IRURRF,IRURAB,
-IRUSER,IRPID ,IRUPMJ,IRTDAY,IRJOBN
-from mis/h3003
-
-插入有批量的记录
-insert into f3003 (IRTRT,IRKIT,IRKITL,IRKITA ,IRMMCU,IRALD ,
-IRDSC1 ,IRLINE,IRMCU,IROPSQ ,IREFFF,IREFFT ,IRBFPF ,IRLAMC ,
-IRTIMB,IROPSR,IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,
-IRSETC,IRMOVD,IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,
-IRAPID ,IRSHNO,IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,
-IRCOST ,IROMCU,IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,
-IRURRF,IRURAB,IRUSER,IRPID ,IRUPMJ,IRTDAY,IRJOBN)
-select IRTRT,IRKIT,IRKITL,IRKITA,IRMMCU,IRALD,IRDSC1 ,IRLINE ,
-'  '||IRMCU,IROPSQ,IREFFF,IREFFT,IRBFPF,IRLAMC ,IRTIMB,IROPSR ,
-IRBQTY ,IRUOM  ,IRRUNM ,IRRUNL,IRSETL,IRPWRT,IRSETC,IRMOVD,
-IRQUED,IRLTPC,IRPOVR,IRNXOP,IROPYP,IRCPYP ,IRAPID ,IRSHNO ,
-IROPSC ,IRINPE ,IRJBCD ,IRAN8,IRVEND ,IRPOY,IRCOST ,IROMCU,
-IROBJ ,IRSUB ,IRRREV,IRURCD,IRURDT,IRURAT,IRURRF,IRURAB,
-IRUSER,IRPID ,IRUPMJ,IRTDAY,IRJOBN
-from mis/h3003
-
-
-2015-12-22
-------------------------------------------------------------------------
-
-userid: wen(陈慧雯) <wen@mentholatum.com.cn>
-Description of problem:
-是所有总帐级。就如附件订单，我们原是开NV，冲折扣，但按现在税法是不正确的。正确做法要开出的发票显示为折让，我们的凭证也就冲减销售收入，如附件的凭证销售折扣应改为销售收入。故我们想新一种单据类型，请测试是否可行.
-To resolve:
-新增单据类型SG　发票调整（无数量），在G00设定该类型单据编号92000001开始计数。
-复制NV的工作状态码到ＳＧ（包含所有状态类型），DW到P4211复制ZNV到ZSG版本，设置菜单ZSOENTRYGZ 16 发票调整（销售）
-  SOENTRYGZ1  15    发票调整（销售）
-
-审批界面　ZAPPROVEAG 从程序 P42040复制版本 ZNVAG到 ZSGAG，设置菜单　23 发票调整（销售）
-
-打印、开发票在外挂完成，不需在JDE操作
-
-销售更新界面　ZACCOUNTS2 菜单 2　 版本ZPSOAR中增加单据类型SG, 菜单6 版本ZFSOARLEO增加单据类型 SG
-
-复制会计指令NV　到SG
-insert into f4095(MLANUM,MLCO ,MLDCTO,MLDCT ,MLGLPT,
- MLCOST,MLMCU ,MLOBJ ,MLSUB )
-select MLANUM,MLCO ,MLDCTO, 'SG' as MLDCT , MLGLPT,
- MLCOST,MLMCU ,MLOBJ ,MLSUB
- from f4095 where mldct='NV'
-
-总帐对应科目：
-总帐级	大类(分类码5)	入帐科目	科目
-IN33	乐碧	502514	销售收入－止汗剂
-IN35	欧治系列	502520	销售收入－快治
-IN36	润肤乳液系列	502526	销售收入－润肤乳液
-IN41	润唇膏类	502501	销售收入－润唇膏
-IN45	润唇膏类	502509	销售收入－润唇膏－有色
-IN46	护手系列	502510	销售收入－护手霜
-IN48	男仕系列	502524	销售收入－沐浴露
-IN52	洁面系列	502515	销售收入－泡沫洁面乳
-IN53	面膜系列	503005	销售收入－面膜
-IN54	乐肤洁系列	502521	销售收入－乐肤洁
-IN55	男仕系列	502522	销售收入－男士
-IN56	肌研系列	502523	销售收入－肌研
-IN63	新碧系列	503510	销售收入－防晒乳液
-
-　
-
-2015-12-8
-------------------------------------------------------------------------
-
-userid: ck510(不合格&废品) <ck510@mentholatum.com.cn>
-Description of problem:
-一些退货需报废的记录，到期日已到期，需修改为未到期，以录入ＪＤＥ后可同步生成总帐记录。
-To resolve:
-update mis/h4141  set pjcntj = 
- (select max(iommej) from f4108 where iomcu='  ZZS0760510'
-     and  (iolitm || iolotn) = (pjlitm || pjlotn) )
- where pjlitm || pjlotn  in 
-  (select iolitm || iolotn from f4108
-    where iomcu='  ZZS0760510')
-
-
-update f4108 set iommej=116360
-  where iomcu='  ZZS0760510' and iolitm || iolotn 
-  in  (select pjlitm || pjlotn from mis/h4141)             
-
-
-update f4108 set iommej= 
-   (select max(pjcntj) from mis/h4141 where 
-      (iolitm || iolotn) = (pjlitm || pjlotn))
-  where iomcu='  ZZS0760510' and iolitm || iolotn 
-  in  (select pjlitm || pjlotn from mis/h4141)             
-
-
-
-
-2015-11-25
-------------------------------------------------------------------------
-
-userid: zhangqi（张琦）
-Description of problem:
-台湾供应商90130419亚东的交易货币错建为RMB，大概什么时候可以更改为USD？
-To resolve:
-未结ＰＯ已取消，已收货的ＰＯ也已过帐，但仍不能更改，其F0401中的a6aypd,a6aprc有数值不能更改, 先将这两个栏位清零，在用户界面更改为USD后，再改回。
-update f0401 set a6aypd=47585350, a6aprc=-187455075
- where a6an8=90130419
-
-2015-11-24
-------------------------------------------------------------------------
-
-userid: zhenglihua（郑丽华） <zhenglihua@mentholatum.com.cn>
-Description of problem:
-90040548 PV正确发票号是：X164483A-24F3, 错误为X160153A-24F3-2-1-1
-To resolve:
-update f43121 set prvinv='X164483A-24F3'      
- where prdoco= 81042919 and prdcto='HE'       
-  and prvinv='X160153A-24F3-2-1-1'            
- and prmatc='2' and prdoc = 90040548
-
-update f0411 set rpvinv='X164483A-24F3'    
- where RPDOC = 90040548 AND RPDCT='PV'     
-  and rpvinv='X160153A-24F3-2-1-1'         
-
-2015-09-30
-------------------------------------------------------------------------
-
-userid: zhenglihua（郑丽华） <zhenglihua@mentholatum.com.cn>
-Description of problem:
-ME90517516*OP10 有一条记录没有生成IM记录
-To resolve:
-insert into f4111(ilitm,illitm,ilaitm,ilmcu,illocn,illotn,ilplot,
- ilstun,illdsq,iltrno,ilfrto,illmcx,illots,illotg,ilkit,
-  ilmmcu,ildmct,ildmcs,ilbalu,ilkco,ildoc,ildct,ilsfx,
-   iljeln,ilicu,ildgl,ilglpt,ildcto,ildoco,ilkcoo,illnid,
-  ilnlin,ilipcd,iltrdj,iltrum,ilan8,iltrex,iltref,ilrcd,
-   iltrqt,iluncs,ilpaid,iltday,iluser,ilpid,ilcrdj,ilterm)
-select ilitm,illitm,ilaitm,ilmcu, illocn,illotn,ilplot,
- ilstun,illdsq,iltrno,ilfrto,illmcx,illots,illotg,ilkit,
-  ilmmcu,ildmct,ildmcs,ilbalu,ilkco, 72631 as ildoc,
-  'IM' as ildct,ilsfx,
-   iljeln,ilicu,ildgl,ilglpt,ildcto,ildoco,ilkcoo,illnid,
-  ilnlin,ilipcd,iltrdj,iltrum,ilan8,iltrex,iltref,ilrcd,
-   -iltrqt,iluncs,-ilpaid,iltday,iluser,ilpid,ilcrdj,ilterm
-  from f4111 
-where ildct='OV' and ilukid='16538498'
-
-
-update f41021 set lipqoh=0
- where liitm=38054 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN56'
- where illitm='ME90601SHH*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-
-update f41021 set lipqoh=0
- where liitm=37956 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN63'
- where illitm='ME91420032*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=38595 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
- where illitm='ME90601MYW*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37013 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
- where illitm='ME906171109*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-
-2015-08-26
-------------------------------------------------------------------------
-
-userid: CWB <CWB@mentholatum.com.cn>
-Description of problem:
-代码按要求批量修改库存类型和闪烁信息
-To resolve:
-将清单上传到H4141
-update f4102 set ibstkt='O',ibifla=''
- where ibmcu = '  ZZS0760210'
- and iblitm in (
-  select pjlitm from mis/h4141)
-
-
-2015-08-24
-------------------------------------------------------------------------
-
-userid: cksh(仓库收货) <cksh@mentholatum.com.cn>
-Description of problem:
-今天佛山新安81041576 HC 到货以下物料ME40602095，在入帐时JDE发生异常，导致帐上有数但物料无法导出请验单.
-To resolve:
-检查系统没有生成OV记录，只是F4211及F41021有变更。
-update f4311 set pduopn=pdurec,pdaopn=pdarec      
- where   pdlitm='ME40602095'                     
-  and pddoco=81041576  and pddcto='HC'   
-   and pdlnid=22000         
-update f4311 set pdurec=0,     pdarec=0         
- where  pdlitm='ME40602095'      
-  and pddoco=81041576 and pddcto='HC'   
-    and pdlnid=22000 
-update f41021 set lipqoh=0                  
- where liitm=5811 and limcu='  ZZS0760210' 
-    and lilotn='20150824' and lilocn='R'  
-update f4311 set pdnxtr=280,pdlttr=220         
- where   pdlitm='ME40602095'     
-  and pddoco=81041576  and pddcto='HC'   
-   and pdlnid=22000      
-让用户重新收货      
-
-
-2015-08-03
-------------------------------------------------------------------------
-
-userid: zhenglihua（郑丽华） <zhenglihua@mentholatum.com.cn>
-Description of problem:
-外发加工收货生成的IM记录没带到数量.
-To resolve:
-update f41021 set lipqoh=0
- where liitm=37345 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN41'
- where illitm='ME90517514*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37921 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN41'
- where illitm='ME90517528*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-
-update f41021 set lipqoh=0
- where liitm=37343 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN41'
- where illitm='ME90517516*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=36609 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN54'
- where illitm='ME90618AM3*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=33624 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN55'
- where illitm='ME90617905*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=36432 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN56'
- where illitm='ME90601SFM*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37681 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN56'
- where illitm='ME906171123*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-
-
-update f41021 set lipqoh=0
- where liitm=21432 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN98'
- where illitm='RO70101017S*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37922 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN41'
- where illitm='ME90517480*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-
-2015-07-17
-------------------------------------------------------------------------
-
-userid: cksh(仓库收货) <cksh@mentholatum.com.cn>
-Description of problem:
-81040947HE MEP0601437在收货时出错,提示 0252 总价格无效.
-To resolve:
-检查这张单发现是外币单,总价格 单价X数量=620121.6 ,而系统数据库记录的是为620121
-
-update f4311 set pdfec=620122, pdfea=620122, pdfap=620122   
- where pddoco=81040947 and pddcto='HE'             
-    and pdfec=620121   and pdlitm='MEP0601437'     
-
-
-
-
-2015-07-14
-------------------------------------------------------------------------
-
-userid: ZhengLiHua(郑丽华) <ZhengLiHua@mentholatum.com.cn>
-Description of problem: 
-一些PV单号在总帐被删除(正确应该在匹配窗口删除), 但在匹配窗口没有看到返还的OV记录,在收货匹配窗口仍然看不到.
-To resolve:
-90039119PV, 90039120PV,90039121PV, 90039122PV,90039123PV,90039124PV,90039125PV
-检查F0411,F0911记录删除，但F43121发现记录匹配类型为2的记录仍然存在, 先将这些要删除的类型为2的PV记录类型改为4备案, 然后将这此改为4的记录找到对应的类型1的UOPN和AOPN加回,同时扣减UPTD, APTD 
-
-update f43121 set prmatc='4'                   
- where prdoc =90039121     and prdct='PV'      
-   and prmatc='2' and pran8=90130211           
-
-关联查询寻找关联的OV记录,检查是否正常关联到
-select * from f43121 inner join 
-(
-select a.prdoco,a.prdcto,a.prlnid,a.prnlin,a.prlitm,
-  a.pruptd, a.praptd from f43121 a        
-left join f43121 b on a.prmatc='1'                  
-     and a.prdoco=b.prdoco and a.prdcto=b.prdcto    
-      and a.prlnid=b.prlnid and a.prnlin=b.prnlin   
-    and a.prlitm=b.prlitm                           
- where a.prdoc ='90039121'  and a.prdct='PV'  
-   and a.prmatc='4'   )    as v_err
-on f43121.prdoco=v_err.prdoco and f43121.prdcto=v_err.prdcto
- and f43121.prlnid=v_err.prlnid and f43121.prnlin=v_err.prnlin
-  and f43121.prlitm=v_err.prlitm
- where f43121.prmatc='1' and pran8=90130211
-
-
-update  f43121 set pruopn = pruopn + 
-  (select b.pruptd from f43121 b where b.prmatc='4' and
-  b.prdoc='90039121' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
-   praopn = praopn + 
-   (select b.praptd from f43121 b where b.prmatc='4' and
-  b.prdoc='90039121' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
-  pruptd = pruptd -
-  (select b.pruptd from f43121 b where b.prmatc='4' and
-  b.prdoc='90039121' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
-   praptd = praptd -
-   (select b.praptd from f43121 b where b.prmatc='4' and
-
-  b.prdoc='90039121' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm )
-
- where prmatc='1' and prdoco||prdcto||prlnid||prnlin||prlitm  in
- (select prdoco||prdcto||prlnid||prnlin||prlitm from f43121
-    where prmatc='4' and prdoc='90039121' and prdct='PV')
-   and pran8=90130211
- 
-
-
-2015-07-01
-------------------------------------------------------------------------
-
-userid: liaocaihong(廖彩红) <liaocaihong@mentholatum.com.cn>
-Description of problem:
-一些*OP10记录没有生成IM记录.
-To resolve:
-update f41021 set lipqoh=0
- where liitm=37344 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN41'
- where illitm='ME90517515*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37923 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN41'
- where illitm='ME90517479*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37919 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN41'
- where illitm='ME90517512*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37762 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN53'
- where illitm='ME906171169*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37763 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN53'
- where illitm='ME906171168*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37764 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN53'
- where illitm='ME906171167*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37765 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN53'
- where illitm='ME906171166*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37766 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN53'
- where illitm='ME906171165*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37767 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN53'
- where illitm='ME906171164*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37768 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN53'
- where illitm='ME906171163*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37769 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN53'
- where illitm='ME906171162*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37137 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2823700  ,ilglpt='IN56'
- where illitm='ME906171137*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=90028683
-update f41021 set lipqoh=0
- where liitm=37138 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200,  ilglpt='IN56'
- where illitm='ME90601MRM*OP10'  and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37682 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200,  ilglpt='IN56'
- where illitm='ME90619SM4*OP10'  and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37683 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200,  ilglpt='IN56'
- where illitm='ME80620025*OP10'  and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37347 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200,  ilglpt='IN56'
- where illitm='ME80620030*OP10'  and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37859 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200,  ilglpt='IN63'
- where illitm='ME91417183*OP10'  and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37342 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200,  ilglpt='IN41'
- where illitm='ME90517524*OP10'  and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-
-2015-06-19
-------------------------------------------------------------------------
-
-userid: Agnes <agnes@mentholatum.com.hk>
-Description of problem:
-9929SD,在做Match Voucher时反红,出错提示 3006  Purchase Order Number/Type/Line Invalid
-To resolve:
-这是dirctory ship订单,关联的Sale order 是 9928 SD, 错误的原因是,原用户开单后又单方面修改了9928SD, 导至9929SD出错
-
-update f43121 set prlnid=1100           
- where prdoco=9929 and prdcto ='SD'     
-     and prlnid=1000                    
-     and prnlin=2  
-                     
-2015-05-31
-------------------------------------------------------------------------
-
-userid: Liuxiaoyu(刘晓瑜) <Liuxiaoyu@mentholatum.com.cn>
-Description of problem:
-HC 81038727 订单已收货19KG,但未核付(6KG)及已核付(21KG)共27KG
-To resolve:
-查F43121中 收货记录90179937.90179938，90179939共三张OV收货19KG，在未结PO可看到6KG未核付是多余的，查F43121 其中有一条OPEN 6KG的记录不正确。
-
-update f43121 set pruptd=pruopn, pruopn=0, praptd=praopn,praopn=0
- where prdoco=81038727 and prdcto='HC' 
-   and prlitm='ME41406006' and pruopn>0
-
-
-
-2015-05-31
-------------------------------------------------------------------------
-
-userid: liaocaihong(廖彩红) <liaocaihong@mentholatum.com.cn>
-Description of problem:
-*OP10收货时出错, 没有生成IM数量 .
-To resolve:
-update f41021 set lipqoh=0
- where liitm=37133 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
- where illitm='ME906171157*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=36947 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
- where illitm='ME60617720*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=35557 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN63'
- where illitm='ME91417171*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=35124 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200   ,ilglpt='IN98'
- where illitm='ME20617170*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37401 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200   ,ilglpt='IN98'
- where illitm='ME20617193*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37341 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
- where illitm='ME90517523*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37012 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
- where illitm='ME906171148*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37015 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
- where illitm='ME906171108*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=37017 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
- where illitm='ME906171103*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-
-
-2015-05-07
-------------------------------------------------------------------------
-
-userid: cksh(仓库收货) <cksh@mentholatum.com.cn>
-Description of problem:
-PO收货时出错,提示超出容限, 用户反应, 没改数量只是将系统带出的数量收货.
-To resolve:
-查这个记录, PO单位是KG, 但记录中没有第二单位数量
-update f4311 set pdsqor=pduorg * 1000  ,pdpqor=pduorg*1000 
- where pddcto='HC' and pddoco=81039128  
-    and pdsqor=0                        
-
-
-
-2015-05-04
-------------------------------------------------------------------------
-
-userid: liaocaihong(廖彩红) <liaocaihong@mentholatum.com.cn>
-Description of problem:
-外发加工收货生成的IM记录没带到数量.
-To resolve:
-update f41021 set lipqoh=0
- where liitm=37014 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
- where illitm='ME906171105*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-update f41021 set lipqoh=0
- where liitm=37016 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
- where illitm='ME906171113*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-update f41021 set lipqoh=0
- where liitm=37135 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
- where illitm='ME90619AW5*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-update f41021 set lipqoh=0
- where liitm=37134 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
- where illitm='ME90622AW5*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-update f41021 set lipqoh=0
- where liitm=37136 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
- where illitm='ME90601AM4*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-
-2015-04-30
-------------------------------------------------------------------------
-
-userid: liaocaihong(廖彩红) 
-Description of problem:
-81038045HE在表头记录地址号是90130028, 但在明细记录中是90130342,已经收货,但还没匹配.
-To resolve:
-update f4311 set pdan8=90130028            
- where pddoco=81038045  and pddcto='HE'    
-update f43121 set pran8=90130028           
- where prdoco=81038045 and prdcto='HE'     
-update f0911 set glan8=90130028,glexa=' 曼秀雷敦 ( 亚洲太平洋 )'    
- where gldct='OV' and gldoc in (90185944,90185948,90185949,90185950)
-  and glpost=''                                                     
-
-
-2015-04-22
-------------------------------------------------------------------------
-
-userid: Liuxiaoyu(刘晓瑜) <Liuxiaoyu@mentholatum.com.cn>
-Description of problem:
-To resolve:
-
-select * from f0414  where rndoc=90037417 
-查到付款号 43283
-select * from f0413 where rmpyid=43283
-有一条记录金额为0
-select * from f0911                     
-   where gldoc =43283 and gldct='PN'   
-没有找到记录
-
-delete   from f0414     
- where rndoc=90037416   and rnpyid= 43283     
-delete   from f0414                       
- where  rndoc=90037417 and rnpyid=43283   
-
-update f0411 set rpaap=rpag,rpfap=rpacr,rppst='A'   
- where rpdoc =90037416 and rppst='P'
-update f0411 set rpaap=rpag,rpfap=rpacr,rppst='A'   
- where rpdoc =90037417 and rppst='P'                           
-
-以下是90037416的PN记录错误样张
-  Payment      File Line   Match    Doc   Do  Document  Pay  Pay 
-    ID         Identifier  Doc Ty   Co    Ty   Number   Itm  Ext 
--------------  ----------  ------  -----  --  --------  ---  --- 
-        43283         1      PN    90000  PV  90037416  001      
-        43283         2      PG    90000  PV  90037416  001      
-        43283         3      PN    90000  PV  90037416  002      
-        43283         4      PG    90000  PV  90037416  002   
-
-
-nt                 Discount             Discount           Foreign Payment     
-nt                 Available             Taken                  Amount         
----------       ---------------   --------------------   --------------------  
-4,838,820-                                                            861,000- 
-  421,890                                                                      
-  229,296-                                                             40,800- 
-   19,992                                                                      
-
-    Foreign Disc            Foreign Disc     F/  Cur      Exchange       G/L  
-     Available                  Taken        D   Cod        Rate        Offset
---------------------       ---------------   --  ---   ---------------  ------
-                                             F   JPY          .0562000        
-                                             F   JPY          .0513000        
-                                             F   JPY          .0562000        
-                                             F   JPY          .0513000        
-
-
-P  H  Per  FY  Century  Closed  Address    Co      Business    Purchase      
-C  D  No                 Item    Number              Unit       Order        
--  -  ---  --  -------  ------  --------  -----  ------------  --------  ----
-        4  15     20            90130283  90000    ZZS0760210  81037448   付 
-   P    4  15     20            90130283  90000    ZZS0760210  81037448   付 
-        4  15     20            90130283  90000    ZZS0760210  81037776   付 
-   P    4  15     20            90130283  90000    ZZS0760210  81037776   付 
-
-
-
-
-
-
-
-   
-
-
-2015-03-30
-------------------------------------------------------------------------
-
-userid: liaocaihong(廖彩红) <liaocaihong@mentholatum.com.cn>
-Description of problem:
-以下*OP10出错，请帮忙处理
-To resolve:
-update f41021 set lipqoh=0
- where liitm=36724 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN63'
- where illitm='ME91417180*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-
-update f41021 set lipqoh=0
- where liitm=36431 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
- where illitm='ME90601MMS*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-update f41021 set lipqoh=0
- where liitm=36458 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
- where illitm='ME90601MMA*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-update f41021 set lipqoh=0                                  
- where liitm=37318 and limcu='  ZZS0760210' and lipqoh<>0   
-update f4111 set iltrqt=-1846000  , ilglpt='IN98'   
- where illitm='ME20617147S*OP10'   and ilglpt=''   
-   and ildct ='IM' and iltrqt=0 and ildoc= 74615
-update f41021 set lipqoh=0
- where liitm=36614 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
- where illitm='ME906171068*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-update f41021 set lipqoh=0
- where liitm=36613 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
- where illitm='ME906171030*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-update f41021 set lipqoh=0
- where liitm=36608 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
- where illitm='ME90617962*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-
-
-update f41021 set lipqoh=0
- where liitm=26952 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200   ,ilglpt='IN98'
- where illitm='ME90617630*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=18127 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200   ,ilglpt='IN98'
- where illitm='ME20617071*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-
-
-2015-03-25
-------------------------------------------------------------------------
-
-userid: 
-Description of problem:
-81039110 HC ME40609116不能收货，提示超过出货数量
-To resolve:
-检查PO,发现这张单的第二单位数量是空的,补上收货正常.
-
-
-
-
-2015-03-23
-------------------------------------------------------------------------
-
-userid: cksh(仓库收货) <cksh@mentholatum.com.cn>
-Description of problem:
-在入以下代码JDE账时，因JDE很卡，现在发现有入到数量，但没有版本号，从81039372HC订单也找不到记录，请帮忙查一下原因
-To resolve:
-检查无分类帐记录，f43121也无记录
-update f4311 set pduopn=pdurec,pdaopn=pdarec      
- where   pdlitm='ME706041002'                     
-  and pddoco=81039372  and pddcto='HC'            
-update f4311 set pdurec=0,     pdarec=0         
- where  pdlitm='ME706041002'      
-  and pddoco=81039372 and pddcto='HC'    
-update f41021 set lipqoh=0                  
- where liitm=35972 and limcu='  ZZS0760210' 
-    and lilotn='150301SHW01' and lilocn='R'  
-     and lipqoh=8555000                    
-update f4311 set pdnxtr=280,pdlttr=220         
- where   pdlitm='ME706041002'     
-  and pddoco=81039372  and pddcto='HC'         
-让用户重新收货      
-
-2015-03-18
-------------------------------------------------------------------------
-
-userid: HeChengGuang(何成光) <hechengguang@mentholatum.com.cn>
-Description of problem:
-90006349 HJ单反复充帐进帐，当前库存没进到帐，但HJ单查不到收货数量
-To resolve:
-查F4311发现未收货数和已收货数都是0，订单状态400 400
-update f4311 set pduopn=48000,pdaopn=86971     
- where   pdlitm='ME906171031*OP10'                     
-  and pddoco=90006349  and pddcto='HJ'            
-update f4311 set pdnxtr=280,pdlttr=220         
- where   pdlitm='ME906171031*OP10'     
-  and pddoco=90006349  and pddcto='HJ'   
-让用户重收
-
-2015-03-02
-------------------------------------------------------------------------
-
-userid: liaocaihong(廖彩红) <liaocaihong@mentholatum.com.cn>
-Description of problem:
-一些*OP10收货后，IM记录没有带到数量。
-To resolve:
-update f41021 set lipqoh=0
- where liitm=35727 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200   ,ilglpt='IN54'
- where illitm='ME90617992*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-
-2015-02-25
-------------------------------------------------------------------------
-
-userid: nancy <nancy@mentholatum.co.kr>
-Description of problem:
-MKB新增客户88000033，为关联交易客户，之后开80045777SP单，做销售更新发现没有生成AR 和 GL 凭证，但有库存分类帐记录。
-To resolve:
-首先在建88000033时，其类码16,17,18空，19="KUS", 这个决定了销售收入和销售成本的进帐BU，其次在F0301.A5ARC =OP 标示关联交易进帐科目。
-另外在 AR的 AAI  3.11 增加 RCOP进帐科目为 KB.280161，在做销售更新后，这个在总帐中是看不到的，只有过总帐后才可以看到这条数
-当然所有增加的科目一定在account master中已存在。
-
-2015-02-15
-------------------------------------------------------------------------
-
-userid: Orange(郑惠嫦) <orange@mentholatum.com.cn>
-Description of problem:
-因业务需要增加会计科目，详阅附件的工作簿“新增清单”，工作簿“MCL”为总科目表。
-由于伤风通与AD软膏分别有药品、化妆品两种类型产品，但现时的入账科目却不能直观地看出成本费用是归属药品还是化妆品，以及为了能更准确分摊相关成本费用，因此在科目不变的情况下特申请增加SUB，修改中英文描述及C10字段。
-To resolve:
-用户修改的是PRCMODEL的描术，由于之前的描述已张复制到多个BU，需要同步更新相关BU的描述，查F0901D发现其它BU的AID不同于PRCMODEL的。
-
-将修改过的 MCU,OBJ,SUB三个栏位上传到h4600, 更新r1itm为对应的AID，然后用以下命令更新其它BU的中文描述。
-
-update f0901d	set lkdl01=
-   ( select xx.lkdl01 from f0901d  xx   left join 
-      ( select tt.gmaid,r1itm from f0901 tt left join h4600 on             
-         tt.gmobj||tt.gmsub = trim(r1litm)||trim(r1aitm)                   
-        where tt.gmco in ('90000','91000','92000','93000')                  
-       and tt.gmobj||tt.gmsub in(select trim(r1litm)||trim(r1aitm)       
-        from h4600)  and tt.gmmcu  != '    PRCMODEL'                       
-         and tt.gmaid not in (select r1itm from h4600) 
-       ) as v_ref on xx.lkaid=v_ref.r1itm             
-     where xx.lklngp='CS' and xx.lkaid in (select r1itm from h4600)
-      and f0901d.lkaid = v_ref.gmaid   )
-
- where lklngp='CS' and lkaid in 
-( select  v_ref.gmaid   from f0901d          
-    left join  (
-      select tt.gmaid,r1itm from f0901 tt left join h4600 on             
-        tt.gmobj||tt.gmsub = trim(r1litm)||trim(r1aitm)                   
-      where tt.gmco in ('90000','91000','92000','93000')                  
-      and tt.gmobj||tt.gmsub in(select trim(r1litm)||trim(r1aitm)       
-        from h4600)  and tt.gmmcu  != '    PRCMODEL'                       
-         and tt.gmaid not in (select r1itm from h4600) 
-       ) as v_ref on lkaid=v_ref.r1itm             
-  where lklngp='CS' and lkaid in (select r1itm from h4600) )
-
-
-2015-01-30
-------------------------------------------------------------------------
-
-userid: liaocaihong(廖彩红) <liaocaihong@mentholatum.com.cn>
-Description of problem:
-一些*OP10的记录没有IM数量
-To resolve:
-update f41021 set lipqoh=0
- where liitm=36632 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200   ,ilglpt='IN98'
- where illitm='ME70610074S*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=80023377
-update f41021 set lipqoh=0
- where liitm=35558 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN63'
- where illitm='ME91417172*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-update f41021 set lipqoh=0
- where liitm=35559 and limcu='  ZZS0760210' and lipqoh<>0
-update f4111 set iltrqt=-2593200  ,ilglpt='IN63'
- where illitm='ME91417173*OP10'   and ilglpt=''
-  and ildct ='IM' and iltrqt=0 and ildoc=62089
-
-2015-01-19
-------------------------------------------------------------------------
-
-userid: ZhengJinShan(郑锦珊) <ZhengJinShan@mentholatum.com.cn>
-Description of problem: 
-90037064 PV号已经删除，供应商地址号为 90130022,但已匹配的数据恢复不了,　在收化匹配窗口仍然看不到
-To resolve:
-检查F0411,F0911记录删除，但F43121发现有个记录匹配类型为3的记录错误,另一个类型为2,先将这些删除的PV类型改为4备案, 然后将这下两个找到对应的类型1的UOPN和AOPN加回,同时扣减UPTD, APTD 
-
-注意：做完以上操作后仍不正确，原来用户删除90037064 后，又用这个PV做了另一家供应商的匹配，所以以下SQL必须加供应商限制才安全
-
-update f43121 set prmatc='4'
- where prdoc ='90037064'  and prdct='PV'  
-   and  prmatc<>'1'  and pran8=90130022
-
-select * from f43121 inner join 
-(
-select a.prdoco,a.prdcto,a.prlnid,a.prnlin,a.prlitm,
-  a.pruptd, a.praptd
- from f43121 a        
-left join f43121 b on a.prmatc='1'                  
-     and a.prdoco=b.prdoco and a.prdcto=b.prdcto    
-      and a.prlnid=b.prlnid and a.prnlin=b.prnlin   
-    and a.prlitm=b.prlitm                           
- where a.prdoc ='90037064'  and a.prdct='PV'  
-   and a.prmatc='4'   )    as v_err
-on f43121.prdoco=v_err.prdoco and f43121.prdcto=v_err.prdcto
- and f43121.prlnid=v_err.prlnid and f43121.prnlin=v_err.prnlin
-  and f43121.prlitm=v_err.prlitm
- where f43121.prmatc='1' and pran8=90130022
-
-update  f43121 set pruopn = pruopn + 
-  (select b.pruptd from f43121 b where b.prmatc='4' and
-  b.prdoc='90037064' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
-   praopn = praopn + 
-   (select b.praptd from f43121 b where b.prmatc='4' and
-  b.prdoc='90037064' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
-  pruptd = pruptd -
-  (select b.pruptd from f43121 b where b.prmatc='4' and
-  b.prdoc='90037064' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm ),
-   praptd = praptd -
-   (select b.praptd from f43121 b where b.prmatc='4' and
-
-  b.prdoc='90037064' and b.prdct='PV' and f43121.prdoco=b.prdoco
- and f43121.prdcto=b.prdcto and f43121.prlnid=b.prlnid and
-  f43121.prnlin=b.prnlin and f43121.prlitm=b.prlitm )
-
- where prmatc='1' and prdoco||prdcto||prlnid||prnlin||prlitm  in
- (select prdoco||prdcto||prlnid||prnlin||prlitm from f43121
-    where prmatc='4' and prdoc='90037064' and prdct='PV')
-   and pran8=90130022
-
-
-
-2015-01-01
-------------------------------------------------------------------------
-
-Userid: Miaoling Lin <MiaoLingLin@mentholatum.com.tw>
-Description of problem:
-系統新增 IN40 for Megumi (Hair Care), 預計明年初會進貨, 請幫我們增設該品類總帳及庫存連結關係. 
-To resolve:
-insert into f4095(MLANUM,MLCO ,MLDCTO,MLDCT ,MLGLPT,
- MLCOST,MLMCU ,MLOBJ ,MLSUB )
-select MLANUM,MLCO ,MLDCTO, MLDCT ,'IN39' as MLGLPT,
- MLCOST,MLMCU ,MLOBJ ,MLSUB
- from f4095 where mlglpt='IN41' and mlco='00276'
-
-然后在系统中再手工修改正确的AccountId，再将IN39更改为IN40
-update f4095 set mlglpt='IN40'
-   where mlglpt='IN39' and mlco='00276'
 

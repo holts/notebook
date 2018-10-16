@@ -1,0 +1,253 @@
+﻿.. zs bip report sql
+
+========================================================================
+ZS BIP Report
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+Itemledger_no_gldate
+========================================================================
+ 
+PRCZSAC\ZZSC0015
+
+select wadoco 定单号,wadcto 定单类型, ildct 文书类型, wasrst 状态, 
+ ildgl 总帐日期, iltrdj 定单日期,  illitm 第二产品号, ilpaid 总成本/价格,
+  iltrqt 交易数量,   iltrum 交易计量单位, iluncs 单位成本,iluser 用户号
+ from f4111 left join f4801 on wadoco = ildoc
+   where  wasrst <= 99 and ildct in ('IC','IM','IS')
+    and ildgl not btween 1 and 30
+     and iltrdj btween 1 and 30
+
+
+select	 "F4801"."WADOCO" as "WADOCO",	 "F4801"."WADCTO" as "WADCTO",
+   "F4111"."ILDCT" as "ILDCT",	 "F4801"."WASRST" as "WASRST",
+    PKG_SHRE_JDE.ntod("F4111"."ILDGL") as "ILDGL",
+     PKG_SHRE_JDE.ntod("F4111"."ILTRDJ") as "ILTRDJ",
+     "F4111"."ILLITM" as "ILLITM",  "F4111"."ILUSER" as "ILUSER",
+      "F4111"."ILPAID" /100 as "ILPAID",  "F4111"."ILTRQT" /100 as "ILTRQT",
+        "F4111"."ILTRUM" as "ILTRUM",  "F4111"."ILUNCS" / 10000 as  "ILUNCS" 
+ from	"CRPDTA"."F4111" "F4111"  left join  "CRPDTA"."F4801" "F4801"
+     on  "F4111"."ILDOC" = "F4801"."WADOCO"
+ where  "F4111"."ILDCT" in (:p_dct)  and "F4801"."WASRST" <= 99
+  and PKG_SHRE_JDE.ntod("F4111"."ILTRDJ")  between  :p_fromdate and :p_todate
+  and ( decode(PKG_SHRE_JDE.ntod("F4111"."ILDGL") , null, :p_fromdate,  PKG_SHRE_JDE.ntod("F4111"."ILDGL") )  not between  :p_fromdate  and :p_todate  
+       or   PKG_SHRE_JDE.ntod("F4111"."ILDGL") is null 
+     )
+      
+Work_Order_IC10
+========================================================================
+
+PRCZSAC\ZZSC0016
+
+select wadcto as 定单类型 , ibglpt as 总帐类型, wadoco as 定单号, 
+  walitm as 第二产品号,  wasrst as 状态, wasprt as 工单闪烁信息, 
+   wasoqs as 发数数量, wasocn as 取消数量, wauser as 用户号, imdsc1 as 描述
+ from f4801 left join f4102 on walitm=iblitm
+  left join f4101d on walitm=imlitm
+   where wadcto in ('WS','W1','W2')
+      and wasrst='10'  and ibmcu='  ZZS00760210'
+         and wasoqs <> 0
+ 
+
+select	 "F4801"."WALITM" as "WALITM",	 "F4801"."WADCTO" as "WADCTO",
+	 "F4102"."IBGLPT" as "IBGLPT",	 "F4801"."WADOCO" as "WADOCO",
+	 "F4801"."WASRST" as "WASRST",	 "F4801"."WASOQS" / 100 as "WASOQS",
+	 "F4801"."WASOCN" / 100 as "WASOCN",	 "F4801"."WASPRT" as "WASPRT",
+	 "F4801"."WAUSER" as "WAUSER",	 "F4101D"."IMDSC1" as "IMDSC1" 
+ from	"CRPDTA"."F4801" "F4801"  left join  "CRPDTA"."F4101D" "F4101D" 
+           on  "F4801"."WALITM"="F4101D"."IMLITM"
+         left join  "CRPDTA"."F4102" "F4102"  on 
+   "F4801"."WAMCU"="F4102"."IBMCU"  and	 "F4801"."WALITM"="F4102"."IBLITM"
+ where   "F4801"."WASRST" = '10'  and  "F4801"."WASOQS"  <> 0
+  and "F4801"."WAMCU" = '  ZZS0760210'
+   and "F4801"."WADCTO"  in (:p_dcto)
+
+
+work_order_flash_message
+========================================================================
+
+PRCZSAC\ZZSC0017
+
+select wadcto as 定单类型 , ibglpt as 总帐类型, wadoco as 定单号, 
+  walitm as 第二产品号,  wasrst as 状态, wasprt as 工单闪烁信息, 
+   wasoqs as 发数数量, wasocn as 取消数量, wauser as 用户号, imdsc1 as 描述
+ from f4801 left join f4102 on walitm=iblitm
+  left join f4101d on walitm=imlitm
+   where wadcto in ('WS','W1','W2')
+     and waprt not in ('','A','C','M','P','4','5','6','7','8','9')
+      and wasrst between '10' and '98' and ibmcu='  ZZS00760210'
+         and   wastrt >= (:p_StartDate)
+
+
+
+select	 "F4801"."WALITM" as "WALITM",	 "F4801"."WADCTO" as "WADCTO",
+	 "F4102"."IBGLPT" as "IBGLPT",	 "F4801"."WADOCO" as "WADOCO",
+	 "F4801"."WASRST" as "WASRST",	 "F4801"."WASOQS" / 1000 as "WASOQS",
+	 "F4801"."WASOCN" / 1000 as "WASOCN",	 "F4801"."WASPRT" as "WASPRT",
+	 "F4801"."WAUSER" as "WAUSER",	 "F4101D"."IMDSC1" as "IMDSC1" 
+ from	"PRODDTA"."F4801" "F4801"  left join  "PRODDTA"."F4101D" "F4101D" 
+           on  "F4801"."WALITM"="F4101D"."IMLITM"
+         left join  "PRODDTA"."F4102" "F4102"  on 
+   "F4801"."WAMCU"="F4102"."IBMCU"  and	 "F4801"."WALITM"="F4102"."IBLITM"
+ where "F4801"."WASRST" between '10' and '98' and "F4801"."WAMCU" = '  ZZS0760210'
+   and "F4801"."WASPRT" not in (' ','A','C','M','P','4','5','6','7','8','9')  
+  and PKG_SHRE_JDE.ntod( "F4801"."WASTRT" )  >= (:p_startDate)  
+   and "F4801"."WADCTO"  in (:p_dcto)
+
+
+work_order_no_cost
+========================================================================
+
+PRCZSAC\ZZSC0018
+
+select illitm as 第二产品号, ildoc as 文书号, ildcto as 定单类型, 
+ ildct as 文书类型, ildgl as 总帐日期, iluncs as 单位成本, ilpaid as 总成本
+  from f4111 where iluncs <= 0  and ildct in ('IC' ) and ildgl between 
+
+
+select	 "F4111"."ILLITM" as "ILLITM",	 "F4111"."ILDOC" as "ILDOC",
+ "F4111"."ILDCT" as "ILDCT", PKG_SHRE_JDE.ntod("F4111"."ILDGL") as "ILDGL",
+ "F4111"."ILDCTO" as "ILDCTO",	 "F4111"."ILUNCS" / 10000 as "ILUNCS",
+ "F4111"."ILPAID" / 100 as "ILPAID" 
+ from	"CRPDTA"."F4111" "F4111"
+  where "F4111"."ILUNCS" <= 0    and "F4111"."ILDCT" = 'IC'
+  and  PKG_SHRE_JDE.ntod("F4111"."ILDGL")  between (:p_fromdate) and (:p_todate)
+
+
+work_order_no_cost_gldate
+========================================================================
+
+PRCZSAC\ZZSC0019
+
+
+select illitm as 第二产品号, ildoc as 文书号, ildcto as 定单类型, 
+ ildct as 文书类型, ildgl as 总帐日期, iluncs as 单位成本, ilpaid as 总成本
+  from f4111 where iluncs <= 0  and ildct in ('IC' ) and ildgl not between 
+
+
+select	 "F4111"."ILLITM" as "ILLITM",	 "F4111"."ILDOC" as "ILDOC",
+ "F4111"."ILDCT" as "ILDCT", PKG_SHRE_JDE.ntod("F4111"."ILDGL") as "ILDGL",
+ "F4111"."ILDCTO" as "ILDCTO",	 "F4111"."ILUNCS" / 10000 as "ILUNCS",
+ "F4111"."ILPAID" / 100 as "ILPAID" 
+ from	"CRPDTA"."F4111" "F4111"
+  where "F4111"."ILUNCS" <= 0    and "F4111"."ILDCT" = 'IC'
+  and  PKG_SHRE_JDE.ntod("F4111"."ILDGL") is null
+
+
+
+总帐未过帐检查表 RECON/ZSCHK
+========================================================================
+
+select gldct as 文书类型,gldoc as 文书号,glpost as 总帐过帐码,
+ gldgj as 总帐日期,glicu as 批号,glicut as 批类型,icist as 批状态,
+  gldicj as 批日期,icuser as 用户号 
+ from proddta.f0911 left join proddta.f0011 on glicu=icicu and glicut=icicut
+where glkco='90000' and glpost='' and icist='D' and icdicj >= '118100'
+
+select "F0911"."GLDCT" as "GLDCT", "F0911"."GLDOC" as "GLDOC",
+  "F0911"."GLPOST" as "GLPOST", "F0911"."GLICU" as "GLICU",
+    PKG_SHRE_JDE.ntod("F0911"."GLDGJ")  as "GLDGJ",
+    "F0911"."GLICUT" as "GLICUT", "F0011"."ICIST" as "ICIST",
+      PKG_SHRE_JDE.ntod( "F0011"."ICDICJ") as "ICDICJ",
+      "F0011"."ICUSER" as "ICUSER" 
+   from "PRODDTA"."F0911" "F0911" left join "PRODDTA"."F0011" "F0011" 
+    on "F0911"."GLICU"="F0011"."ICICU"  and "F0911"."GLICUT"="F0011"."ICICUT"
+  where	 "F0911"."GLPOST" = '' and "F0011"."ICIST" = 'D'
+   and "F0911"."GLKCO" = '90000' and PKG_SHRE_JDE.ntod( "F0011"."ICDICJ") >= :p_date
+
+
+ 
+AR To GL By Offset Account  (G0922/11/ZS01A)
+========================================================================
+
+F0311
+RPCO in (90000,91000,92000,93000)
+RGGLC <> 'ZZZZZZ'
+RPPOST='D'
+
+
+AP To GL By Offset Account (G0922/12/ZS01)
+========================================================================
+
+select kgmcu||'.'||kgobj||'.'||kgsub as AccId
+  , sum(rpaap)/100 as AP
+  , GL/100 as GL 
+  , (GL + sum(rpaap))/100 as BL
+ from proddta.f0411 left join proddta.f0012 
+    on 'PC'||rpglc =KGitem and rpco=kgco
+ left join ( 
+   select gbmcu,gbobj,gbsub,sum(gbawtd+gbapyn) as gl
+    from proddta.f0902	
+     where gbco in (90000,91000,92000,93000)
+       and gblt='AA'  and gbfy=18
+      group by gbmcu,gbobj,gbsub
+     )    v_gl on kgmcu=gbmcu and kgobj=gbobj and kgsub=gbsub
+ where ( RPPOST='D' and  RPDCTA<>'PE'
+   and RPCO in  (90000,91000,92000,93000) )
+Or
+  (RPPOST<>'D' and RPDCTA='PE'  and 
+    RPCO in  (90000,91000,92000,93000) )
+ group by  kgmcu||'.'||kgobj||'.'||kgsub, gl
+  having sum(rpaap)<>0
+ 
+
+
+select AccId, sum(AP) as AP, sum(GL) as GL, sum(BL) as BL  from  (
+
+select kgmcu||'.'||kgobj||'.'||kgsub as AccId
+  , sum(rpaap)/100 as AP
+  , 0.00 as GL 
+  , sum(rpaap)/100 as BL
+ from proddta.f0411 left join proddta.f0012 
+    on 'PC'||rpglc =KGitem and rpco=kgco
+ where ( RPPOST='D' and  RPDCTA<>'PE'
+   and RPCO in  (90000,91000,92000,93000) )
+Or
+  (RPPOST<>'D' and RPDCTA='PE'  and 
+    RPCO in  (90000,91000,92000,93000) )
+ group by  kgmcu||'.'||kgobj||'.'||kgsub 
+  having sum(rpaap)<>0
+ 
+union all
+
+select kgmcu||'.'||kgobj||'.'||kgsub as AccId
+  , 0.00 as AP
+  , sum(gbawtd+gbapyn)/100 as GL 
+  , sum(gbawtd+gbapyn)/100 as BL
+ from proddta.f0411 left join proddta.f0012 
+  on 'PC' ||rpglc =KGitem   and rpco=kgco
+ left join proddta.f0902	
+     on gbco in (90000,91000,92000,93000)
+       and gblt='AA'  and gbfy=18 
+        and kgmcu=gbmcu and kgobj=gbobj  and kgsub=gbsub
+ where ( RPPOST='D' and  RPDCTA<>'PE'
+   and RPCO in  (90000,91000,92000,93000) )
+Or
+  (RPPOST<>'D' and RPDCTA='PE'  and 
+    RPCO in  (90000,91000,92000,93000) )
+ group by  kgmcu||'.'||kgobj||'.'||kgsub 
+  having sum(gbawtd+gbapyn) <> 0
+
+)   v_core  group by AccId
+
+   

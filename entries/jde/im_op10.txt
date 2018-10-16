@@ -2,6 +2,7 @@
 外发加工的*OP10的记录，在收货后，生成的IM记录，没有带到数量，导至费用类库存不平，需要修正相关记录。
 
 
+
 insert into f4111(ilitm,illitm,ilaitm,ilmcu,illocn,illotn,ilplot,
  ilstun,illdsq,iltrno,ilfrto,illmcx,illots,illotg,ilkit,
   ilmmcu,ildmct,ildmcs,ilbalu,ilkco,ildoc,ildct,ilsfx,
@@ -17,6 +18,606 @@ select ilitm,illitm,ilaitm,ilmcu, illocn,illotn,ilplot,
    -iltrqt,iluncs,-ilpaid,iltday,iluser,ilpid,ilcrdj,ilterm
   from f4111 
 where ildct='OV' and ilukid='16538498'
+
+
+
+update f41021 set lipqoh=0
+ where liitm=44479 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME20617230*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=44481 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME20617232*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=44478 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME20617229*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=44477 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME20617224*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=44480 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME20617231*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46539 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN52'
+ where illitm='ME906171278*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46537 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN35'
+ where illitm='OX82719OUC*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46544 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN54'
+ where illitm='ME90601A6C*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46372 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN63'
+ where illitm='ME91417217*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46536 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN35'
+ where illitm='OX82722OUC*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497 
+update f41021 set lipqoh=0
+ where liitm=46546 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN55'
+ where illitm='ME90618PMW*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497 
+update f41021 set lipqoh=0
+ where liitm=46547 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN55'
+ where illitm='ME90618PFW*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497 
+update f41021 set lipqoh=0
+ where liitm=46549 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN54'
+ where illitm='ME90620179*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497 
+update f41021 set lipqoh=0
+ where liitm=46887 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN54'
+ where illitm='ME90618ADD*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497 
+update f41021 set lipqoh=0
+ where liitm=46464 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN53'
+ where illitm='ME90619BHA*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497 
+update f41021 set lipqoh=0
+ where liitm=46468 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN53'
+ where illitm='ME90619BHM*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497 
+update f41021 set lipqoh=0
+ where liitm=46463 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN53'
+ where illitm='ME90619BCD*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497 
+update f41021 set lipqoh=0
+ where liitm=46467 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN53'
+ where illitm='ME90619BHB*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46465 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN53'
+ where illitm='ME90619BCB*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46548 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN54'
+ where illitm='ME90620177*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46466 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN53'
+ where illitm='ME90619BCM*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=31936 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN54'
+ where illitm='ME90618AM2*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=47158 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME706011694S*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46531 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN56'
+ where illitm='ME906171466*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46525 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN56'
+ where illitm='ME906171464*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+
+update f41021 set lipqoh=0
+ where liitm=47159 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME706011693W*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46885 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME706011693S*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=47194 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN63'
+ where illitm='ME91417276*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=47195 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN63'
+ where illitm='ME91417272*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46888 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN52'
+ where illitm='ME906171396*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=46896 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN52'
+ where illitm='ME906171357*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497
+update f41021 set lipqoh=0
+ where liitm=25632 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1534400  ,ilglpt='IN52'
+ where illitm='ME90617513*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59101
+update f41021 set lipqoh=0
+ where liitm=45664 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1534400  ,ilglpt='IN52'
+ where illitm='ME906171397*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=59101
+update f41021 set lipqoh=0
+ where liitm=46551 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-396000  ,ilglpt='IN54'
+ where illitm='ME90620159*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90063983
+   and ilpaid=-213840
+update f41021 set lipqoh=0
+ where liitm=46545 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN54'
+ where illitm='ME90620225*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90063982
+update f41021 set lipqoh=0                                  
+ where liitm=45834 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-52900  , ilglpt='IN45'   
+ where illitm='ME90517678*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=90062913
+update f41021 set lipqoh=0                                  
+ where liitm=45update f41021 set lipqoh=0
+ where liitm=47159 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME706011693W*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497681 and limcu='  ZZS0760210' and lipqoh<>0   
+update f4111 set iltrqt=-52900  , ilglpt='IN56'   
+ where illitm='ME90601PHG*OP10'   and ilglpt=''   
+   and ildct ='IM' and iltrqt=0 and ildoc=77104
+update f41021 set lipqoh=0
+ where liitm=25631 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2823700  ,ilglpt='IN52'
+ where illitm='ME90617511*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90028683
+update f41021 set lipqoh=0
+ where liitm=25630 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2823700  ,ilglpt='IN52'
+ where illitm='ME90617512*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90028683
+update f41021 set lipqoh=0
+ where liitm=45637 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517635*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45665 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517645*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742  
+update f41021 set lipqoh=0
+ where liitm=45666 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517646*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45668 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME90601BFJ*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45595 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME90601BFV*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45596 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME90601BFT*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45593 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME90601BFR*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45663 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
+ where illitm='ME906171380*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742  
+update f41021 set lipqoh=0
+ where liitm=45660 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
+ where illitm='ME906171334*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742  
+update f41021 set lipqoh=0
+ where liitm=45661 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
+ where illitm='ME906171336*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742  
+update f41021 set lipqoh=0
+ where liitm=25402 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN52'
+ where illitm='ME90617478*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742  
+update f41021 set lipqoh=0
+ where liitm=45662 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN55'
+ where illitm='ME906171125*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742  
+update f41021 set lipqoh=0
+ where liitm=45847 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME23417021*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742  
+update f41021 set lipqoh=0
+ where liitm=45858 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='WI54'
+ where illitm='ME20617238S*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=46157 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME70610198S*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=46158 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='update f41021 set lipqoh=0
+ where liitm=47159 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME706011693W*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497ME70610199S*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45419 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME80601BFT*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45591 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME80601BFR*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45678 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME80618BML*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45677 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME80618BMM*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+ 
+update f41021 set lipqoh=0
+ where liitm=45632 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME90620270*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45633 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME90620271*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liiupdate f41021 set lipqoh=0
+ where liitm=47159 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-1500000  ,ilglpt='IN98'
+ where illitm='ME706011693W*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90051497tm=45679 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME80618BMD*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45680 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME80618BDM*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45420 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME80601BFV*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=45659 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN45'
+ where illitm='ME90517675*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45658 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN45'
+ where illitm='ME90517676*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45642 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN45'
+ where illitm='ME90517677*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45643 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN45'
+ where illitm='ME90517679*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45634 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517644*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45635 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517642*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45636 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517643*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45639 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517637*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45638 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517636*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45640 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517615*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45641 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN45'
+ where illitm='ME90517521*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45179 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME20601026*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45125 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90619MMB*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45127 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90619MMD*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45129 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90619MMM*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45131 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90619MME*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45133 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90619MML*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45126 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90622MMB*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45128 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90622MMD*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=45130 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90622MMM*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+ 
+
+
+
+
+update f41021 set lipqoh=0
+ where liitm=44567 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517571*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44565 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517572*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44564 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517573*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44568 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517574*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44563 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517575*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44569 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517576*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44570 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517577*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44566 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517557*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44742 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517578*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44572 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517602*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44562 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME90517630*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+
+update f41021 set lipqoh=0
+ where liitm=43430 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90601KL8*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=43426 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90601KM8*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=43428 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90601KG8*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=43429 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90601KD8*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=43427 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME90601KB8*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=35469 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME20601020*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=44470 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME23417013*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=44469 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME23417012*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44471 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME23417011*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44473 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME23417015*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=44472 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME23417014*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44474 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME23417016*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742 
+update f41021 set lipqoh=0
+ where liitm=44475 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME23417017*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44476 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME23417018*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=45065 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME70501444S*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=45066 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN41'
+ where illitm='ME70502162S*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44890 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN98'
+ where illitm='ME706011359W*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+
+update f41021 set lipqoh=0
+ where liitm=44355 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN56'
+ where illitm='ME906171525*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44571 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN54'
+ where illitm='ME906171258*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
+update f41021 set lipqoh=0
+ where liitm=44272 and limcu='  ZZS0760210' and lipqoh<>0
+update f4111 set iltrqt=-2593200  ,ilglpt='IN53'
+ where illitm='ME90620240*OP10'   and ilglpt=''
+  and ildct ='IM' and iltrqt=0 and ildoc=90060742
 
 update f41021 set lipqoh=0
  where liitm=44354 and limcu='  ZZS0760210' and lipqoh<>0

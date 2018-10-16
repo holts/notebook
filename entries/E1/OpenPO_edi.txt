@@ -1,0 +1,110 @@
+﻿.. zs open purhase order sql
+
+========================================================================
+ZS Open purchase order EDI
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+必填项测试
+========================================================================
+  
+以下是旧系统中必填项 
+insert into f47141 (syedst, syeder, syekco, symcu, syedoc, 
+   syedct, sytpur, syan8, syshan )                  
+  values('865', 'R', '90000', '  ZZS0760210', '20120301',
+'HA',  '00',  90130288, 90000000 )
+
+
+insert into f47142 (szedst, szeder, szekco, szmcu, szedoc, 
+   szedct,  szan8, szshan ,szedln, szitm, szlitm,
+    szaitm, szuorg  )
+  values('865', 'R', '90000', '  ZZS0760210', '20120301',
+    'HA',   90130288, 90000000, 1000, 4144, 'ROR0102018',
+'ROR0102018', 200000  )
+ 
+新系统中必填项
+insert into crpdta.f4301z1 (syedus, syedbt, syedtn, syedln, sytytn, 
+  sydrin, sytnac, syedct, sykcoo, symcu,  syan8, syshan, syeddl, 
+   sydoco,sydcto )                  
+values('Holts','00', '201801',0,'850','1', 'A', 'HC', '90000', '  ZZS0760210', 
+  90130288, 90000000, 0, 
+  81056645, 'HC' )
+
+insert into crpdta.f4311z1 (szedus, szedbt, szedtn, szedln, sztytn,
+ szdrin, sztnac, szedct. szkcoo, szmcu, szdoco, szdcto,  szan8, szshan ,
+  szeddl, szitm, szlitm,   szaitm, szuorg  )
+values('Holts','00','201801', 0, '850', '1', 'A', 'HC', '90000', '  ZZS0760210',  
+    81056645, 'HC',  90130288, 90000000, 1000,  4144, 'ROR0102018',
+  'ROR0102018', 200000  )
+ 
+
+
+
+      
+Work_Order_IC10
+========================================================================
+ 
+
+
+insert into f47141(syekco,syedoc,syedct,sytpur,
+  symcu,syan8, syedst,syeder)
+ values('90000', '20120301', 'HA', '00', '  ZZS0760210',
+ 90130288, '865', 'R' )
+
+insert into f47142(szekco,szedoc,szedct,szedln,szchgc,
+ szmcu,szan8,szedst,szeder, szlitm,   szuorg)
+values('90000','20120301','HA',1000, 'AI', '  ZZS0760210',
+  90130288, '865', 'R', 'ROR0102018', 200000)
+
+
+insert into f98301 (DEPID,DEVERS,DETY,DESQN,DEOPT#,DEDWTY,
+ DEFILN,DEPFX,DEMID,DEFMAT,DELGF,DEJEX,DEEXCL,DEOUTM,DEUSER,
+ DEVCD,DEVED,DEPTSP,DEPTIN,DEHJBQ,DETXT1,DEKOPT,DEFLDN,DEDTAS,
+ DEDTAT,DECDEC,DEEC,DEDFLD,DERJST,DEAO,DESVL,DEVALR,DESTY,
+ DEMCRG,DEAALL,DESAD,DETXTO,DELTOT,DEPAGE,DETYT,DEOQSO,DEOQOP,
+ DEOQOO,DEOQOU,DEOQOD)
+
+select DEPID,DEVERS,DETY,DESQN,DEOPT#,DEDWTY,
+ DEFILN,DEPFX,DEMID,DEFMAT,DELGF,DEJEX,DEEXCL,DEOUTM,DEUSER,
+ DEVCD,DEVED,DEPTSP,DEPTIN,DEHJBQ,DETXT1,DEKOPT,DEFLDN,DEDTAS,
+ DEDTAT,DECDEC,DEEC,DEDFLD,DERJST,DEAO,DESVL,DEVALR,DESTY,
+ DEMCRG,DEAALL,DESAD,DETXTO,DELTOT,DEPAGE,DETYT,DEOQSO,DEOQOP,
+ DEOQOO,DEOQOU,DEOQOD
+from temp/f98301
+
+
+
+work_order_flash_message
+========================================================================
+ 
+work_order_no_cost
+========================================================================
+
+PRCZSAC\ZZSC0018
+
+
+
+
+ 
+
+ 

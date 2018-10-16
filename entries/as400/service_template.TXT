@@ -27,6 +27,8 @@
 请求样例
 ========================================================================
 
+PSS CSC HK <hkpsscsc@hk1.ibm.com>
+
 我司外包给你们维护的一台AS400主机，
 
 SN: 10-3HHCM
@@ -44,6 +46,8 @@ Type: 9406 – 170
 
 公司电话： +852 26990078
 Betsy direct line 2685 6332 
+
+Jeffrey.Leung  +852 26856313 
 
 leave LAM mobile 9831 9682 
 
@@ -110,7 +114,7 @@ When performed the simulated cost rollup program (p30820) to calculate the cost,
 https://login.oracle.com/mysso/signon.jsp
 http://metalink3.oracle.com/
 USERID：holts@mentholatum.com.cn
-psd：
+psd：12341234
 
 The Customer User Administrator has Approved the request of he holts in MetaLink 3.
 

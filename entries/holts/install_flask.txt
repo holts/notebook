@@ -1,0 +1,109 @@
+﻿.. setup windows+apache+mod_wsgi
+
+========================================================================
+在Windows安装Flask的生产运行环境
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+搭建运生环境
+========================================================================
+ 
+Windows server 2008 R2 Standard X64
+Python 3.7 amd64 (MSC v.1914 64 bit　是用VC14编释的版本)
+
+使用 apache + mod_wsgi 来跑flask应用， Apache,mod_wsgi和Python都必须用相同版本的C/C++编译器生成，它们要么是32位的，要么是64位的，不能混用。 如果以上这一点没有做到，整个过程有99%的可能性会失败。
+
+在此下载编译好的 Apache Windows 版本。
+
+http://httpd.apache.org/docs/...
+Apache 2.4.x OpenSSL 1.1.0 VC14　
+
+解压后，更改配置文件中的根目录，监听端口更改为8081，进入BIN目录执行
+
+httpd -k install
+
+安装 mod_wsgi
+pip install mod_wsgi
+
+也可以下载编译好的 mod_wsgi
+http://www.lfd.uci.edu/~gohlk...
+
+mod_wsgi-4.5.24+ap24vc14-cp37-cp37m-win_amd64.whl 
+
+意思是这样：mod_wsgi[WSGI version]+ap[Apache version]vc[Visual C++
+Redistributable version that was used to compile Apache]-cp[Python
+version]-none-win[32/64 bit version].whl
+
+pip 命令进行安装 ：pip install mod_wsgi-4.5.24+ap24vc14-cp37-cp37m-win_amd64.whl
+
+这里要记住，如果失败了, 请使用：python -m pip install -U pip   
+
+安装完毕之后，执行命令：mod_wsgi-express module-config > myconfig.txt
+这里将信息重定向到了当前文件夹下的myconfig.txt，打开这个txt文件，将里面的信息复制到httpd.conf文件夹中。
+
+实际上相当于在httpd.conf中加入这三行
+LoadFile "e:/work/python3/python37.dll"
+LoadModule wsgi_module "e:/work/python3/lib/site-packages/mod_wsgi/server/mod_wsgi.cp37-win_amd64.pyd"
+WSGIPythonHome "e:/work/python3"
+
+
+安装好 Apache 以及下载编译相应的 mod_wsgi 模块，配置好文件就行了。
+
+配置文件可以参考官方文档http://flask.pocoo.org/docs/0...
+中文版http://dormousehole.readthedocs.io/en/latest/
+
+过程中唯一复杂的地方在于你选择的 mod_wsgi 版本要和你的 Apache 版本、Windows 环境以及 Python 的版本匹配。
+
+
+在apache上部署基于Python-Flask的后端服务器
+========================================================================
+
+Flask是非常简单易用的一个python后端框架，非常适合用来快速开发小规模的后端程序。然而在对Flask开发的后端进行部署时，虽然Flask本身支持使用app.runthreaded=True, host='0.0.0.0',)实现多线程运行，但依然无法实现较高的性能表现。这种时候我们就需要将Flask应用部署到专业的后端服务器，例如使用MOD_WSGI将该应用部署至Apache HTTP Server下
+
+在我们的后端应用的根目录下，为了兼容Apache HTTP Server，我们需要创建一个.wsgi文件，该文件非常简单，仅仅是为了创建可被mod_wsgi调用的application:
+
+# 下面两行是为了将当前路径添加到系统路径中从而保证import不抛异常
+import sys
+sys.path.insert(0, '/var/www/app-root')
+
+from SQLbackend import app as application
+
+
+配置Apache配置文件，以虚拟机方式运行在Web前端
+
+<VirtualHost _default_:8081>
+DocumentRoot "${SRVROOT}/htdocs"
+#ServerName www.example.com:80
+ 
+    ServerName mzlserver13
+
+    # WSGIScriptAlias只用在网站地址hostname部分后面url部分的地址，例如如果我们的网站地址为example.com，则将WSGIScriptAlias设为/的话，任何访问example.com的请求都将被当前应用处理。若将Alias设为/some-alias，则只有访问example.com/some-alias/的请求会被当前应用处理。
+    WSGIScriptAlias /mcl e:\work\mcl\mcl.wsgi
+
+    <Directory e:\work\mcl>
+        #AllowOverride none
+	#Options None
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+

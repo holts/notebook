@@ -61,7 +61,7 @@ Run Odoo with a custom configuration
 
 客制化设定 当您已经开始使用，並且想要针对odoo，进行一些客制化的环境设定，可以参考下面的安裝方式
 
-$ docker run -v e:/dockdatavolume/odoo/to/config:/etc/odoo -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo
+$ docker run -v e:/dockdatavolume/odoo/to/config:/etc/odoo -p 127.0.0.1:8070:8069 --name odoo --link db:db -t odoo
 
 將您配置文件，放到您的路徑（ e:/dockdatavolume/odoo/to/config）即可，至於如何写，可以参考以下资料设定档范本
 
@@ -107,12 +107,12 @@ auto_reload = True
 
 
 You can also directly specify Odoo arguments inline. Those arguments must be given after the keyword -- in the command-line, as follows
-$ docker run -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo -- --db-filter=odoo_db_.*       
+$ docker run -p 127.0.0.1:8070:8069 --name odoo --link db:db -t odoo -- --db-filter=odoo_db_.*       
 
 Mount custom addons
 
 You can mount your own Odoo addons within the Odoo container, at /mnt/extra-addons
-$ docker run -v e:/dockdatavolume/odoo/to/config:/etc/odoo -v e:/dockdatavolume/odoo/to/addons:/mnt/extra-addons -p 127.0.0.1:8069:8069 --name odoo --link db:db -t odoo 
+$ docker run -v e:/dockdatavolume/odoo/to/config:/etc/odoo -v e:/dockdatavolume/odoo/to/addons:/mnt/extra-addons -p 127.0.0.1:8070:8069 --name odoo --link db:db -t odoo 
 
 
 Run multiple Odoo instances 
@@ -120,6 +120,17 @@ $ docker run -p 127.0.0.1:8070:8069 --name odoo2 --link db:db -t odoo
 $ docker run -p 127.0.0.1:8071:8069 --name odoo3 --link db:db -t odoo
 
 Please note that for plain use of mails and reports functionalities, when the host and container ports differ (e.g. 8070 and 8069), one has to set, in Odoo, Settings->Parameters->System Parameters (requires technical features), web.base.url to the container port (e.g. 127.0.0.1:8069).
+
+
+使用Docker中的Odoo
+========================================================================
+
+通常重启电脑后，需要重新启动DB，ODOO
+
+使用 docker attach 可以进入容器，在屏上看到后台输出的内容。
+
+使用以下命令，快速建立开发模块在外挂的数据卷
+docker run odoo odoo scaffold Academy /mnt/extra-addons/academy
 
 
 环境变量

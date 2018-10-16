@@ -1,0 +1,12 @@
+﻿
+
+
+2018-04-01
+------------------------------------------------------------------------
+
+userid: holts@mentholatum.com.cn
+Description of problem:
+新旧系统切换
+To resolve:
+
+E1启用，旧JDE系统停用，用户只能查询

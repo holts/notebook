@@ -1,4 +1,15 @@
 ﻿
+
+
+
+insert e1user(userid,name,grp,grpname,corp,addrno,status)
+SELECT  rtrim(userid) ,rtrim(case when addno=0 then name2 else username end) as username,
+rtrim(grp),rtrim(grpname),  666, addno ,  rtrim(status)
+ FROM OPENROWSET('Microsoft.Ace.OLEDB.12.0', 
+   'Excel 12.0;Database=D:\holts\e1user.xlsx', userlist$)
+
+
+
 提取系统当前用户
 ------------------------------------------------------------------------
 DSPUSRPRF USRPRF(*ALL) OUTPUT(*OUTFILE) outfile(temp/user)

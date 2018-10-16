@@ -1,0 +1,59 @@
+﻿
+
+2018-06-22
+------------------------------------------------------------------------
+userid: Luomulian(罗木连) <Luomulian@mentholatum.com.cn>
+Description of problem:
+因原供应商标签厂正博后续要搬迁至集团下的深圳正峰，并关闭东莞正博。
+所以我们原来在正博生产所有包材需要转到新增供应商正峰，希望IT在JDE系统做出以下调整：
+
+1.请帮忙把正博的所有包材单价信息转到正峰
+2.正博的所有包材的类别码信息也同步由“ZB”转为”ZF”
+
+To resolve:
+
+insert into proddta.f41061 (CBMCU,CBAN8,CBITM,CBLITM,CBAITM,
+ CBCATN,CBDMCT,CBDMCS,CBKCOO,CBDOCO,CBDCTO,CBLNID,CBCRCD,
+ CBUOM,CBPRRC,CBUORG,CBEFTJ,CBEXDJ,CBUSER,CBPID,
+ CBJOBN,CBUPMJ,CBTDAY)
+select  CBMCU, 90130526 as CBAN8,CBITM,CBLITM,CBAITM,
+ CBCATN,CBDMCT,CBDMCS,CBKCOO,CBDOCO,CBDCTO,CBLNID,CBCRCD,
+ CBUOM,CBPRRC,CBUORG,CBEFTJ,CBEXDJ,CBUSER,CBPID,
+ CBJOBN,CBUPMJ,CBTDAY
+ from proddta.f41061 
+ where cban8=90130384
+
+update  proddta.f4102 set ibshcn='ZF'
+ where ibmcu='  ZZS0760210'  
+  and ibshcn='ZB'
+
+
+
+2018-05-30
+------------------------------------------------------------------------
+
+userid: yejinping（叶金平） <yejinping@mentholatum.com.cn>
+Description of problem:
+月结锁帐号操作方式
+To resolve:
+
+需要停用的用户清单表(proddta.users_monthend)
+维护此清单中的用户号字段即可
+ 
+锁帐号，执行如下SQL：
+lockusers
+
+执行完后，查看表users_monthend.FLOG，如果为N，表示清单中的帐号原本不为01状态，将不会被更新到04
+
+解锁帐号，执行如下SQL:
+unlockuser
+
+users_monthend.FLOG字段为N的不会被解锁
+
+begin
+  jde.mgrtools.lockusers;
+end;
+
+------------------------------------------------------------------------
+
+

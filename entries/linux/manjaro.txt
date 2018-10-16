@@ -1,0 +1,289 @@
+﻿.. 关于manjaro的安装设置
+
+========================================================================
+Manjaro Linux
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+
+准备工作
+========================================================================
+
+下载系统ISO，存放到某个FAT32分区的根目录下
+从ISO中的文件夹“manjaro/boot/ x86_64 /”中提取出vmlinuz和initramfs.img，并存放到ISO文件相同的位置下（如果下载的ISO不是64位的，高亮的地方就不是“x86_64”啦~）
+
+编辑grub的menu.lst，添加启动项
+
+这部分跟ubuntu或其他的系统的引导不大一样，有一个“misolabel”（引导archlinux也有这个不过名字不一样）
+
+title install manjaro
+find --set-root --ignore-floppies --ignore-cd /initramfs.img
+kernel /vmlinuz  misolabel=MJRO170 boot=casper iso-scan/filename=/manjaro-xfce-17.0-stable-x86_64.iso locale=zh_CN.UTF-8
+initrd /initramfs.img
+
+注意将高亮的ISO文件名部分改成自己下载的ISO的文件名
+    “MJRO170”：在windows下用虚拟光驱挂载后看到的对应驱动器的名字就是
+
+
+grub启动到manjaro live系统
+========================================================================
+
+重启机器，用install manjaro入口，届时会因为找不到iso而停下来，并给出一个命令行提示符
+
+手动加载iso，在命令行中依次执行下列命令：
+
+mkdir /iso
+mount -r -t vfat /dev/sda1 /iso
+modprobe loop
+losetup /dev/loop6 /iso/manjaro-xfce-17.0-stable-x86_64.iso
+ln -s /dev/loop6 /dev/disk/by-label/MJRO170
+exit
+
+如果ISO文件所在分区是ntfs格式，就把vfat改为ntfs
+“sda1”改成iso文件所在分区对应的设备，如果不确定可以用blkid命令查看
+输入exit命令后就会进入到manjaro的live系统(跟ubuntu类似); 如果ISO文件是放在移动硬盘里面，可能启动会失败或启动后不能正常安装，所以建议将ISO文件存到电脑的硬盘中
+
+
+安装系统
+
+启动到Live系统后，可以开始图形化界面的安装过程啦
+
+
+安装中文输入法:
+sudo pacman -S fcitx-im  fcitx-configtool
+sudo mousepad /etc/profile
+
+编辑~/.xprofile文件添加下面的文本
+
+export LANG="zh_CN.UTF-8"
+export XMODIFIERS="@im=fcitx"
+export GTK_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export DefaultIMModule=fcitx
+
+输入法需重启后才生效，可以按ctrl+space键切换输入法
+
+
+启用AUR仓库安装wps-office
+
+    运行manjaro的gui软件管理器：“系统”–>”添加/删除软件”
+    展开右上角的菜单栏，点“首选项”，在弹出的配置界面中启用AUR即可
+    在AUR中搜索wps-office，如下图： 
+
+    勾选后点应用
+
+
+PS
+
+1. 经试验，发现ISO文件可以放在NTFS分区，但是其他文件不能在NTFS分区
+
+2. manjaro除了正式的xfce和kde版，还有很多社区发布版（包括Cinnamon、gnome、lxqt、deepin等）也很值得一试哦 https://manjaro.org/community-editions/
+
+
+更换国内源
+========================================================================
+
+由于manjaro是滚动更新的，所以为了接下来以及今后的更新不会卡网速，我们首先将更新源改到国内, 就两行命令搞定：
+
+sudo pacman-mirrors -q stable -c China  //选择中国源并更新
+sudo pacman -Syyu  //更新系统
+
+
+也可以用下面的方法手动指定想要使用的源
+
+    创建一个名为 /etc/pacman.d/mirrors/Custom 的文件，并在里面加入：
+
+##
+## Pacman Mirrorlist
+##
+
+[Custom]
+Server = http://mirrors.tuna.tsinghua.edu.cn/manjaro/stable/$repo/$arch
+Server = https://mirrors.ustc.edu.cn/manjaro/stable/$repo/$arch
+# 目前中国有四个源我去除了两个实际速度不加的，查看官方的源列表 http://repo.manjaro.org/
+# 可以加入其它的软件源，格式与这个类似。
+
+
+保存后接着编辑 /etc/pacman-mirrors.conf ，使 pacman-mirrors 只对这个文件列出的镜像站进行排行：
+
+OnlyCountry = Custom
+
+如果需要关闭测速则进一步修改
+
+Method=random
+
+保存后终端执行
+sudo pacman-mirrors -g
+
+
+更新系统
+
+上面对软件源的各种折腾无非是为了更新时能够快一些，而我在安装完成之后没记错的话有近千个更新需要安装。
+终端输入下面的命令然后等待更新就好了
+
+sudo pacman -Syu
+
+
+字体美化
+========================================================================
+
+简单说就是开启抗锯齿，显示调整为略微，次像素RGB。我用的谷歌思源黑体，想用这个字体可以输入
+sudo pacman -S noto-fonts-cjk
+进行安装，再在字体里选用。
+
+
+接下来还要做一些微小的工作提升字体显示效果：
+(1）新建文件：/etc/fonts/local.conf
+sudo nano /etc/fonts/local.conf
+把以下代码黏贴到文件里：
+<match target="font">
+<edit name="autohint" mode="assign">
+<bool>true</bool>
+</edit>
+
+<edit name="hinting" mode="assign">
+<bool>true</bool>
+</edit>
+
+<edit mode="assign" name="hintstyle">
+<const>hintslight</const>
+</edit>
+
+<edit mode="assign" name="lcdfilter">
+<const>lcddefault</const>
+</edit>
+</match>
+
+2）打开/新建~/.Xresources文件：nano ~/.Xresources删除文件里原有内容（如果有的话），把以下代码黏贴进去：
+Xft.dpi: 96
+Xft.antialias: true
+Xft.hinting: true
+Xft.rgba: rgb
+Xft.autohint: false
+Xft.hintstyle: hintslight
+Xft.lcdfilter: lcddefault
+然后Ctrl+X保存文件并退出。
+（3）在终端运行以下命令：xrdb -merge ~/.Xresources
+（4）请确保在字体设置里开启抗锯齿，显示调整为略微，次像素RGB。
+（5）重启系统，你就会看到效果了。
+
+
+----
+
+在安装桌面环境/窗口管理器之前，也许你会先安装些美观的字体。Dejavu 是不错的字体集。英文字体优先选择dejavu字体
+
+# pacman -S ttf-dejavu
+
+对于中文字体，开源的文泉驿正黑矢量字体是不错的选择，它还内嵌了9pt-12pt的点阵宋体：
+
+# pacman -S wqy-zenhei
+
+当然现在流行的是安装1个字体:
+
+# pacman -S wqy-microhei
+
+对于经常使用虚拟终端的用户，可以通过配置字体提高可读性
+
+sudo pacman -S netease-cloud-music
+
+
+URxvt的配置
+========================================================================
+
+!!$HOME/.Xresources
+URxvt.preeditType:Root
+
+! default input method
+URxvt.inputMethod:fcitx
+
+! color setup
+URxvt.depth:32
+
+URxvt.inheritPixmap:true
+URxvt.background:#282A36
+URxvt.foreground:#F8F8F2
+URxvt.colorBD:Gray95
+URxvt.colorUL:Green
+URxvt.color1:Red2
+URxvt.color4:RoyalBlue
+URxvt.color5:Magenta2
+URxvt.color8:Gray50
+URxvt.color10:Green2
+URxvt.color12:DodgerBlue
+URxvt.color14:Cyan2
+URxvt.color15:Gray95
+
+! default web brower
+URxvt.urlLauncher:/usr/bin/google-chrome-stable
+URxvt.matcher.button:1
+Urxvt.perl-ext-common:matcher
+
+! scroll bar setting
+URxvt.scrollBar:False
+URxvt.scrollBar_floating:False
+URxvt.scrollstyle:plain
+
+! scroll screen setting
+URxvt.mouseWheelScrollPage:True
+URxvt.scrollTtyOutput:False
+URxvt.scrollWithBuffer:True
+URxvt.scrollTtyKeypress:True
+
+! cursor splash
+URxvt.cursorBlink:True
+URxvt.saveLines:3000
+
+! border setting
+URxvt.borderLess:False
+
+! font setting 这里的字体系统中一定要已经安装
+URxvt.font:xft:Droid\ Sans\ Mono\ For\ Powerline:regular:size=10,xft:WenQuanYi Micro Hei Mono:regular:size=13:minispace=true
+
+
+让软件自动归类到Workspace下
+========================================================================
+
+所谓自动归类，拿Terminal举例，不管你在哪一个工作区按下了打开终端的快捷键，Terminal都会在你指定的工作区内打开。这样做的好处是，你可以把多个终端集中到一个workspace里面。那么这功能到底如何实现呢？
+首先你得知晓一点，关于i3wm所有的配置都是在～/.i3/config文件里面。打开配置文件之后，你会发现里面有很多预定的配置，实现上面的功能你需要做以下的几步：
+
+    为workspace绑定快捷键mod+1，并定义变量名ws1
+bindsym $mod+1 workspace $ws1
+
+在特定的workspace里面打开应用，这里我使用的终端是URxvt
+
+assign [class="URxvt"] $ws1
+
+我的~/.i3/config配置文件自定义部分如下
+
+# Workspace names # to display names or symbols instead of plain workspace numbers you can use # something like: set $ws1 1:mail # set $ws2 2:? set $ws1 "Terminal ?" set $ws2 "Chrome ?" set $ws3 "Androidstudio ?" set $ws4 "Video ?" set $ws5 5 set $ws6 6 set $ws7 7 set $ws8 8 # switch to workspace bindsym $mod+1 workspace $ws1 bindsym $mod+2 workspace $ws2 bindsym $mod+3 workspace $ws3 bindsym $mod+4 workspace $ws4 bindsym $mod+5 workspace $ws5 bindsym $mod+6 workspace $ws6 bindsym $mod+7 workspace $ws7 bindsym $mod+8 workspace $ws8 # Move focused container to workspace bindsym $mod+Ctrl+1 move container to workspace $ws1 bindsym $mod+Ctrl+2 move container to workspace $ws2 bindsym $mod+Ctrl+3 move container to workspace $ws3 bindsym $mod+Ctrl+4 move container to workspace $ws4 bindsym $mod+Ctrl+5 move container to workspace $ws5 bindsym $mod+Ctrl+6 move container to workspace $ws6 bindsym $mod+Ctrl+7 move container to workspace $ws7 bindsym $mod+Ctrl+8 move container to workspace $ws8 # Move to workspace with focused container bindsym $mod+Shift+1 move container to workspace $ws1; workspace $ws1 bindsym $mod+Shift+2 move container to workspace $ws2; workspace $ws2 bindsym $mod+Shift+3 move container to workspace $ws3; workspace $ws3 bindsym $mod+Shift+4 move container to workspace $ws4; workspace $ws4 bindsym $mod+Shift+5 move container to workspace $ws5; workspace $ws5 bindsym $mod+Shift+6 move container to workspace $ws6; workspace $ws6 bindsym $mod+Shift+7 move container to workspace $ws7; workspace $ws7 bindsym $mod+Shift+8 move container to workspace $ws8; workspace $ws8 # Open applications on specific workspaces assign [class="URxvt"] $ws1 assign [class="Google-chrome"] $ws2 assign [class="jetbrains-studio"] $ws3 # assign [class="Skype"] $ws5 # autostart program # exec xrandr --output HDMI2 --off --output HDMI1 --mode 1920x1080 --pos 0x0 --rotate normal --output DP1 --off --output eDP1 --off --output VIRTUAL1 --off # exec_always urxvt # exec_always fcitx # exec_always fluxgui
+
+
+科学上网
+========================================================================
+
+
+
+
+Zathura：一款基于 Poppler 库的 pdf 阅读器，用法有 vim 的特色。
+
+

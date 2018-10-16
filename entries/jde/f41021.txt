@@ -18,3 +18,27 @@ from f41021 where limcu ='  ZZS0760210'
   and lipbin='P'   and lilotn= ''                    
   and liitm in (select imitm from f4101 where imlitm 
        = 'ME70609045')                                                            
+
+
+========================================================================
+
+insert into f41021 (liitm,      lilocn,lilotn,lipbin,       
+ liglpt,lilots, lilrcj, lipqoh,                             
+ liuser, lipid,lijobn,liupmj,litday,limcu)                  
+select liitm,      lilocn,       lilotn,        lipbin,     
+ liglpt,lilots, lilrcj, 0 as  lipqoh,                       
+ liuser, lipid,lijobn,liupmj,litday  ,'  ZSH0210233'        
+from f41021 where                                           
+limcu ='  ZGZ0200241'  and lipbin='P'                       
+                                                            
+========================================================================
+
+
+insert into f41021 (liitm, lilocn,lilotn,lipbin, liglpt,lilots, 
+ lilrcj, lipqoh, liuser, lipid,lijobn,liupmj,litday,limcu)                  
+select liitm,  'D03' as lilocn,  lilotn,  lipbin, liglpt,lilots,
+  lilrcj, 0 as lipqoh, liuser, lipid,lijobn,liupmj,litday, limcu       
+from f41021 where limcu ='  ZZS0760210'  and lilocn='4' and 
+ liitm || lilotn || lilocn   not in 
+ (select liitm || lilotn || lilocn from f41021
+   where limcu='  ZZS0760210' and lilocn='D03')         

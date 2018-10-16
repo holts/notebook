@@ -25,16 +25,20 @@ Bunsenlabs Linux
 .. section-numbering::
 
 
-由于bunsenlabs linux 对中文的支持不好,在安装时建议用英文安装,安装完成后,首次进入系统会执行bl-welcome, 引导用户升级及安装一些必要的软件,大约占用3.5G的空间.
-
-
-自动挂载NTFS分区
+安装bunsenlabs helium
 ========================================================================
 
+直接从官网下的ISO文件，采用硬盘安装方式, 从http://ftp.nl.debian.org/debian/dists/stable/main/installer-amd64/current/images/hd-media/下载引导文件，在gurb4dos按如下方式引导安装。
 
+title  bunsenlabs install
+find --set-root --ignore-floppies --ignore-cd  /debianboot
+kernel   /vmlinuz boot=casper noacpi iso-scan/filename=/debian-7.2.0-amd64-CD-1.iso ro quiet splash 
+initrd  /initrd.gz
+boot
 
-安装中文区域设置(locale)
-========================================================================
+安装过程比较简单，基本是一路回车，由于对中文支持不好，选的是英文安装，国家也选的是美国，时区随意选了个，待安装完成后，首次进入系统后，Alt+Ctrl+1切换控制台用Root登入系统执行以下安装。
+
+dpkg-reconfigure tzdata    更改时区为亚州的上海
 
 dpkg-reconfigure locales
 
@@ -47,31 +51,227 @@ zh_CN.UTF-8
 zh_TW.BIG5
 zh_TW.UTF-8
 
+这时重启后，我的电脑有一部分变成了中文，但是我希望全部显示为英文，所以进行如下操作：
+vim /etc/default/locale    把文本的内容替换为：
+LANG="en_US.UTF-8"
+LANGUAGE="en_US:en"
+
 建议系统默认区域设置还是设成"en_US.UTF-8"
 
-安装必要的字体包
+在安装时建有Root用户和普通用户，普通用户是没有sudo权限的，而Root用户又不能登入到图型桌面，所以需要将普通用户增加sudo,　方便使用时随时安装系统。
+
+例如我的用户名是cycong
+su    登录到root
+visudo    进入sudo配置，找到“root ALL=(ALL:ALL) ALL”，在此行下追加一行，追加后结果如下：
+root ALL=(ALL:ALL) ALL
+cycong ALL=(ALL:ALL) ALL
+
+bl-welcome
 ========================================================================
 
-首先，我们的字体美化依赖 Droid 系列字体，因此我们首先安装这个软件包： ttf-droid。
+首次进入桌面，会在自动打开终端执行bl-welcome,先按q退出，把以下163的数据源
 
-有了这个字体，对于日常工作和生活而言已经非常足够了。如果你还需要更多中文字体的话，推荐可以安装“文泉驿正黑”，“文泉驿点阵宋体”等。文泉驿的安装包已经进入了 Debian/Ubuntu，直接安装 ttf-wqy-zenhei 就可以了。如果想直接使用点阵宋体的话，可以安装 xfonts-wqy。另外，还可以通过 ttf-wqy-microhei 安装文泉驿微米黑，那是一个 Droid 系列字体衍生出来的字体，效果也不错。
+# 163
+deb http://mirrors.163.com/debian/ stretch main non-free contrib
+deb http://mirrors.163.com/debian/ stretch-updates main non-free contrib
+deb http://mirrors.163.com/debian/ stretch-backports main non-free contrib
+deb-src http://mirrors.163.com/debian/ stretch main non-free contrib
+deb-src http://mirrors.163.com/debian/ stretch-updates main non-free contrib
+deb-src http://mirrors.163.com/debian/ stretch-backports main non-free contrib
+deb http://mirrors.163.com/debian-security/ stretch/updates main non-free contrib
+deb-src http://mirrors.163.com/debian-security/ stretch/updates main non-free contrib
 
-除了文泉驿系列字体外，比较流行的免费中文字体还有文鼎提供的楷体和上海宋，包名分别是： ttf-arphic-ukai 和 ttf-arphic-uming。把这些字体都装上之后，应该就已经具备一个基本能用的中文环境了。
+贴到 /etc/apt/sources.list，然后在终端执行bl-welcome
 
 
-sudo apt-get install ttf-droid ttf-wqy-zenhei xfonts-wqy ttf-wqy-microhei ttf-arphic-ukai ttf-arphic-uming xfonts-intl-chinese
+sudo apt-get install vim vim-gtk
 
-ttf-droid
-ttf-arphic-ukai
-ttf-arphic-uming
+由于bunsenlabs默认的文本编辑器是geany,很不习惯，按以下方式将它改为熟习的VIM
+
+Openbox Main Menu → Help → Bunsen Help Files → About Bunsen Alternatives
+
+将bl-cli-editor的默认程序指定为VIM
+
+卸载无用的软件：
+sudo apt-get remove --purge geany nano
+sudo apt-get autoclean
+
+安装中文字体包
+========================================================================
+
+我们的字体美化依赖 Droid 系列字体，因此我们首先安装这个软件包： ttf-droid。 英文字体优先选择dejavu字体.
+
+sudo apt-get install ttf-droid
+
+有了这个字体，对于日常工作和生活而言已经非常足够了。如果你还需要更多中文字体的话，推荐可以安装“文泉驿正黑”，“文泉驿点阵宋体”等。文泉驿的安装包已经进入了 Debian/Ubuntu，直接安装 ttf-wqy-zenhei 就可以了。如果想直接使用点阵宋体的话，可以安装 xfonts-wqy。另外，还可以通过 ttf-wqy-microhei 安装文泉驿微米黑，那是一个 Droid 系列字体衍生出来的字体，效果也不错。装上这些字体后，应该就已经具备一个基本能用的中文环境了。
 
 字体的美化
 ========================================================================
 
-修改字体配置文件
+Debian9默认的字体渲染并不是很好。可以安装Infinality字体工具以改善字体渲染, 有現成的(http://tieba.baidu.com/p/5023690780) Debian 9 字体渲染 Use Infinality For Fonts Rendering 。
 
-将以下内容写到存放到你的home目录下，命名为 .fonts.conf，就可以了。
-?
+Infinality的官方网站(https://github.com/Infinality/fontconfig-infinality/tree/master/infinality)现在并不接受公众访问。而且据我的了解，Infinality字体工具没有官方的deb包提供Debian用户安装。然而，launchpad网站的slow这位童鞋在维护Infinality PPA(https://launchpad.net/~no1wantdthisname/+archive/ubuntu/ppa)。我们可以用这个PPA在Debian8系统上安装Infinality。虽然launchpad是由ubuntu母公司canonical为ubuntu创建的，但我们同样可以在Debian系统上使用PPA安装软件包。只要配置好对应版本，解决依赖问题就行了。 
+
+在终端中执行下面的命令（一个一个执行每一行之后敲击回车）
+
+echo "deb http://ppa.launchpad.net/no1wantdthisname/openjdk-fontfix/ubuntu bionic main" | sudo tee /etc/apt/sources.list.d/infinality.list 
+echo "deb-src http://ppa.launchpad.net/no1wantdthisname/openjdk-fontfix/ubuntu bionic main" | sudo tee -a /etc/apt/sources.list.d/infinality.list
+
+我选择了ubuntu18.04 bionic 这个版本的Infinality，在Debian9系统上安装不存在依赖问题。
+
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E985B27B 
+这一步导入这个PPA的PGP公钥，以便下载完软件包后可以验证完整性。
+
+执行以下命令来升级你的系统并安装 Infinality 包
+
+sudo apt-get update 
+sudo apt-get upgrade 
+
+sudo apt-get install fontconfig-infinality 
+
+运行下面的命令，选择你喜欢的字体风格。
+
+sudo bash /etc/fonts/infinality/infctl.sh setstyle
+
+你可以看到，你可以使Debian9字体模拟infinality, linux, os x和windows字体的风格。这里选择的是第6个：Win7风格。但你可以尝试其他的字体风格。
+
+另外，你可以选择一个更加具体的字体风格。运行下面的命令
+
+sudo vim /etc/profile.d/infinality-settings.sh
+
+找到下面这一行文字
+
+USE_STYLE="DEFAULT"
+
+将DEFAULT更改为WINDOWS7
+
+重启你的计算机
+
+
+
+
+
+安装中文输入法
+========================================================================
+
+sudo apt-get install fcitx fcitx-table-wbpy fcitx-config-gtk 
+
+vim /etc/X11/Xsession.d/95im_init    创建文件并添加以下内容：
+export LANG=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+export XMODIFIERS=@im=fcitx
+fcitx &
+重启后，就可以在Applications->Settings->Fcitx Configuration，配置输入法
+
+
+
+
+
+
+
+安装远程连接软件Rdesktop：
+sudo apt-get install rdesktop
+目标计算机如果是Windows，需要去掉“仅允许运行使用网络级别身份认证的远程桌面计算机的连接”
+使用方法：
+1.rdesktop -f 192.168.X.XXX    这是全屏的，退出全屏的快捷键是ctrl+alt+enter
+2.rdesktop -g 1366x768  192.168.X.XXX    这是指定分辨率的
+
+
+
+
+安装shadowsocks客户端
+========================================================================
+
+使用 simple-obfs 混淆时，请确认服务端同样开启了混淆功能。以下的所有命令，都是针对 Debian 9 Stretch，并在 root 用户下执行的。
+
+添加 stretch-backports：
+
+sh -c 'printf "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/stretch-backports.list'
+
+apt update
+
+安装 shadowsocks-libev 和 simple-obfs：
+
+apt -t stretch-backports install shadowsocks-libev simple-obfs -y
+
+
+编辑配置文件：
+
+vim /etc/shadowsocks-libev/config-obfs.json
+
+/etc/shadowsocks-libev/config-obfs.json
+
+{
+    "server":"服务器地址",
+    "server_port":端口,
+    "local_port":1080,
+    "password":"密码",
+    "timeout":60,
+    "method":"aes-256-gcm",
+    "mode":"tcp_and_udp",
+    "fast_open":false,
+    "plugin":"obfs-local",
+    "plugin_opts":"obfs=http;obfs-host=混淆用的域名"
+}
+
+
+激活服务，以便开机自动启动：
+
+systemctl enable shadowsocks-libev-local@config-obfs
+
+启动服务：
+
+systemctl start shadowsocks-libev-local@config-obfs
+
+查看服务状态：
+
+systemctl status shadowsocks-libev-local@config-obfs
+
+至此，对客户端的配置完成，代理服务在 localhost:1080 上。
+
+＝＝＝＝＝＝＝＝
+
+ShadowSocks客户器端linux版有python和libdev两种方式，首选安装python版的
+
+sudo apt-get install python-pip
+sudo pip install shadowsocks
+注意，如果执行的时候报错了，可能是你没有安装“setuptools”,安装一下即可。 
+
+用以上命令执行不成功，改成以下方式安装成功了
+sudo esay_install shadowsocks
+
+配置客户端，配置文件一般放到 /etc下面，为方便修改和维护我把它放在/home/holts/Shadowsocks/shadowsocks.json
+
+vi ./Shadowsocks/shadowsocks.json
+
+然后在shadowsocks.json里面添加配置信息，如：
+
+{
+  "server":"my_server_ip",
+  "local_address": "127.0.0.1",
+  "local_port":1080,
+  "server_port":my_server_port,
+  "password":"my_password",
+  "timeout":300,
+  "method":"aes-256-cfb"
+}
+
+配置文件的路径改成自己的，如：/etc/shadowsocks.json
+
+前端启动：sslocal -c /home/xx/Software/ShadowsocksConfig/shadowsocks.json；
+后端启动：sslocal -c /home/xx/Software/ShadowsocksConfig/shadowsocks.json -d start；
+后端停止：sslocal -c /home/xx/Software/ShadowsocksConfig/shadowsocks.json -d stop；
+重启(修改配置要重启才生效)：sslocal -c /home/xx/Software/ShadowsocksConfig/shadowsocks.json -d restart
+
+
+
+
+修改字体配置文件
+========================================================================
+
+和若干年前比起来，目前 Debian/Ubuntu 默认的字体配置效果已经非常好了，如果觉得已经满意了的话，完全就可以使用默认配置，不需要再做什么额外设置。如果想获得更好一些的效果的话，可以参考以下滇狐自己的字体配置文件。将以下内容写到存放到你的家目录下，命名为 .fonts.conf，就可以了。
+ 
+
 <?xmlversion='1.0'encoding='utf-8'?>
 <!DOCTYPE fontconfig SYSTEM 'fonts.dtd'>
 <fontconfig>
@@ -89,6 +289,7 @@ ttf-arphic-uming
 <family>WenQuanYi Zen Hei</family>
 </prefer>
 </alias>
+
 <alias>
 <family>sans-serif</family>
 <prefer>
@@ -103,6 +304,7 @@ ttf-arphic-uming
 <family>AR PL ShanHeiSun Uni</family>
 </prefer>
 </alias>
+
 <alias>
 <family>monospace</family>
 <prefer>
@@ -117,6 +319,7 @@ ttf-arphic-uming
 <family>AR PL ShanHeiSun Uni</family>
 </prefer>
 </alias>
+
 <!-- Default Alias -->
 <alias>
 <family>DejaVu Sans</family>
@@ -124,6 +327,7 @@ ttf-arphic-uming
 <family>sans-serif</family>
 </default>
 </alias>
+
 <!-- Generic font families -->
 <matchtarget="pattern">
 <testname="family"qual="any">
@@ -141,6 +345,7 @@ ttf-arphic-uming
 <string>DejaVu Sans</string>
 </edit>
 </match>
+
 <matchtarget="pattern">
 <testname="family"qual="any">
 <string>monospace</string>
@@ -244,70 +449,52 @@ ttf-arphic-uming
 </edit>
 </match>
 <dir>~/.fonts</dir>
+
 </fontconfig>
 
-Konsole 字体
-
-Konsole 下还是坚持使用 DejaVu Sans Mono 字体，那个字体更适合工作。
-Chrome
-
-Chrome 的字体渲染原则很奇怪，如果我们直接使用默认配置的话，它会选择一个很奇怪的日文字体来渲染中文，对于日文字体里不存在的中文文字，它又会 Fallback 到另外一个奇怪的中文字体上。滇狐目前没太多时间和精力来详细调查这个现象，
-
-解决这个问题最简单的方法就是把 Chrome 里的默认字体和 Sans 字体全都强制指定“Droid Sans Fallback”上，效果还不错。至于 Serif 字体，我们可以使用“Droid Serif”，Monospace 字体就用“Droid Sans Mono”，这样风格比较统一。
+　　
+修改完字体配置后，中文的显示效果应该可以上很大一个层次。但是，为了得到更好的效果，我们还需要对具体应用程序里的字体进行更多配置。
 
 
-安装中文输入法
+
+---------
+
+Debian8Infinality 美化
+
+https://www.linuxdashen.com/debian8%E5%AE%89%E8%A3%85infinality%E6%94%B9%E5%96%84%E5%AD%97%E4%BD%93%E6%B8%B2%E6%9F%93%EF%BC%8C%E5%AE%89%E8%A3%85ubuntu%E5%AD%97%E4%BD%93
+Debian8安装Infinality改善字体渲染，安装Ubuntu字体
+
+https://www.linuxdashen.com/debian8%E5%AE%89%E8%A3%85infinality%E6%94%B9%E5%96%84%E5%AD%97%E4%BD%93%E6%B8%B2%E6%9F%93%EF%BC%8C%E5%AE%89%E8%A3%85ubuntu%E5%AD%97%E4%BD%93
+
+https://linux.cn/article-3019-1.html
+
+https://launchpad.net/~no1wantdthisname/+archive/ubuntu/ppa
+
+
+终端字体美化
 ========================================================================
 
-比较流行的Linux下中文输入法是SCIM
+解决终端字体重叠难看问题,终于找到了一些比较好看的终端字体，尤其是 droid sans mono 字体，简直爱死了
 
-apt-get install scim scim-tables-zh
+sudo apt-get install fonts-inconsolata
 
-或者安装小企fcitx输入法
+sudo apt-get install ttf-droid
+sudo apt-get install ttf-dejavu
+sudo apt-get install ttf-liberation
 
-apt-get install fcitx fcitx-table-wbpy
+sudo apt-get install xfonts-terminus
 
-安装完后,重新login后就可以用了,一般默认 ctrl+空格 开启输入界面
-
-
-===
-看到crunchbang的11版出来了，第一时间下载安装，发现没有中文输入法，于是安装了fcitx，但刚开始一直无法正常使用，于是google了一把，最后结合fcitx的wiki与debian的wiki解决了，以下是具体流程
-
-$sudo apt-get install fcitx fcitx-sunpinyin
-$sudo apt-get install fcitx-frontend-gtk2 fcitx-frontend-gtk3 fcitx-frontend-qt4 im-config
-
-然后运行im-config按照提示一步步操作即可
-$im-config
-
-===
-第一步:
-sudo apt-get install fcitx fcitx-sunpinyin  fcitx-ui-classic fcitx-table fcitx-config-common fcitx-config-gtk fcitx-data fcitx-frontend-all fcitx-libs im-config
-
-第二步,然后运行im-config按照提示一步步操作即可
-$im-config
+安装好后就可以在终端->编译->配置文件->编辑里面选择字体和大小了。
 
 
-====
- 默认情况，安装好后Iceweasel是firefox的一个精简版浏览器， 使用的语言是英文，可以通过下面的命令安装中文语言包：
-
-    # sudo apt-get install iceweasel-l10n-zh-cn
-=======
-第一步:在终端下
-
-    sudo apt-get install fcitx fcitx?sunpinyin  fcitx-ui-classic fcitx-table
-
-    sudo apt-get install fcitx-config-common fcitx-config-gtk fcitx-data fcitx-frontend-all fcitx-libs im-config
-
-第二步,然后运行im-config按照提示一步步操作即可
-
-    im-config
+字体
+========================================================================
 
 
 
-=========
 
 conky中文显示及其他
-2014年2月15日 admin 发表评论 阅读评论
+========================================================================
 
 最近将自己电脑上的linux mint换成了crunchbang linux ，周六没事也顺手玩了下conky 。现将遇到几个问题和自己做的一个配置做下总结。由于我的笔记本配置不行，所以花梢的东西都没加，只在conky上展示了一些最实用的东西。如果想找一些比较绚丽的效果的请尽早绕道。
 
@@ -453,71 +640,7 @@ ${color lightgrey}${rss http://gcc.gnu.org/git/?p=gcc.git;a=rss 1440 item_title 
 
 Crunchbang Debian Linux
 =====================
-
-试过十来个发行版了，对我一个不用鼠标的人来说，什么KED，GNOME，Xfce，LXDE等桌面环境一无是处，花哨只会耗系统资源。Debian最小化安装基本系统和前几年安装ArchLinux也差不多了，肯定是不会直接安装上无线网卡驱动的，旅行在外，没网线，更没那些时间折腾，好在，随钥匙包里有个13年时装有Crunchbang的U盘，安装真快捷方便，还自动就装上firmware-iwlwifi固件了。Debian Openbox（桌面管理程序）tint2（小型任务栏）obmenu（轻型菜单）conky（监视器）很符合我的极简口味，只是内核陈旧了，官方也不再支持，要更改些设置，记录、分享一下。
-
-选择英文系统安装，手动分区：/，/boot，/home，swap
-
-swap   4G          ##内存小于4G的为内存的2倍
-/boot   300M
-/          30-50G   ##较大一些并强制主分区
-/home
-其它剩余空间可以划分出一部分给业务应用，根据硬盘大小，按照需要自行分配。
-
-很快就安装成功了，进入系统后，先别根据提示更新、安装相关软件。
-编辑：#vi /etc/apt/sources.list，去掉Crunchbang的更新源地址。
-
-#apt-get remove cb-tint2 tint2conf
-
-#apt-get clean
-#apt-get update
-#apt-get upgrade
-#apt-get dist-upgrade
-
-清理旧版本的软件缓存：
-#apt-get autoclean
-
-#dpkg-reconfigure locales ##设置本地支持的编码，选择：
-
-en_US ISO-8859-1
-zh_TW BIG5
-zh_TW.UTF-8 UTF-8
-zh_CN GB2312
-zh_CN.GBK GBK
-zh_CN.UTF-8 UTF-8
-
-ThinkPad有小红帽了，再设计上个触摸板，很烦人，禁用：
-#vi /etc/profile 添加：
-synclient TouchpadOff=1
-
-安装常用字体，配置字体避免乱码：
-#apt-get install ttf-wqy-microhei
-
-使用fcitx输入法，安装五笔拼音：
-#apt-get install fcitx fcitx-table-wbpy fcitx-tools fcitx-config-gtk2 fcitx-frontend-gtk2 fcitx-ui-classic fcitx-ui-light im-config
-
-安装完成后，运行im-config进行配置。
-
-
-#vim ~/.xinitrc 添加：
-
-export GTK_IM_MODULE=xim
-export QT_IM_MODULE=xim
-export XMODIFIERS="@im=fcitx"
-fcitx &
-
-#vim ~/.config/fcitx/config
-找到：[Program]
-DelayStart=0 ##改成：10
-延时启动，防止状态栏图标显示不正常。
-
-安装所缺的软件：
-#apt-get install pidgin pidgin-hotkeys
-#apt-get install libreoffice
-#apt-get install vim
-#apt-get install shutter
-http://www.linuxidc.com/Linux/2014-07/104337.htm
-
+   
 配置.vimrc
 
 卸载无用的软件：
