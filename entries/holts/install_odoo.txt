@@ -1,0 +1,190 @@
+
+
+安装数据库
+------------------------------------------------------------------------
+
+先在本机(Windows 2008 R2 64) 增加用户
+
+userid:postgres
+psd:Ht&123M@
+
+增加对目录的所有控制权
+E:\Work\PostgreSQL\10\
+
+然后开始安装 PostgreSQL 10.7
+
+Installation Directory: E:\Work\PostgreSQL\10
+Server Installation Directory: E:\Work\PostgreSQL\10
+Data Directory: E:\Work\PostgreSQL\10\data
+Database Port: 5432
+Database Superuser: postgres
+Operating System Account: NT AUTHORITY\NetworkService
+Database Service: postgresql-x64-10
+Command Line Tools Installation Directory: E:\Work\PostgreSQL\10
+pgAdmin4 Installation Directory: E:\Work\PostgreSQL\10\pgAdmin 4
+Stack Builder Installation Directory: E:\Work\PostgreSQL\10
+
+userid:postgres
+psd:Ht&123M@
+
+装完提示数据库 initdb Cluster失败，data目录中没有文件生成
+
+以管理员身份运行 cmd.exe
+runas /user:postgres cmd 
+
+在新打开的窗口中定位到:
+cd e:\work\postgresql\10\bin\
+
+再输入:
+initdb -D "e:\work\postgresql\10\data" -E UTF-8 --locale=English
+
+成功后，检查data文件夹里面多了些文件夹和文件。
+
+安装PostgreSQL服务.
+回到Administrator启动的cmd.exe界面中，输入： 
+cd e:\work\postgresql\10\bin\
+
+再输入
+pg_ctl register -N PostgreSQL -D "e:\work\postgresql\10\data\"
+
+成功后显示：服务“PostgreSQL”已经注册。在服务里面可以找到“PostgreSQL”服务，启动服务成功。
+
+
+在Dos命令行创建用户:odoo，密码:mcl@!
+createuser --createdb --no-createrole --no-superuser --pwprompt odoo
+
+
+安装 Odoo 13 
+------------------------------------------------------------------------
+
+下载 Odoo 13 for windows
+https://www.odoo.com/zh_CN/page/download
+
+选择 All in One 安装，指定安装位置为　E:\Work\Odoo13, 安装过程中会弹出数据库配置参数窗，默认如下配置
+postgresql connection
+
+hostname:localhost
+port:5432
+username:openpg
+password:openpgpwd
+
+
+更改E:\Work\Odoo13\server\odoo.conf以下内容为:
+
+#data_dir = C:\Users\zsadmin\AppData\Local\OpenERP S.A\Odoo
+data_dir = E:\Work\database
+
+#db_password = openpgpwd
+db_password = mcl@!
+#db_user = openpg
+db_user = odoo
+
+
+
+[options]
+addons_path = E:\Work\Odoo13\server\odoo\addons
+admin_passwd = admin
+bin_path = E:\Work\Odoo13\thirdparty
+csv_internal_sep = ,
+data_dir = e:\work\database
+db_host = localhost
+db_maxconn = 64
+db_name = False
+db_password = mcl@!
+db_port = 5432
+db_sslmode = prefer
+db_template = template0
+db_user = odoo
+dbfilter = 
+demo = {}
+email_from = False
+geoip_database = E:\usr\share\GeoIP\GeoLite2-City.mmdb
+http_enable = True
+http_interface = 
+http_port = 8069
+import_partial = 
+limit_memory_hard = None
+limit_memory_soft = None
+limit_request = None
+limit_time_cpu = None
+limit_time_real = None
+limit_time_real_cron = None
+list_db = True
+log_db = False
+log_db_level = warning
+log_handler = :INFO
+log_level = info
+logfile = E:\Work\Odoo13\server\odoo.log
+longpolling_port = 8072
+max_cron_threads = 2
+osv_memory_age_limit = 1.0
+osv_memory_count_limit = False
+pg_path = E:\Work\PostgreSQL\bin
+pidfile = None
+proxy_mode = False
+reportgz = False
+screencasts = None
+screenshots = C:\Users\zsadmin\AppData\Local\Temp\2\odoo_tests
+server_wide_modules = base,web
+smtp_password = False
+smtp_port = 25
+smtp_server = 0.0.0.0 
+smtp_ssl = False
+smtp_user = False
+syslog = False
+test_enable = False
+test_file = False
+test_tags = None
+translate_modules = ['all']
+unaccent = False
+upgrades_paths = 
+without_demo = False
+workers = None
+
+
+运行odoo
+------------------------------------------------------------------------
+
+cd e:\work\odoo13
+python\python server\odoo-bin
+
+http://localhost:8069/
+
+
+通过客户端Web界面建立数据库：
+
+Database Name: demo
+Email: demo@mentholatum.com.cn
+Password: 123123
+Phone number:
+Language: Chines(Simplified)
+Country: China
+Demo data: yes
+
+Load demonstration data
+运行完后，自动进入系统，帐号显示名称是:administrator
+
+退出至登录界面，在最下面多了个管理数据库的键链接，点进去会看到
+
+Warning, your Odoo database manager is not protected.
+Please set master password to secure it.
+
+set master passwrod: 123123db
+
+做了这个设置后，将数据库保护起来，同时查配置问件，发现admin_pass成了加密字串。
+
+
+创建用户
+------------------------------------------------------------------------
+
+userid: demo@mentholatum.com.cn
+password of admin user: 123123
+
+语言：简体中文
+
+user: demo
+psd: demo
+
+user: test
+psd: test
+

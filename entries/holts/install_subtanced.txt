@@ -27,10 +27,22 @@ Install substance d
 安装substance d
 ========================================================================
 
-Once you have Python and virtualenv installed, you can do the following:
 
-$ virtualenv --no-site-packages substanced
-$ cd substanced
+Once you have Python 3.61 and virtualenv installed, you can do the following:
+
+python -m venv substanced
+cd substanced
+scripts\activate
+python -m pip install --upgrade pip
+pip install substanced
+
+或者下载源代码包安装
+git clone https://github.com/PyIons/substanced.git
+
+从下载源代码解压到目录 tmp
+
+cd tmp
+pip install -e .
 
 在windows 2008 sp2下安装substance d, 有些包需要编绎，所以需要建立VC的编绎环境，打开CMD窗口，运行activate启动虚拟环境.
 

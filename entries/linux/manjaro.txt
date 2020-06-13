@@ -29,20 +29,20 @@ Manjaro Linux
 准备工作
 ========================================================================
 
-下载系统ISO，存放到某个FAT32分区的根目录下
-从ISO中的文件夹“manjaro/boot/ x86_64 /”中提取出vmlinuz和initramfs.img，并存放到ISO文件相同的位置下（如果下载的ISO不是64位的，高亮的地方就不是“x86_64”啦~）
+下载系统ISO，存放到某个(FAT32或NTFS)分区的根目录下
+从ISO中的文件夹“/boot/”中提取出vmlinuz_x86_64和initramfs_x86_64.img，并存放到ISO文件相同的位置下（如果下载的ISO不是64位的，文件名中就不是“x86_64”啦~）, 如果ISO文件是放在移动硬盘里面，可能启动会失败或启动后不能正常安装，所以建议将ISO文件存到电脑的硬盘中
+
 
 编辑grub的menu.lst，添加启动项
 
 这部分跟ubuntu或其他的系统的引导不大一样，有一个“misolabel”（引导archlinux也有这个不过名字不一样）
 
 title install manjaro
-find --set-root --ignore-floppies --ignore-cd /initramfs.img
-kernel /vmlinuz  misolabel=MJRO170 boot=casper iso-scan/filename=/manjaro-xfce-17.0-stable-x86_64.iso locale=zh_CN.UTF-8
-initrd /initramfs.img
+find --set-root --ignore-floppies --ignore-cd /initramfs_x86_64.img
+kernel /vmlinuz_x86_64  misolabel=MJRO1804 boot=casper iso-scan/filename=/manjaro-bspwm-18.0.4-unstable-x86_64.iso locale=zh_CN.UTF-8
+initrd /initramfs_x86_64.img
 
-注意将高亮的ISO文件名部分改成自己下载的ISO的文件名
-    “MJRO170”：在windows下用虚拟光驱挂载后看到的对应驱动器的名字就是
+注意将ISO文件名部分改成自己下载的ISO的文件名 “MJRO1804”：在windows下用虚拟光驱挂载后看到的对应驱动器的名字就是
 
 
 grub启动到manjaro live系统
@@ -53,20 +53,19 @@ grub启动到manjaro live系统
 手动加载iso，在命令行中依次执行下列命令：
 
 mkdir /iso
-mount -r -t vfat /dev/sda1 /iso
+mount -r -t vfat /dev/sda1 /iso     
+
+如果ISO文件所在分区是ntfs格式，就把vfat改为ntfs “sda1”改成iso文件所在分区对应的设备，如果不确定可以用blkid命令查看
+
 modprobe loop
-losetup /dev/loop6 /iso/manjaro-xfce-17.0-stable-x86_64.iso
-ln -s /dev/loop6 /dev/disk/by-label/MJRO170
+losetup /dev/loop6 /iso/manjaro-bspwm-18.0.4-unstable-x86_64.iso
+ln -s /dev/loop6 /dev/disk/by-label/MJRO1804  (如果已经有了，这步可以不用)
 exit
 
-如果ISO文件所在分区是ntfs格式，就把vfat改为ntfs
-“sda1”改成iso文件所在分区对应的设备，如果不确定可以用blkid命令查看
-输入exit命令后就会进入到manjaro的live系统(跟ubuntu类似); 如果ISO文件是放在移动硬盘里面，可能启动会失败或启动后不能正常安装，所以建议将ISO文件存到电脑的硬盘中
+输入exit命令后就会进入到manjaro的图型初装界面，开始安装系统。
 
 
-安装系统
-
-启动到Live系统后，可以开始图形化界面的安装过程啦
+如果进入的是live系统，可以从菜单中启动图形界面的安装过程。
 
 
 安装中文输入法:
@@ -91,13 +90,6 @@ export DefaultIMModule=fcitx
     在AUR中搜索wps-office，如下图： 
 
     勾选后点应用
-
-
-PS
-
-1. 经试验，发现ISO文件可以放在NTFS分区，但是其他文件不能在NTFS分区
-
-2. manjaro除了正式的xfce和kde版，还有很多社区发布版（包括Cinnamon、gnome、lxqt、deepin等）也很值得一试哦 https://manjaro.org/community-editions/
 
 
 更换国内源
@@ -280,9 +272,6 @@ assign [class="URxvt"] $ws1
 
 科学上网
 ========================================================================
-
-
-
 
 Zathura：一款基于 Poppler 库的 pdf 阅读器，用法有 vim 的特色。
 

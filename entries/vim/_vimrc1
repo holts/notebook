@@ -1,0 +1,151 @@
+" holts's vimrc.
+
+let s:is_win = has('win32')
+let $v = $HOME.(s:is_win ? '\vimfiles' : '/.vim')
+
+if s:is_win
+  set shell=cmd.exe
+  set shellcmdflag=/c
+else
+  " The fish shell is not very compatible to other shells and unexpectedly
+  " breaks things that use 'shell'.
+  if &shell =~# 'fish$'
+    set shell=/bin/bash
+  endif
+endif
+
+" Put all temporary files under the same directory.
+" https://github.com/mhinz/vim-galore#handling-backup-swap-undo-and-viminfo-files
+set backup
+set backupext     =-vimbackup
+set backupskip    =
+set undofile
+set updatecount   =100
+if has('nvim')
+  set backupdir  -=.
+  set shada       ='100
+else
+  set backupdir   =$v/backup
+  set directory   =$v/swap//
+  set undodir     =$v/undo
+  set viewdir     =$v/view
+  set viminfo     ='100,n$v/info/viminfo
+endif
+
+call plug#begin()
+  Plug 'arcticicestudio/nord-vim'
+  Plug 'vim-airline/vim-airline'
+  Plug 'vim-airline/vim-airline-themes'
+  Plug 'scrooloose/nerdtree'
+call plug#end()
+
+" 禁止生成 swap 恢复文件
+" 早期计算机经常崩溃，vim 会自动创建一个 .swp 结尾的文件
+" 崩溃重启后可以从 .swap 文件恢复
+" 现在计算机鲜少崩溃了，可以禁用此功能
+set noswapfile
+
+" vim 内部使用的编码，默认使用 latin1，改成通用的 utf8 编码，避免乱码
+set encoding=utf-8
+
+" 文件编码探测列表
+" vim 启动的时候会依次使用本配置中的编码对文件内容进行解码
+" 如果遇到解码失败，则尝试使用下一个编码
+" 常见的乱码基本都是 windows 下的 gb2312, gbk, gb18030 等编码导致的
+" 所以探测一下 utf8 和 gbk 足以应付大多数情况了
+set fileencodings=utf-8,gb18030
+
+" You want Vim, not vi. When Vim finds a vimrc, 'nocompatible' is set anyway.
+" We set it explicitely to make our position clear!
+set nocompatible
+
+filetype plugin indent on  " Load plugins according to detected filetype.
+syntax on                  " Enable syntax highlighting.
+
+set autoindent             " Inscrooloose/nerdtree dent according to previous line.
+set expandtab              " Use spaces instead of tabs.
+set smarttab
+set softtabstop =4         " Tab key indents by 4 spaces.
+set shiftwidth  =4         " >> indents by 4 spaces.
+set shiftround             " >> indents to next multiple of 'shiftwidth'.
+
+set backspace   =indent,eol,start  " Make backspace work as you would expect.
+set hidden                 " Switch between buffers without having to save first.
+set laststatus  =2         " Always show statusline.
+set display     =lastline  " Show as much as possible of the last line.
+
+set showmode               " Show current mode in command-line.
+set showcmd                " Show already typed keys when more are expected.
+
+set incsearch              " Highlight while searching with / or ?.
+set hlsearch               " Keep matches highlighted.
+
+set ttyfast                " Faster redrawing.
+set lazyredraw             " Only redraw when necessary.
+
+set splitbelow             " Open new windows below the current window.
+set splitright             " Open new windows right of the current window.
+
+set cursorline             " Find the current line quickly.
+set wrapscan               " Searches wrap around end-of-file.
+set report      =0         " Always report changed lines.
+set synmaxcol   =200       " Only highlight the first 200 columns.
+
+"设置代码折叠功能，用空格键控制折叠开关：
+set foldenable
+set foldmethod=indent
+nnoremap @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')
+
+" 显示相对行号（这个非常重要，慢慢体会）
+set relativenumber
+
+"set list                   " Show non-printable characters.
+
+
+" 显示窗口比较小的时候折行展示，不然需要水平翻页，推荐
+"set linebreak
+
+" 开启 24 位真彩色支持
+" 24位真彩色信息请参考 https://gist.github.com/XVilka/8346728
+set termguicolors
+
+" 高亮第 80 列，推荐
+set colorcolumn=80
+
+" vim 默认的主题确实难看, 换用 nord 主题。
+" https://github.com/arcticicestudio/nord-vim.git  ~/.vim/pack/vendor/start/nord
+" 下载后放到 ~/.vim/pack/vendor/start 就可以了,这里vendor可以随便取名
+
+" 设置主题
+if has('gui_running')
+  if s:is_win
+    "autocmd GUIEnter * simalt ~x
+    set lines=36 columns=86
+    "let &guifont = 'Monaco:h12'
+  endif
+endif
+colorscheme nord
+
+" Airline & Themes 显示更友好的状态栏，再配以漂亮的配色
+" https://github.com/vim-airline/vim-airline
+" ~/.vim/pack/vendor/start/vim-airline
+" https://github.com/vim-airline/vim-airline-themes ~/.vim/pack/vendor/start/vim-airline-themes
+
+" 开启 tab 栏, 应用 `simple` 样式
+"let g:airline#extensions#tabline#enabled=1 
+"let g:airline_theme='simple'
+
+" nerdtree
+" git clone https://github.com/scrooloose/nerdtree ~/.vim/pack/vendor/start/nerdtree
+
+" 执行 :NERDTree  可以在左边打开一个类似文件浏览器的窗口。可以像普通窗口一样移动光标、搜索关键字，惟一的不同是按回车键可以展开文件夹，如果在在文件上按回车则会打开相应的文件。
+" 执行 :NERDTreeToggle 则可以打开或者关闭窗口；执行 :NERDTreeFind 则可以打开管理窗口并将光标定位到当前文件。
+" 因为实在是太常用，我给这两个命令设了两个快捷键：
+nnoremap <silent> <leader>e :NERDTreeToggle<cr>
+nnoremap <silent> <leader>f :NERDTreeFind<cr>
+
+" vim 有个 leader 键，默认这个键是 \。leader 键提供了一个键位空间，防止用户自定义的快捷键覆盖默认键位的功能。推荐大家使用 leader 键。网上有人推荐使用 , 作为 leader 键。真心不推荐，因为 , 是跟 ; 配对，用来重复行内查找的。
+
+" 在这里，当按 \+e 时 vim 打开 NERDTree；按 \+f vim 会打开 NERDTree 并定位到当前文件。非常方便。
+
+

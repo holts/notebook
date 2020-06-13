@@ -1,0 +1,100 @@
+﻿.. 这是一个reStructuredText格式的文档模板
+
+========================================================================
+通过Docker联通windows和linux
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2019/09/27 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+实现框架
+========================================================================
+
+Win10 + Docker <-- 本机共享文件夹Volume --> Ubuntu命令行(in WSL)
+Ubuntu --> remote Docker daemon --> Docker in Windows
+Win10浏览器 --> Docker in Windows --> Ubuntu IP --> Ubuntu内服务
+
+安装Docker in Windows 10
+========================================================================
+
+从官网：https://docs.docker.com/docker-for-windows/install/下载安装。
+
+安装完成后，打开Docker Desktop设置:
+确保勾选：Expose daemon on localhost:2375 without TLS
+
+在Win10 WSL里安装Debian
+========================================================================
+
+在Win10设置里安装，重启后，在微软商店里安装Debian
+
+$ sudo apt-get install curl git neovim
+
+在Debian中安装docker CE
+========================================================================
+ 
+https://docs.docker.com/install/linux/docker-ce/debian/
+
+Set up the repository
+
+$ sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg2 \
+    software-properties-common
+ 
+Add Docker’s official GPG key:
+
+$ curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+
+Verify that you now have the key with the fingerprint 9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88, by searching for the last 8 characters of the fingerprint.
+
+$ sudo apt-key fingerprint 0EBFCD88
+
+$ sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/debian \
+   $(lsb_release -cs) \
+   stable"
+$ sudo apt-get update
+$ sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+# Allow your user to access the Docker CLI without needing root access.
+$ sudo usermod -aG docker $USER
+
+# Install Python and PIP.
+$ sudo apt-get install -y python3 python3-pip
+
+# Install Docker Compose into your user's home directory.
+$ pip3 install --user docker-compose
+
+不通过deamon连接的话，你在Linux里运行docker，就会出现错误，最关键的是这一行命令的最后，打开Bash。
+$ echo "export DOCKER_HOST=tcp://localhost:2375" >> ~/.bashrc && source ~/.bashrc
+
+验证Docker启动成功：
+$ docker info
+$ docker-compose --version
+
+$ docker run hello-world
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+========================================================================
+

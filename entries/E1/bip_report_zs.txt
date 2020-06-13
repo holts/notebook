@@ -24,6 +24,2148 @@ ZS BIP Report
 .. contents:: 内容索引 Table of Contents
 .. section-numbering::
 
+GA
+------------------------------------------------------------------------
+
+select rownum+2017 yyyy, rownum+17 pn from dual connect by rownum<= ((to_char(sysdate,'yyyy'))-2017)
+select rownum pn, lpad(rownum,2,'0') mm  from dual connect by rownum<= 12 
+
+select grp, lineno, DL, sum(case when gblt='AA' then amt else 0.0 end) as PC,
+     sum(case when gblt='AA' then ytd else 0.0 end) as PY,
+     sum(case when gblt='BA' then amt else 0.0 end) as BPC,
+     sum(case when gblt='BA' then ytd else 0.0 end) as BPY,
+     sum(case when gblt='AA' then pamt else 0.0 end) as PPC,
+     sum(case when gblt='AA' then pytd else 0.0 end) as PPY
+   from (           
+    select case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy, mm, gblt,
+       case when yyyy = :p_yyyy then amt else 0 end as amt, 
+       case when yyyy = :p_yyyy then ytd else 0 end as ytd, 
+       case when yyyy = :p_yyyy-1 then amt else 0 end as pamt, 
+       case when yyyy = :p_yyyy-1 then ytd else 0 end as pytd, 
+       '' as grp, 
+      case when gmr025 in ('159.0') then '01'   when gmr025 in ('186.0') then '02' 
+        when gmr025 in ('187.0')	then '03'   when gmr025 in ('188.0') then	'04'
+        when gmr025 in ('189.0') then	'05'  when gmr025 in ('190.0') then '06' 
+        when gmr025 in ('191.0') then '07'  when gmr025 in ('193.0') then '08' 
+        when gmr025 in ('194.0') then '09'  when gmr025 in ('195.0') then	'10' 
+        when gmr025 in ('197.0') then '11'  when gmr025 in ('181.0') then '12'
+        when gmr025 in ('178.0','179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7') then '13'
+        else '' end as lineno,
+      case when gmr025 in ('159.0') then ' Postage ' 
+        when gmr025 in ('186.0') then  ' Ins. - Life ' 
+        when gmr025 in ('187.0')	then '       - Labour '
+        when gmr025 in ('188.0') then 	' Welfare Fund '
+        when gmr025 in ('189.0') then 	' & Housing Pension '
+        when gmr025 in ('190.0')	then ' Recruitment '
+        
+        when gmr025 in ('191.0') then 	' Training '
+        when gmr025 in ('193.0')  then 	' Legal Fee '
+        when gmr025 in ('194.0') then ' Office Cleaning '
+        when gmr025 in ('195.0') then 	' E.D.P. '
+        when gmr025 in ('197.0') then 	' Bank Charges '
+        when gmr025 in ('181.0') then 	' 低值品攤銷 '
+        when gmr025 in ('178.0','179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7')
+        then 	' General Expenses '      else '' end as DL
+      from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA','BA' ) and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+           and   gmr025 in ('159.0','186.0','187.0','188.0','189.0','190.0',
+              '191.0','193.0','194.0','195.0','197.0','181.0','178.0','179.0',
+               '179.1','198.0','198.3','198.4','198.5','198.6','198.7'
+            )
+           
+        ) v_core  group by  grp,lineno,dl 
+
+order by grp, lineno
+
+Selling_expense
+------------------------------------------------------------------------
+
+select grp, lineno, DL, sum(case when gblt='AA' then amt else 0.0 end) as PC,
+     sum(case when gblt='AA' then ytd else 0.0 end) as PY,
+     sum(case when gblt='BA' then amt else 0.0 end) as BPC,
+     sum(case when gblt='BA' then ytd else 0.0 end) as BPY,
+     sum(case when gblt='AA' then pamt else 0.0 end) as PPC,
+     sum(case when gblt='AA' then pytd else 0.0 end) as PPY
+   from (           
+    select case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy, mm, gblt,
+       case when yyyy = :p_yyyy then amt else 0 end as amt, 
+       case when yyyy = :p_yyyy then ytd else 0 end as ytd, 
+       case when yyyy = :p_yyyy-1 then amt else 0 end as pamt, 
+       case when yyyy = :p_yyyy-1 then ytd else 0 end as pytd, 
+       case when gmr025 in ('146.0','147.0','147.1','148.0','149.0','149.1') then '1'
+         else '2' end as grp, 
+      case when gmr025 in ('146.0','147.0','147.1') then '01'   when gmr025 in ('148.0','149.0','149.1') then '02' 
+        when gmr025 in ('150.0','150.1','151.0','185.0')	then '03'   when gmr025 in ('152.0','153.0','153.1') then	'04'
+        when gmr025 in ('154.0','155.0') then	'05'  when gmr025 in ('156.0') then '06' 
+        when gmr025 in ('157.0') then '07'  when gmr025 in ('158.0') then '08' 
+        when gmr025 in ('160.0','197.1') then '09'  when gmr025 in ('161.0','162.0') then	'10' 
+        when gmr025 in ('163.0','164.0') then 	'11'
+        when gmr025 in ('165.0','166.0','166.1') then '12' when gmr025 in ('173.0','198.2','187.1') then '13'
+        when gmr025 in ('167.0','168.0') then '14' when gmr025 in ('169.0') then '15'
+        when gmr025 in ('170.0') then '16' when gmr025 in ('171.0','172.0') then '17'
+        when gmr025 in ('174.0','175.0') then '18' when gmr025 in ('176.0','177.0','177.1') then '19'
+        when gmr025 in ('212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1') then '20' 
+        when gmr025 in ('196.0') then '21'
+        when gmr025 in ('180.0') then '22' when gmr025 in ('') then '23'
+        when gmr025 in ('145.0') then '24'
+        when gmr025 in ('182.0','182.1','182.3','182.4') then '25'
+        when gmr025 in ('143.0','144.0') then '26'  else '' end as lineno,
+      case when gmr025 in ('146.0','147.0','147.1') then 'Advertising' 
+        when gmr025 in ('148.0','149.0','149.1') then  'Promotion' 
+        when gmr025 in ('150.0','150.1','151.0','185.0')	then 'Salary'
+        when gmr025 in ('152.0','153.0','153.1') then 	'Commission'
+        when gmr025 in ('154.0','155.0') then 	'Utility / Management'
+        when gmr025 in ('156.0')	then 'Office Rental'
+        when gmr025 in ('157.0') then 	'Printing / Stationery'
+        when gmr025 in ('158.0')  then 	'Telephone / Fax'
+        when gmr025 in ('160.0','197.1') then 'Travelling Expenses'
+        when gmr025 in ('161.0','162.0') then 	'Delivery Charges'
+        when gmr025 in ('163.0','164.0') then 	'Storage Charges'
+        when gmr025 in ('165.0','166.0','166.1') then 	'Packaging Expenses'
+        when gmr025 in ('173.0','198.2','187.1') then 	'Insurance'
+        when gmr025 in ('167.0','168.0') then 	'I/E Declaration'
+        when gmr025 in ('169.0') then 	'Repair and Maintenance'
+        when gmr025 in ('170.0') then 	'Depreciation - Sales Office F and F'
+        when gmr025 in ('171.0','172.0') then 	'Depreciation - Sales Office Equip.'
+        when gmr025 in ('174.0','175.0') then 	'Bad Debts Reserve'
+        when gmr025 in ('176.0','177.0','177.1') then 	'Free Goods'
+        when gmr025 in ('212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1') then 	'General Expenses'
+        when gmr025 in ('196.0') then 	'Staff Quarter Expenses'
+        when gmr025 in ('180.0') then 	'Entertainment'
+        when gmr025 in ('') then 	'Import Duties进口税'
+        when gmr025 in ('145.0') then 'Consumption Tax消费税'
+        when gmr025 in ('182.0','182.1','182.3','182.4') then 	'Slow Moving Stock'
+        when gmr025 in ('143.0','144.0') then 	'Royalty Fee'  else '' end as DL
+      from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA','BA' ) and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+           and   gmr025 in ('146.0','147.0','147.1','148.0','149.0','149.1',
+            '150.0','150.1','151.0','185.0','152.0','153.0','153.1',
+            '154.0','155.0','156.0','157.0','158.0','160.0','197.1',
+            '161.0','162.0','163.0','164.0','165.0','166.0','166.1',
+            '173.0','198.2','187.1','167.0','168.0','169.0','170.0',
+            '171.0','172.0','174.0','175.0','176.0','177.0','177.1',
+            '212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1',
+            '196.0','180.0','145.0','182.0','182.1','182.3','182.4',
+            '143.0','144.0'
+            )
+           
+        ) v_core  group by  grp,lineno,dl 
+
+order by grp, lineno
+
+G&A expense
+------------------------------------------------------------------------
+
+select grp, lineno, DL, sum(case when gblt='AA' then amt else 0.0 end) as PC,
+     sum(case when gblt='AA' then ytd else 0.0 end) as PY,
+     sum(case when gblt='BA' then amt else 0.0 end) as BPC,
+     sum(case when gblt='BA' then ytd else 0.0 end) as BPY,
+     sum(case when gblt='AA' then pamt else 0.0 end) as PPC,
+     sum(case when gblt='AA' then pytd else 0.0 end) as PPY
+   from (           
+    select case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy, mm, gblt,
+       case when yyyy = :p_yyyy then amt else 0 end as amt, 
+       case when yyyy = :p_yyyy then ytd else 0 end as ytd, 
+       case when yyyy = :p_yyyy-1 then amt else 0 end as pamt, 
+       case when yyyy = :p_yyyy-1 then ytd else 0 end as pytd, 
+       case when gmr025 in ('225.0') then '2' else '1' end as grp, 
+      case when gmr025 in ('200.0','200.1','200.2','200.3','242.0') then '01' 
+        when gmr025 in ('201.0') then '02' when gmr025 in ('202.0')	then '03'
+        when gmr025 in ('203.2') then	'04' when gmr025 in ('204.0') then 	'05'
+        when gmr025 in ('205.0') then '06' when gmr025 in ('206.0') then 	'07'
+        when gmr025 in ('207.0') then '08' when gmr025 in ('203.1','208.0') then '09'
+        when gmr025 in ('209.0') then	'10' when gmr025 in ('210.0') then 	'11'
+        when gmr025 in ('211.0') then '12' when gmr025 in ('213.0') then '13'
+        when gmr025 in ('214.0') then '14' when gmr025 in ('215.0') then '15'
+        when gmr025 in ('216.0') then '16' when gmr025 in ('224.4') then '17'
+        when gmr025 in ('218.0') then '18' when gmr025 in ('219.0') then '19'
+        when gmr025 in ('220.0') then '20' when gmr025 in ('221.0') then '21'
+        when gmr025 in ('222.0') then '22' when gmr025 in ('223.0') then '23'
+        when gmr025 in ('212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1') then '24'
+        when gmr025 in ('217.0') then '25' when gmr025 in ('228.0') then '26'
+        when gmr025 in ('229.0') then '27' when gmr025 in ('230.0') then '28'
+        when gmr025 in ('231.0','233.0') then	'29'  when gmr025 in ('232.0') then	'30'
+        when gmr025 in ('234.0') then	'31'  when gmr025 in ('235.0') then	'32'
+        when gmr025 in ('236.0') then	'33'  when gmr025 in ('226.0') then	'34'
+        when gmr025 in ('202.2') then	'35'  when gmr025 in ('227.0') then	'36'
+        when gmr025 in ('228.1') then	'37'  when  gmr025 in ('225.0') then '38' else '' end as lineno,
+      case when gmr025 in ('200.0','200.1','200.2','200.3','242.0') then 'OFFICE SALARIES' 
+        when gmr025 in ('201.0') then  'PENSIONS' 
+        when gmr025 in ('202.0')	then 'EMPLOYEE - MEDICAL'
+        when gmr025 in ('203.2') then 	'EMPLOYEE - LABOUR INS / LIFE'
+        when gmr025 in ('204.0') then 	'STAFF WELFARE / MEAL ALLOWANCE'
+        when gmr025 in ('205.0')	then 'ENTERTAINMENT'
+        when gmr025 in ('206.0') then 	'RECRUITMENT'
+        when gmr025 in ('207.0')  then 	'TRAINING EXPENSES'
+        when gmr025 in ('203.1','208.0') then 'GASOLINE / VAN EXPENSES'
+        when gmr025 in ('209.0') then 	'LOCAL TRAVELLING'
+        when gmr025 in ('210.0') then 	'OVERSEAS TRAVELLING'
+        when gmr025 in ('211.0') then 	'PRINTING / STATIONERY'
+        when gmr025 in ('213.0') then 	'TELEPHONE'
+        when gmr025 in ('214.0') then 	'FAX'
+        when gmr025 in ('215.0') then 	'IDD TELEPHONE'
+        when gmr025 in ('216.0') then 	'ELECTRICITY'
+        when gmr025 in ('224.4') then 	'OFFICE RENTAL'
+        when gmr025 in ('218.0') then 	'LEGAL and PROFESSIONAL FEE'
+        when gmr025 in ('219.0') then 	'OFFICE CLEANING'
+        when gmr025 in ('220.0') then 	'EDP EXPENSES'
+        when gmr025 in ('221.0') then 	'REPAIR and MAINTENANCE'
+        when gmr025 in ('222.0') then 	'STAFF QUARTER EXPENSES'
+        when gmr025 in ('223.0') then 	'BANK CHARGES'
+        when gmr025 in ('212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1') then 'GENERAL EXPENSES'
+        when gmr025 in ('217.0') then 	'WAREHOUSE RENTAL'
+        when gmr025 in ('228.0') then 	'DEPRECN - LAND USE RENTAL'
+        when gmr025 in ('229.0') then 	'DEPRECN - BUILDING'
+        when gmr025 in ('230.0') then 	'DEPRECN - MOTOR VEHICLES'
+        when gmr025 in ('231.0','233.0') then 	'DEPRECN - OFFICE F and F'
+        when gmr025 in ('232.0') then 	'DEPRECN - OFFICE EQUIP'
+        when gmr025 in ('234.0') then 	'DEPRECN - WAREHOUSE EQUIP'
+        when gmr025 in ('235.0') then 	'DEPRECN - STAFF QUARTER'
+        when gmr025 in ('236.0') then 	'EXCHANGE DIFFERENCE'
+        when gmr025 in ('226.0') then 	'Service charge by MAP'
+        when gmr025 in ('202.2') then 	'Workmen Compensation'
+        when gmr025 in ('227.0') then 	'Staff Welfare -Housing Pension'
+        when gmr025 in ('228.1') then 	'AMORTIZATED EXPENSES'
+        when  gmr025 in ('225.0') then 'R and D EXPENSES' else '' end as DL
+      from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA','BA' ) and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+           and   gmr025 in ('200.0','200.1','200.2','200.3','242.0',
+           '201.0','202.0','203.2','204.0','205.0','206.0','207.0','203.1','208.0',
+           '209.0','210.0','211.0','213.0','214.0','215.0','216.0','224.4','218.0',
+           '219.0','220.0','221.0','222.0','223.0',
+           '212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1',
+           '217.0','228.0','229.0','230.0','231.0','233.0','232.0','234.0','235.0',
+           '236.0','226.0','202.2','227.0','228.1','225.0' )
+                 
+        ) v_core  group by  grp,lineno,dl 
+
+order by grp, lineno
+
+
+BS_CURRENT_ASSETS
+------------------------------------------------------------------------
+
+ select grp, yyyy, mm, DL, sum(yc) as YTD, sum(lastyc) as LastAmt
+   from (
+
+    select '1. CURRENT ASSETS' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+     mm, gmr025, gbobj, case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+       case when yyyy = :p_yyyy - 1 then pyc+ytd else 0 end as lastyc,  gmdl01,
+         case when  gbobj in (111000, 112530,112501,112505,112523,112525
+           ,112507,112521,112531,112524,112526,112508,112517,112506
+           ,112510,112512,112520,112514,112515,112533,112534,112532
+           ,112535,112536,112537,112538,112539,112504,112540,112542
+           ,112544,112545,112546,112547,112556,112557,112558,112559
+           ,112561,112563,112564,112565,112566,112567,112568,112569
+           ,112570)  then '01. CASH' 
+         when ( gbobj in (121000,260006,264001,265004, 265005,264008)
+                or (gbobj>=280000 and gbobj<290000) ) then '02. ACCOUNTS RECEIVABLE'
+           else ''  end as DL
+        from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+        and  ( gbobj in (111000, 112530,112501,112505,112523,112525
+           ,112507,112521,112531,112524,112526,112508,112517,112506
+           ,112510,112512,112520,112514,112515,112533,112534,112532
+           ,112535,112536,112537,112538,112539,112504,112540,112542
+           ,112544,112545,112546,112547,112556,112557,112558,112559
+           ,112561,112563,112564,112565,112566,112567,112568,112569
+           ,112570)   or
+           ( gbobj in (121000,260006,264001,265004, 265005,264008)
+                or (gbobj>=280000 and gbobj<290000) ) 
+            )
+
+    union all
+    select '1. CURRENT ASSETS' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+     mm, gmr025, gbobj,  case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+       case when yyyy = :p_yyyy - 1 then pyc+ytd else 0 end as lastyc,  gmdl01,
+      case when gmr025 in ('060.0') then '03. DEPOSITS' 
+        when gmr025 in ('061.0') then  '04. PREPAYMENT' 
+        when (gmr025 in ( '062.0','062.1','063.0','063.1','064.0',
+           '065.0','065.1','065.2','066.0','066.1','066.2','066.3',
+                 '066.4' ) 
+              or   
+             (( gmr025 >='124' and gmr025 <='142.75' )
+                   or (gmr025 >='250.01' and gmr025<='250.31'))
+              or
+             ((gbobj='410040' and gbsub in ('C4','XE','XF','XG','EX'))
+                   or (gbobj='410030' and gbsub in ('B1','C3')) )
+
+                ) then '05. INVENTORY' 
+        when  gmr025 in ('094.2') then '06. DEFERRED TAX' else '' end as DL
+        from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+          and  (gmr025 in ('060.0','061.0', '094.2',
+            '062.0','062.1','063.0','063.1','064.0', '065.0','065.1',
+             '065.2','066.0','066.1','066.2','066.3', '066.4' )
+            or          
+         (( gmr025 >='124' and gmr025 <='142.75' )
+              or (gmr025 >='250.01' and gmr025<='250.31'))
+            or
+         ((gbobj='410040' and gbsub in ('C4','XE','XF','XG','EX'))
+                   or (gbobj='410030' and gbsub in ('B1','C3')) )
+            )
+     
+     
+     union all
+    select case when gmr025 in ('067.0', '074.0', '069.0', '069.1', '069.2',
+           '072.0', '072.1', '072.2', '070.0', '073.0', '068.0', '071.0',
+           '071.1', '071.2', '075.0', '075.1', '075.2',
+                '076.0','077.0','078.0','078.1','078.2',
+           '079.0','080.0','080.1','080.2','081.0','081.1','081.2',
+                 '082.0','083.0','085.0','085.1','085.2' )  then '2. FIXED ASSEST' 
+     when gmr025 in ('086.0', '089.1') then '3. ' 
+       when gmr025 in ('084.0','089.0','084.1',
+       '086.0', '089.1', '087.0','088.0','087.1')  then  '4. INTANGIBLE ASSETS' 
+        when gmr025 in ('104.0','105.0','108.0','109.0','107.0') then '6. CAPITAL'
+          else '5. CURRENT LIABILITIES'   end as grp, 
+      case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+     mm, gmr025, gbobj,  case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+       case when yyyy = :p_yyyy - 1 then pyc+ytd else 0 end as lastyc,  gmdl01,
+        case when gmr025 in ('067.0') then '01. BUILDING'
+            when gmr025 in ('074.0') then '02. STAFF QUARTER'
+            when gmr025 in ('069.0') then '03. OFFICE FURN. & FIXTURES'
+            when gmr025 in ('069.1') then '04. Fum - Office'
+            when gmr025 in ('069.2') then '05. Fixtures - Office'
+            when gmr025 in ('072.0') then '06. WAREHOUSE FURN. & FIXTURES'
+            when gmr025 in ('072.1') then '07. Fum - Warehouse'
+            when gmr025 in ('072.2') then '08. Fixtures - Warehouse'
+            when gmr025 in ('070.0') then '09. OFFICE EQUIPMENT'
+            when gmr025 in ('073.0') then '10. WAREHOUSE EQUIPMENT'
+            when gmr025 in ('068.0') then '11. MOTOR VEHICLES'
+            when gmr025 in ('071.0') then '12. PRODUCTION EQUIPMENT'
+            when gmr025 in ('071.1') then '13. M&E - Molds'
+            when gmr025 in ('071.2') then '14. M&E - Mfg Equipment Other'
+            when gmr025 in ('075.0') then '15. STAFF QUARTER FURN. & FIXTURE'
+            when gmr025 in ('075.1') then '16. Fum - Staff Quarter'
+            when gmr025 in ('075.2') then '17. Fixtures - Stalf Quarter'
+            when gmr025 in ('076.0','077.0','078.0','078.1','078.2',
+             '079.0','080.0','080.1','080.2','081.0','081.1','081.2',
+                 '082.0','083.0','085.0','085.1','085.2' )
+             then '18. ACCUMULATED DEPRECIATION'   
+        
+            when gmr025 in ('086.0') then '01. CONSTRUCTION IN PROGRESS'
+            when gmr025 in ('089.1') then '02. INVESTMENT IN SUBSIDIARY'
+
+            when gmr025 in ('087.0') then '01. LAND'
+            when gmr025 in ('088.0') then '02. PRELIMINARY EXPENSES'
+            when gmr025 in ('087.1') then '03. OXY TRADE MARK'
+            when gmr025 in ('084.0','089.0','084.1') then '04. ACCUMULATED AMORTIZATION'  
+            
+            when gmr025 in ('095.6') then '02. SHORT TERM LOAN'
+            when gmr025 in ('096.0') then '03. PROV. FOR BAD DEBTS'
+            when gmr025 in ('093.1') then '04. Accrued Tax Vat'
+            when gmr025 in ('094.0') then '05. Tax Payable Vat Tax'
+            when gmr025 in ('099.0') then '06. Federal / Nat Tax Provision'
+            when gmr025 in ('103.0') then '07. PROV. FOR INCOME TAX'   
+            when gmr025 in ('100.1') then '08. PROV. FOR GOODS RETURNED'
+            when gmr025 in ('100.0') then '09. PROV. FOR OBSOLETE STOCK'
+            when gmr025 in ('094.4') then '10. PROV. FOR IMPAIRMENT IN THE VALUE OF THE FIXED ASSETS'
+            when gmr025 in ('098.0') then '11. PROV. FOR AUDIT FEES'
+            when gmr025 in ('100.2') then '12. DEFERRED REVENUE' 
+            when gmr025 in ('090.0') then '13. DIVIDEND PAYABLE'   
+            when gmr025 in ('094.3') then '14. A/P Suspense Account'
+            
+            when gmr025 in ('104.0') then '01. ISSUED CAPITAL'
+            when gmr025 in ('105.0') then '02. RETAINED EARNINGS'
+            when gmr025 in ('108.0') then '03. RESERVE FUND'
+            when gmr025 in ('109.0') then '04. STAFF BONUS / WELFARE FUND' 
+            when gmr025 in ('107.0') then '05. PROPOSED DIVIDEND'      
+            
+        else '' end as DL
+        from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+          and  gmr025 in ('067.0', '074.0', '069.0', '069.1', '069.2',
+           '072.0', '072.1', '072.2', '070.0', '073.0', '068.0', '071.0',
+           '071.1', '071.2', '075.0', '075.1', '075.2',
+                '076.0','077.0','078.0','078.1','078.2',
+           '079.0','080.0','080.1','080.2','081.0','081.1','081.2',
+                 '082.0','083.0','085.0','085.1','085.2',
+                 
+          '086.0', '089.1', '087.0','088.0','087.1',     
+          
+                '084.0','089.0','084.1',
+          
+            '090.5','096.0','093.1','094.0','099.0','103.0',
+             '100.1','100.0','094.4','098.0','100.2','090.0','094.3',
+          
+             '104.0','105.0','108.0','109.0','107.0')
+             
+      union all
+      select '5. CURRENT LIABILITIES' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+       mm, gmr025, gbobj, case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+       case when yyyy = :p_yyyy - 1 then pyc+ytd else 0 end as lastyc, gmdl01,
+        '01. ACCOUNTS PAYABLE'   as DL
+       from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+         and gbco in ('90000','91000','92000','93000')
+          and ( gbobj in ( 250000,401001,404001, 411033,420070,420090,430001)
+            or (gbobj>=470000 and gbobj<480000 )
+            or (gbobj=410030 and gbsub in ('001','002','003','004','005','006','007')) 
+            or (gbobj=410040 and gbsub=' ')
+            )   
+        
+     
+      union all
+      select '6. CAPITAL' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+     mm, gmr025, gbobj, case when yyyy = :p_yyyy - 1 then 0 else -(pyc+ytd) end as yc, 
+       case when yyyy = :p_yyyy - 1 then -(pyc+ytd) else 0 end as lastyc,  gmdl01,
+          '06. CURRENT EARNINGS'   as DL
+        from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+        and  ( gbobj in (111000, 112530,112501,112505,112523,112525
+           ,112507,112521,112531,112524,112526,112508,112517,112506
+           ,112510,112512,112520,112514,112515,112533,112534,112532
+           ,112535,112536,112537,112538,112539,112504,112540,112542
+           ,112544,112545,112546,112547,112556,112557,112558,112559
+           ,112561,112563,112564,112565,112566,112567,112568,112569
+           ,112570)   or
+           ( gbobj in (121000,260006,264001,265004, 265005,264008)
+                or (gbobj>=280000 and gbobj<290000) ) 
+             or
+              (gmr025 in ('060.0','061.0', '094.2',
+            '062.0','062.1','063.0','063.1','064.0', '065.0','065.1',
+             '065.2','066.0','066.1','066.2','066.3', '066.4' )
+                or          
+             (( gmr025 >='124' and gmr025 <='142.75' )
+                 or (gmr025 >='250.01' and gmr025<='250.31'))
+                or
+             ((gbobj='410040' and gbsub in ('C4','XE','XF','XG','EX'))
+                   or (gbobj='410030' and gbsub in ('B1','C3')) )
+               )
+                or
+                (gmr025 in ('067.0', '074.0', '069.0', '069.1', '069.2',
+                '072.0', '072.1', '072.2', '070.0', '073.0', '068.0', '071.0',
+                '071.1', '071.2', '075.0', '075.1', '075.2', '076.0','077.0',
+                '078.0','078.1','078.2','079.0','080.0','080.1','080.2','081.0',
+                '081.1','081.2','082.0','083.0','085.0','085.1','085.2',
+                '086.0', '089.1', '087.0','088.0','087.1','084.0','089.0','084.1'))
+            )
+
+
+
+      union all
+     select '6. CAPITAL' as grp,  case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+     mm, gmr025, gbobj,  case when yyyy = :p_yyyy - 1 then 0 else -(pyc+ytd) end as yc, 
+       case when yyyy = :p_yyyy - 1 then -(pyc+ytd) else 0 end as lastyc,  gmdl01,
+          '06. CURRENT EARNINGS'  as DL
+        from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+          and  gmr025 in   ( '090.5','096.0','093.1','094.0','099.0','103.0',
+             '100.1','100.0','094.4','098.0','100.2','090.0','094.3',
+             '104.0','105.0','108.0','109.0','107.0')  
+             
+             
+      union all
+      select '6. CAPITAL' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+       mm, gmr025, gbobj, case when yyyy = :p_yyyy - 1 then 0 else -(pyc+ytd) end as yc, 
+       case when yyyy = :p_yyyy - 1 then -(pyc+ytd) else 0 end as lastyc,  gmdl01,
+        '06. CURRENT EARNINGS'   as DL
+       from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+         and gbco in ('90000','91000','92000','93000')
+          and ( gbobj in ( 250000,401001,404001, 411033,420070,420090,430001)
+            or (gbobj>=470000 and gbobj<480000 )
+            or (gbobj=410030 and gbsub in ('001','002','003','004','005','006','007')) 
+            or (gbobj=410040 and gbsub=' ')
+            )   
+        
+
+     
+        ) v_core  group by  grp,dl, yyyy, mm
+
+order by grp ,dl
+
+
+
+BS_INVENTORY
+------------------------------------------------------------------------
+
+select case when gmr025 ='064.0' then '自制半成品' when gmr025>='062.0' and gmr025<='063.1' then '原材料'  else '产成品' end as grp, yyyy, mm, gmr025 as gbobj, sum(yc) as YTD, sum(lastyc) as LastAmt,  LKDL01,GMDL01
+   from (
+    select 'INVENTORY' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+     mm, gmr025, gbobj,  case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+       case when yyyy = :p_yyyy - 1 then pyc+ytd else 0 end as lastyc, lkdl01, gmdl01
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+     left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+          and  gmr025 in ('062.0','062.1','063.0','063.1','064.0',
+           '065.0','065.1','065.2','066.0','066.1','066.2','066.3',
+                 '066.4' )
+         
+    union all
+    select 'INVENTORY' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy, 
+     mm, gmr025, gbobj,  case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+      case when yyyy = :p_yyyy - 1 then  pyc+ytd else 0 end as lastyc, lkdl01, gmdl01
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+     left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+         and gbco in ('90000','91000','92000','93000')
+          and (  (gbobj='410040' and gbsub in ('C4','XE','XF','XG','EX'))
+                   or (gbobj='410030' and gbsub in ('B1','C3')) 
+                )
+
+    union all
+    select '制造费用' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy, 
+     mm, gmr025, gbobj,  case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+      case when yyyy = :p_yyyy - 1 then  pyc+ytd else 0 end as lastyc, lkdl01, gmdl01
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+     left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+         and gbco in ('90000','91000','92000','93000')
+            and (( gmr025 >='124' and gmr025 <='142.75' )
+              or (gmr025 >='250.01' and gmr025<='250.31'))
+
+        ) v_core  group by  grp, yyyy, mm, gmr025, LKDL01,GMDL01
+order by grp,gmr025
+
+
+
+BS_ACCUMULATED
+------------------------------------------------------------------------
+
+select grp, yyyy, mm, gmr025 as gbobj, sum(yc) as YTD, sum(lastyc) as LastAmt,  LKDL01,GMDL01
+   from (
+    select 'ACCUMULATED DEPRECIATION' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+     mm, gmr025, gbobj,  case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+       case when yyyy = :p_yyyy - 1 then pyc+ytd else 0 end as lastyc, lkdl01, gmdl01
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+     left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+          and  gmr025 in ('076.0','077.0','078.0','078.1','078.2',
+           '079.0','080.0','080.1','080.2','081.0','081.1','081.2',
+                 '082.0','083.0','085.0','085.1','085.2' )
+           
+         
+    union all
+    select 'ACCUMULATED AMORTIZATION' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy, 
+     mm, gmr025, gbobj,  case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+      case when yyyy = :p_yyyy - 1 then  pyc+ytd else 0 end as lastyc, lkdl01, gmdl01
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+     left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+         and gbco in ('90000','91000','92000','93000')
+          and gmr025 in ('084.0','089.0','084.1'  )   
+        ) v_core  group by  grp, yyyy, mm, gmr025, LKDL01,GMDL01
+
+order by grp,gmr025
+
+
+
+ARAP
+------------------------------------------------------------------------
+
+select grp, yyyy, mm, gbobj, sum(yc) as YTD, sum(lastyc) as LastAmt,
+     LKDL01,GMDL01
+   from (
+    select 'ACCOUNTS RECEIVABLE' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+     mm, gbobj,  case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+       case when yyyy = :p_yyyy - 1 then pyc+ytd else 0 end as lastyc, lkdl01, gmdl01
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+     left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+          and ( gbobj in (121000,260006,264001,265004, 265005,264008)
+            or (gbobj>=280000 and gbobj<290000) 
+           ) 
+
+            
+    union all
+    select 'ACCOUNTS PAYABLE' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy, 
+    mm, gbobj,  case when yyyy = :p_yyyy - 1 then 0 else pyc+ytd end as yc, 
+      case when yyyy = :p_yyyy - 1 then  pyc+ytd else 0 end as lastyc, lkdl01, gmdl01
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+     left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+         and gbco in ('90000','91000','92000','93000')
+and ( gbobj in ( 250000,401001,404001, 411033,420070,420090,430001)
+            or (gbobj>=470000 and gbobj<480000 )
+            or (gbobj=410030 and gbsub in ('001','002','003','004','005','006','007')) 
+            or (gbobj=410040 and gbsub=' ')
+            )   
+        ) v_core  group by  grp, yyyy, mm, gbobj, LKDL01,GMDL01
+
+
+BS现金
+------------------------------------------------------------------------
+
+select grp, yyyy, mm, gbobj, sum(pyc+ytd) as YTD, sum(lastamt) as LastAmt,
+     LKDL01,GMDL01
+   from (
+    select 'CASH' as grp, case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy,
+     mm, gbobj, case when yyyy = :p_yyyy - 1 then 0 else amt end as amt, 
+      case when yyyy = :p_yyyy - 1 then 0 else pyc end as pyc, 
+       case when yyyy = :p_yyyy - 1 then 0 else ytd end as ytd, 
+        case when yyyy = :p_yyyy - 1 then 0 else lastamt end as lastamt, lkdl01, gmdl01
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+     left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+          and gbobj in (111000, 112530,112501,112505,112523,112525
+           ,112507,112521,112531,112524,112526,112508,112517,112506
+           ,112510,112512,112520,112514,112515,112533,112534,112532
+           ,112535,112536,112537,112538,112539,112504,112540,112542
+           ,112544,112545,112546,112547,112556,112557,112558,112559
+           ,112561,112563,112564,112565,112566,112567,112658,112569
+           ,112570
+        )
+     
+    ) v_core  group by  grp, yyyy, mm, gbobj, LKDL01,GMDL01
+
+非生产部门费用
+------------------------------------------------------------------------
+
+select glctry || glfy as yyyy, to_char(jde.rpttools.NTOD(gldgj),'mm') as mm, 
+  globj,lkdl01,gmdl01, glexa,glexr,
+
+case when lkdl01 like '%社会保险%' then '10100 社保费' 
+  when lkdl01 like '%生命保险%' then '10200 医保费'
+  when lkdl01 like '%住房公积金%' then '10300 住房公积金'
+  when globj='xxx' then '10400 宿舍补贴'
+  when (globj='875000' and gbsbl='JSCF') then '10500 公司接送车费'
+  when lkdl01 like '%样本%' then '20100 样品领用'
+  when globj='xxx' then '20200 电脑费'
+  when globj='xxx' then '20300 书刊费'
+  when globj='xxx' then '20400 电话费'
+  when globj='xxx' then '20500 差费小计：'
+  when globj Like '801000' AND glsbl IN('90120040','90120176')  then '20501 差费'
+  when globj Like '875000' AND glexr LIKE '%接送车%' then '20502 福利费（加班车费&餐费)'
+  when globj='xxx' then '20600 速递费'
+  when globj='xxx' then '20700 文具费\印刷费'
+  when globj='xxx' then '20800 影印费'
+  when globj='xxx' then '20900 一般费用'
+  when globj='xxx' then '20901 其它(QI）'
+  when globj='xxx' then '20902 就业费(JIU)'
+  when globj='xxx' then '20903 会费(HUI)'
+  when globj='xxx' then '20904 样品费(YANG)'
+  when globj='xxx' then '20905 赞助（ZAN）'
+  when globj='xxx' then '21000 顾问费'
+  when globj='xxx' then '21100 维修费'
+  when globj='xxx' then '21200 应酬费'
+  when globj Like '875000' AND (glexa LIKE '%宿舍%'  OR glexr LIKE '%宿舍%') 
+   AND glsbl IN('90120040','90120176') then '21300 宿舍费'
+  when globj='xxx' then '21400 培训费'
+  when globj='xxx' then '21500 电脑租线费'
+  when globj='xxx' then '21600 法律费用'
+  when globj='xxx' then '21700 翻译费'
+  when globj='xxx' then '21800 AJQC会议费用'
+  when globj='xxx' then '21801 会议场租'
+  when globj Like '875000'AND glsbl Like' ' then  '21802 差费'
+  when globj='xxx' then '21803 应酬费'
+  when globj='xxx' then '21804 一般费用'
+  when globj='xxx' then '21900 个人所得税核数费'
+ else ' ' end as Proj
+ ,  sum(glaa/100) as Amt
+
+--when globj='875000' AND glsbl Like '9012%'  THEN '福利费（加班车费&餐费)'
+--when lkdl01 like '%住宿%' then '宿舍费'
+--when lkdl01 like '%加班%' then '加班费'
+
+ from proddta.f0911 left join proddta.f0901d on lklngp='CS' and glaid=lkaid
+  left join proddta.f0901 on glaid=gmaid
+ where  glco = '90000' and gllt='AA' and glpost='P'
+   and  (glctry || glfy) = :p_yyyy  and to_char(jde.rpttools.NTOD(gldgj),'mm') <= :p_mm
+   and ( (glmcu='  ZZS0760121' and globj='875000')
+    OR (glmcu='  ZZS0760121' and lkdl01 not LIKE '%工资%' 
+	      and lkdl01 not LIKE '%福利%'  )
+     ) 
+
+group by glctry || glfy,to_char(jde.rpttools.NTOD(gldgj),'mm'), globj,lkdl01,gmdl01, glexa,glexr 
+
+
+
+
+MCL Net Sales RMB
+------------------------------------------------------------------------
+
+销售金额取反
+ 
+select  mm,division, product,
+  sum(case WHEN yyyy=:p_yyyy and grp = 'Sales' then salesamtytd else 0.0 end) as Sales,
+  sum(case when yyyy=:p_yyyy and grp = 'Returns' then salesamtytd else 0.0 end) as Returns,
+  sum(case when yyyy=:p_yyyy and grp = 'Discounts' then salesamtytd else 0.0 end) as Discounts,
+  sum(case when yyyy=:p_yyyy and grp in ('Sales','Returns','Discounts') then salesamtytd else 0.0 end) as SubSales,
+  sum(case when yyyy=:p_yyyy and grp = 'Cost' then Cogsytd else 0.0 end) as Cost,  
+  sum(case when yyyy=:p_yyyy then salesamtytd-cogsytd else 0.0 end) as Profit ,
+  sum(case WHEN yyyy=:p_yyyy-1 and grp = 'Sales' then salesamtytd else 0.0 end) as SalesL,
+  sum(case when yyyy=:p_yyyy-1 and grp = 'Returns' then salesamtytd else 0.0 end) as ReturnsL,
+  sum(case when yyyy=:p_yyyy-1 and grp = 'Discounts' then salesamtytd else 0.0 end) as DiscountsL,
+  sum(case when yyyy=:p_yyyy-1 and grp in ('Sales','Returns','Discounts') then salesamtytd else 0.0 end) as SubSalesL,
+  sum(case when yyyy=:p_yyyy-1 and grp = 'Cost' then Cogsytd else 0.0 end) as CostL,  
+  sum(case when yyyy=:p_yyyy-1  then salesamtytd-cogsytd else 0.0 end) as ProfitL
+from ( 
+ 
+ select division,product,  grp ,yyyy,mm,
+   - sum(salesamt) as salesamt, - sum(salesamtytd) as salesamtytd,
+   case when sum(salesamt)=0 then 0 else sum(-salesamt-cogs)/sum(-salesamt) end as gp,
+   sum(cogs) as cogs,sum(cogsytd) as cogsytd,
+   case when sum(salesamtytd)=0 then 0 else sum(-salesamtytd-cogsytd)/sum(-salesamtytd) end as ytdgp
+  from (
+     select Case When lkdl01 like '%原材料%'  and  gbsbl in ('90200422') 
+       then '1. ShangHai'  when (gbmcu like '%0001') then '2. Local'
+        else '3. Export' end as Division ,         
+     case when lkdl01 like '%眼药水%' THEN 'Eye Drops' WHEN lkdl01 like '%伤风通%' THEN 'Nasal Inhalers' 
+       WHEN lkdl01 like '%镇痛贴%' THEN 'Pain Patch' WHEN lkdl01 like '%樱桃%' THEN 'Cherry Chest Rub' 
+       WHEN lkdl01 like '%薄荷膏%' THEN 'Ointment' WHEN lkdl01 like '%摩擦膏%' THEN 'Deep Heating Rub' 
+       WHEN lkdl01 like '%AD软膏%' THEN 'AD Cream' WHEN lkdl01 like '%美国膏贴%' THEN 'WellPatch' 
+       WHEN lkdl01 like '%退热贴%' THEN 'Fever Patch' WHEN lkdl01 like '%润唇膏%' THEN 'Lipcare' 
+       WHEN lkdl01 like '%护手霜%' THEN 'Hand Cream' WHEN lkdl01 like '%止汗%' THEN 'Body Ice' 
+       WHEN lkdl01 like '%泡沫洁面%' THEN 'Face Wash' WHEN lkdl01 like '%快治%' THEN 'Oxy' 
+       WHEN lkdl01 like '%乐肤洁%' THEN 'Acnes' WHEN lkdl01 like '%男士%' THEN 'Mens' 
+       WHEN lkdl01 like '%肌研%' THEN 'Hada Labo' WHEN lkdl01 like '%沐浴露%' THEN 'Body Wash' 
+       WHEN lkdl01 like '%美活工房%' THEN 'Beauty Workshop' WHEN lkdl01 like '%润肤乳液%' THEN 'Body Veil' 
+       WHEN lkdl01 like '%－Der%' THEN 'Dermacept' WHEN lkdl01 like '%假牙垫%' THEN 'Snug' 
+       WHEN lkdl01 like '%原材料%'  and  gbsbl not in ('90200422') THEN 'Raw Materials' 
+       WHEN lkdl01 like '%原材料%'  and  gbsbl in ('90200422') THEN 'ShangHai' 
+       WHEN lkdl01 like '%防晒%' THEN 'Sunplay' 
+       WHEN lkdl01 like '%洗发露%' THEN 'Selsun' WHEN lkdl01 like '%怀孕乐%' THEN 'Happy Event' 
+       WHEN lkdl01 like '%面膜%' THEN 'Masque' WHEN lkdl01 like '%其他%' THEN 'OTHER' 
+       WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
+       else 'Raw Materials' end as Product, 
+       
+       case WHEN gbobj like '500%' THEN 'Sales'  WHEN gbobj like '501%' THEN 'Sales' 
+        WHEN gbobj like '502%' THEN 'Sales'  WHEN gbobj like '503%' THEN 'Sales' 
+        WHEN gbobj like '505%' THEN 'Returns'  WHEN gbobj like '506%' THEN 'Returns' 
+        WHEN gbobj like '507%' THEN 'Returns'  WHEN gbobj like '508%' THEN 'Returns' 
+        WHEN gbobj like '51____' THEN 'Discounts' WHEN gbobj like '6_____' THEN 'Cost'
+           else  'N/A' end as grp,
+         yyyy,mm,
+       case when gbobj like '5_____' then amt else 0 end  SalesAmt, 
+       case when gbobj like '5_____' then ytd else 0 end  SalesAmtYtd, 
+       case when gbobj like '6_____' then amt  else 0 end as COGS, 
+       case when gbobj like '6_____' then ytd  else 0 end as COGSYtd
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy, :p_yyyy - 1) and mm=:p_mm
+          and  ((gbobj>='500501' and gbobj<'513600')
+              or (gbobj>'600000' and gbobj<'630000')) 
+     
+   )   v_core  
+
+   group by division,product,grp,yyyy,mm
+    order by division,product,grp,yyyy,mm
+
+) group by    mm,division, product
+
+
+
+
+
+Export Sales by product&Customer
+------------------------------------------------------------------------
+
+
+销售金额取反
+select yyyy,mm,division, product,
+  sum(case WHEN grp = 'IND' then salesamtytd else 0.0 end) as PT,
+  sum(case when grp = 'JP' then salesamtytd else 0.0 end) as JP,
+  sum(case when grp = 'VIE' then salesamtytd else 0.0 end) as VIE,
+  sum(case when grp in ('IND','JP','VIE') then salesamtytd else 0.0 end) as SubRT,
+  sum(case when grp = 'MAP' then salesamtytd else 0.0 end) as MAP, 
+  sum(case when grp = 'THA' then salesamtytd else 0.0 end) as THA,
+  sum(case when grp = 'USA' then salesamtytd else 0.0 end) as USA,
+  sum(case when grp in ('MAP','THA','USA') then salesamtytd else 0.0 end) as SubMap,
+  sum(case WHEN grp = 'OTH' then salesamtytd else 0.0 end) as OTH,
+  sum(salesamtytd) as TotalAmt,
+  sum(case WHEN grp = 'IND' then cogsytd else 0.0 end) as PTcogs,
+  sum(case when grp = 'JP' then cogsytd else 0.0 end) as JPcogs,
+  sum(case when grp = 'VIE' then cogsytd else 0.0 end) as VIEcogs,
+  sum(case when grp in ('IND','JP','VIE') then cogsytd else 0.0 end) as SubRTcogs,
+  sum(case when grp = 'MAP' then cogsytd else 0.0 end) as MAPcogs, 
+  sum(case when grp = 'THA' then cogsytd else 0.0 end) as THAcogs,
+  sum(case when grp = 'USA' then cogsytd else 0.0 end) as USAcogs,
+  sum(case when grp in ('MAP','THA','USA') then cogsytd else 0.0 end) as SubMapcogs,
+  sum(case WHEN grp = 'OTH' then cogsytd else 0.0 end) as OTHcogs,
+  sum(cogsytd) as TotalCogs
+ 
+
+from ( 
+ 
+ select division,product,  grp ,yyyy,mm,
+   - sum(salesamt) as salesamt, - sum(salesamtytd) as salesamtytd,
+   case when sum(salesamt)=0 then 0 else sum(-salesamt-cogs)/sum(-salesamt) end as gp,
+   sum(cogs) as cogs,sum(cogsytd) as cogsytd,
+   case when sum(salesamtytd)=0 then 0 else sum(-salesamtytd-cogsytd)/sum(-salesamtytd) end as ytdgp
+  from (
+     select  case when (gbmcu like '%0001') then 
+         case when gbobj in ('500501','505001','510501','610501')  then 'Local Rohto' else 'Local Mentholatum Division' end
+        else case when gbobj in ('500501','505001','510501','610501')  then 'Export Rohto' else 'Export Mentholatum Division' end
+         end as Division ,         
+     case when lkdl01 like '%眼药水%' THEN 'Eye Drops' WHEN lkdl01 like '%伤风通%' THEN 'Nasal Inhalers' 
+       WHEN lkdl01 like '%镇痛贴%' THEN 'Pain Patch' WHEN lkdl01 like '%樱桃%' THEN 'Cherry Chest Rub' 
+       WHEN lkdl01 like '%薄荷膏%' THEN 'Ointment' WHEN lkdl01 like '%摩擦膏%' THEN 'Deep Heating Rub' 
+       WHEN lkdl01 like '%AD软膏%' THEN 'AD Cream' WHEN lkdl01 like '%美国膏贴%' THEN 'WellPatch' 
+       WHEN lkdl01 like '%退热贴%' THEN 'Fever Patch' WHEN lkdl01 like '%润唇膏%' THEN 'Lipcare' 
+       WHEN lkdl01 like '%护手霜%' THEN 'Hand Cream' WHEN lkdl01 like '%止汗%' THEN 'Body Ice' 
+       WHEN lkdl01 like '%泡沫洁面%' THEN 'Face Wash' WHEN lkdl01 like '%快治%' THEN 'Oxy' 
+       WHEN lkdl01 like '%乐肤洁%' THEN 'Acnes' WHEN lkdl01 like '%男士%' THEN 'Mens' 
+       WHEN lkdl01 like '%肌研%' THEN 'Hada Labo' WHEN lkdl01 like '%沐浴露%' THEN 'Body Wash' 
+       WHEN lkdl01 like '%美活工房%' THEN 'Beauty Workshop' WHEN lkdl01 like '%润肤乳液%' THEN 'Body Veil' 
+       WHEN lkdl01 like '%－Der%' THEN 'Dermacept' WHEN lkdl01 like '%假牙垫' THEN 'Snug' 
+       WHEN lkdl01 like '%原材料' THEN 'Raw Materials' WHEN lkdl01 like '%防晒%' THEN 'Sunplay' 
+       WHEN lkdl01 like '%洗发露%' THEN 'Selsun' WHEN lkdl01 like '%怀孕乐%' THEN 'Happy Event' 
+       WHEN lkdl01 like '%面膜%' THEN 'Masque' WHEN lkdl01 like '%其他%' THEN 'OTHER' 
+       WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
+       else 'Raw Materials' end as Product, 
+       
+       case when gbmcu like '%MAP' then 'MAP' WHEN gbmcu like '%0000' THEN 'OTH'
+        WHEN gbmcu like '%USA' THEN 'USA' WHEN gbmcu like '%THA' THEN 'THA'
+         WHEN gbmcu like '%JPN' THEN 'JP' WHEN gbmcu like '%IND' THEN 'IND'
+          WHEN gbmcu like '%VIE' THEN 'VIE' else  'N/A' end as grp,
+         yyyy,mm,
+       case when gbobj like '5_____' then amt else 0 end  SalesAmt, 
+       case when gbobj like '5_____' then ytd else 0 end  SalesAmtYtd, 
+       case when gbobj like '6_____' then amt  else 0 end as COGS, 
+       case when gbobj like '6_____' then ytd  else 0 end as COGSYtd
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+        where gblt in ('AA') and gbmcu not like '%0001' 
+          and  ((gbobj>='500501' and gbobj<'513600')
+              or (gbobj>'600000' and gbobj<'630000')) 
+     
+   )   v_core  
+  where  yyyy = :p_yyyy  and mm=:p_mm
+   group by division,product,grp,yyyy,mm
+    order by division,product,grp,yyyy,mm
+
+) group by   yyyy,mm,division, product
+
+
+Analysis by product line
+------------------------------------------------------------------------
+
+select division,product,grp, yyyy,mm, sum(Qty) as Qty,
+     sum(salesamt) as salesamt, sum(cogs) as cogs, 
+    case when sum(salesamt)=0 then 0 else sum(salesamt-cogs)/sum(salesamt) end as gp
+  from (
+    select case when sddcto not in ('NX') then  'Local Sales' else 'Export Sales' end as Division ,
+      CASE WHEN sdglc LIKE '__34' THEN 'Oxy'  WHEN sdglc  LIKE '__41' THEN 'Lipcare'
+       WHEN sdglc  LIKE '__66' THEN 'Selsun' WHEN sdglc  LIKE '__98' THEN 'Raw Materials'
+       WHEN sdglc  LIKE '__35' THEN 'Oxy' WHEN sdglc  LIKE '__45' THEN 'Lipcare'
+       WHEN sdglc  LIKE '__67' THEN 'Selsun' WHEN sdglc  LIKE '__99' THEN 'Raw Materials'
+       WHEN sdglc like '__11' THEN 'Eye Drops' WHEN sdglc like '__12' THEN 'Inhalers'
+       WHEN sdglc like '__20' THEN 'Fever Patch' WHEN sdglc like '__21' THEN 'Pain Patch'
+       WHEN sdglc like '__22' THEN 'Cherry Chest Rub' WHEN sdglc like '__23' THEN 'Ointment'
+       WHEN sdglc like '__24' THEN 'DHR' WHEN sdglc like '__29' THEN 'WellPatch'
+       WHEN sdglc like '__33' THEN 'Body Ice' WHEN sdglc like '__36' THEN 'Body Veil'
+       WHEN sdglc like '__37' THEN 'Beauty Workshop' WHEN sdglc like '__42' THEN 'Happy Event'
+       WHEN sdglc like '__46' THEN 'Hand Cream' WHEN sdglc like '__48' THEN 'Body Wash'
+       WHEN sdglc like '__49' THEN 'Child Care-Mamahug' WHEN sdglc like '__53' THEN 'Masque'
+       WHEN sdglc like '__52' THEN 'Face Wash' WHEN sdglc like '__54'  or  sdglc like  '__15' THEN 'Acnes'
+       WHEN sdglc like '__55' THEN 'Mens' WHEN sdglc like '__56' THEN 'Hada Labo'
+       WHEN sdglc like '__61' THEN 'Snug' WHEN sdglc like '__63' THEN 'Sunplay'
+       WHEN sdglc like '__40' THEN 'Megumi'  when sdglc like '__60' then  'Other'   ELSE '未定义' END as Product, 
+       case when to_char(jde.rpttools.NTOD(sddgl),'yyyy') = :p_yyyy 
+          then 'This Year' else 'Last Year' end  as grp,
+        to_char(jde.rpttools.NTOD(sddgl),'yyyy') as yyyy, 
+        to_char(jde.rpttools.NTOD(sddgl),'mm') as mm,
+        (sdsoqs/1000) * case when  umcnv1 is not null then  umcnv1/10000000 else 
+         (case when ucconv is not null then ucconv/10000000 else 1 end) end as Qty,  
+       sdaexp/100 as SalesAmt,  sdecst/100 as  COGS 
+     from proddta.f4211 left join  proddta.f4101 on sditm=imitm
+       left join proddta.f41002 on sditm=umitm and sduom=umum and imuom1=umrum
+       left join proddta.f41003 on sduom=ucum and imuom1=ucrum
+      where  sddcto not in ('NW','NR','NF','NL','NT','NQ','SB')
+         and sdglc not in ('FT23','FT60','FT99','INZA','VA','FT3')
+        and  to_char(jde.rpttools.NTOD(sddgl),'yyyy')  in (:p_yyyy-1, :p_yyyy)  
+         and to_char(jde.rpttools.NTOD(sddgl),'mm') <= :p_mm
+         
+    union all
+        select case when gldct not in ('NX') then  'Local Sales' else 'Export Sales' end as Division ,
+      CASE WHEN globj in ('502520','507020','512520') THEN 'Oxy' 
+	   WHEN globj in ('502501','502509','507001','507009','512501','512509') THEN 'Lipcare'
+       WHEN globj in ('503512','508011','513511') THEN 'Selsun' 
+	   WHEN globj = '503508' THEN 'Raw Materials'
+       WHEN globj in ('500501','505001','510501') THEN 'Eye Drops' 
+	   WHEN globj in ('500502','505002','510502') or
+	      ( globj in ('500502','505002','510502') and glsub='INH14') THEN 'Inhalers'
+       WHEN globj in ('501525','506025','511525') THEN 'Fever Patch' 
+	   WHEN globj in ('501501','506001','511501') THEN 'Pain Patch'
+       WHEN globj in ('501502','506002','511502') THEN 'Cherry Chest Rub'
+	   WHEN globj in ('501503','506003','511503') THEN 'Ointment'
+       WHEN globj in ('501504','506004','511504') THEN 'DHR' 
+	   WHEN globj in ('501523','506023','511523') THEN 'WellPatch'
+	   WHEN globj in ('502514','507014','512514') THEN 'Body Ice'
+	   WHEN globj in ('502526','507026','512526') THEN 'Body Veil'
+       WHEN globj in ('502525','507025','512525') THEN 'Beauty Workshop' 
+	   WHEN globj in ('502504','507004','512504') THEN 'Happy Event'
+       WHEN globj in ('502510','507010','512510') THEN 'Hand Cream' 
+	   WHEN globj in ('502524','507024','512524') THEN 'Body Wash'
+       WHEN globj in ('502527','507027','512527') THEN 'Child Care-Mamahug' 
+	   WHEN globj in ('503005','507505','513005') THEN 'Masque'
+       WHEN globj in ('502515','507015','512515') THEN 'Face Wash' 
+	   when globj in ('502521','507021','512521') or 
+	     (globj in ('502521', '507021', '512521') and glsub='AC15')  THEN 'Acnes'
+       WHEN globj in ('502522','507022','512522') THEN 'Mens' 
+	   WHEN globj in ('502523','507023','512523') THEN 'Hada Labo'
+       WHEN globj in ('503501','508001','513501') THEN 'Snug' 
+	   WHEN globj in ('503510','508009','513509') THEN 'Sunplay'
+       WHEN globj in ('502531','507031','512531') THEN 'Megumi'  
+	   when globj in ('502532','507032','512532') then  'Other'   
+	   ELSE '未定义' END as Product, 
+       case when to_char(jde.rpttools.NTOD(gldgj),'yyyy') = :p_yyyy 
+          then 'This Year' else 'Last Year' end  as grp,
+        to_char(jde.rpttools.NTOD(gldgj),'yyyy') as yyyy, 
+        to_char(jde.rpttools.NTOD(gldgj),'mm') as mm, 0.00 as Qty,  
+      - glaa/100 as SalesAmt,  0.00 as  COGS
+   from proddta.f0911 where gldct='JE'  and  glpost='P' and gllt='AA'
+     and to_char(jde.rpttools.NTOD(gldgj),'yyyy')  in (:p_yyyy-1, :p_yyyy)  
+         and to_char(jde.rpttools.NTOD(gldgj),'mm') <= :p_mm    
+  
+  union all
+      select case when gldct not in ('NX') then  'Local Sales' else 'Export Sales' end as Division ,
+      CASE WHEN globj in ('612520') THEN 'Oxy' 
+	   WHEN globj in ('612501','612509') THEN 'Lipcare'
+       WHEN globj in ('613512') THEN 'Selsun' 
+	   WHEN globj = '613508' THEN 'Raw Materials'
+       WHEN globj in ('610501') THEN 'Eye Drops' 
+	   WHEN globj in ('610502') THEN 'Inhalers'
+       WHEN globj in ('611525') THEN 'Fever Patch' 
+	   WHEN globj in ('611501') THEN 'Pain Patch'
+       WHEN globj in ('611502') THEN 'Cherry Chest Rub'
+	   WHEN globj in ('611503') THEN 'Ointment'
+       WHEN globj in ('611504') THEN 'DHR' 
+	   WHEN globj in ('611523') THEN 'WellPatch'
+	   WHEN globj in ('612514') THEN 'Body Ice'
+	   WHEN globj in ('612526') THEN 'Body Veil'
+       WHEN globj in ('612525') THEN 'Beauty Workshop' 
+	   WHEN globj in ('612504') THEN 'Happy Event'
+       WHEN globj in ('612510') THEN 'Hand Cream' 
+	   WHEN globj in ('612524') THEN 'Body Wash'
+       WHEN globj in ('612527') THEN 'Child Care-Mamahug' 
+	   WHEN globj in ('613005') THEN 'Masque'
+       WHEN globj in ('612515') THEN 'Face Wash' 
+	   when globj in ('612521') THEN 'Acnes'
+       WHEN globj in ('612522') THEN 'Mens' 
+	   WHEN globj in ('612523') THEN 'Hada Labo'
+       WHEN globj in ('613501') THEN 'Snug' 
+	   WHEN globj in ('613510') THEN 'Sunplay'
+       WHEN globj in ('612531') THEN 'Megumi'  
+	   when globj in ('612532') then  'Other'   
+	   ELSE '未定义' END as Product, 
+       case when to_char(jde.rpttools.NTOD(gldgj),'yyyy') = :p_yyyy 
+          then 'This Year' else 'Last Year' end  as grp,
+        to_char(jde.rpttools.NTOD(gldgj),'yyyy') as yyyy, 
+        to_char(jde.rpttools.NTOD(gldgj),'mm') as mm, 0.00 as Qty,  
+         0.00 as SalesAmt, glaa/100 as COGS 
+    from proddta.f0911 where gldct='JE'  and  glpost='P' and gllt='AA'
+     and to_char(jde.rpttools.NTOD(gldgj),'yyyy')  in (:p_yyyy-1, :p_yyyy)  
+         and to_char(jde.rpttools.NTOD(gldgj),'mm') <= :p_mm    
+         
+       )   v_core  
+   group by division,product,grp,yyyy,mm
+    order by division,product,yyyy,mm
+
+/*
+     select  case when (gbmcu like '%0001') then 
+         case when gbobj in ('500501','505001','510501','610501')  then 'Local Rohto' else 'Local Mentholatum Division' end
+        else case when gbobj in ('500501','505001','510501','610501')  then 'Export Rohto' else 'Export Mentholatum Division' end
+         end as Division ,
+     case when lkdl01 like '%眼药水%' THEN 'Eye Drops' WHEN lkdl01 like '%伤风通%' THEN 'Nasal Inhalers' 
+       WHEN lkdl01 like '%镇痛贴%' THEN 'Pain Patch' WHEN lkdl01 like '%樱桃%' THEN 'Cherry Chest Rub' 
+       WHEN lkdl01 like '%薄荷膏%' THEN 'Ointment' WHEN lkdl01 like '%摩擦膏%' THEN 'Deep Heating Rub' 
+       WHEN lkdl01 like '%AD软膏%' THEN 'AD Cream' WHEN lkdl01 like '%美国膏贴%' THEN 'WellPatch' 
+       WHEN lkdl01 like '%退热贴%' THEN 'Fever Patch' WHEN lkdl01 like '%润唇膏%' THEN 'Lipcare' 
+       WHEN lkdl01 like '%护手霜%' THEN 'Hand Cream' WHEN lkdl01 like '%止汗%' THEN 'Body Ice' 
+       WHEN lkdl01 like '%泡沫洁面%' THEN 'Face Wash' WHEN lkdl01 like '%快治%' THEN 'Oxy' 
+       WHEN lkdl01 like '%乐肤洁%' THEN 'Acnes' WHEN lkdl01 like '%男士%' THEN 'Mens' 
+       WHEN lkdl01 like '%肌研%' THEN 'Hada Labo' WHEN lkdl01 like '%沐浴露%' THEN 'Body Wash' 
+       WHEN lkdl01 like '%美活工房%' THEN 'Beauty Workshop' WHEN lkdl01 like '%润肤乳液%' THEN 'Body Veil' 
+       WHEN lkdl01 like '%－Der%' THEN 'Dermacept' WHEN lkdl01 like '%假牙垫' THEN 'Snug' 
+       WHEN lkdl01 like '%原材料' THEN 'Raw Materials' WHEN lkdl01 like '%防晒%' THEN 'Sunplay' 
+       WHEN lkdl01 like '%洗发露%' THEN 'Selsun' WHEN lkdl01 like '%怀孕乐%' THEN 'Happy Event' 
+       WHEN lkdl01 like '%面膜%' THEN 'Masque' WHEN lkdl01 like '%其他%' THEN 'OTHER' 
+       WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
+       else 'Raw Materials' end as Product, case when gblt='AA' then 'This Year' else 'Budgetting' end as grp,
+       yyyy,mm,
+       case when gbobj like '5_____' then amt else 0 end  SalesAmt, case when gbobj like '5_____' then ytd else 0 end  SalesAmtYtd, 
+       case when gbobj like '6_____' then amt  else 0 end as COGS,  case when
+gbobj like '6_____' then ytd  else 0 end as COGSYtd
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+        where gblt in ('AA','BA') and gbobj > '500000' and gbobj < '630000'
+        
+  union all
+   select  case when (gbmcu like '%0001') then 
+         case when gbobj in ('500501','505001','510501','610501')  then 'Local Rohto' else 'Local Mentholatum Division' end
+        else case when gbobj in ('500501','505001','510501','610501')  then 'Export Rohto' else 'Export Mentholatum Division' end
+         end as Division ,
+     case when lkdl01 like '%眼药水%' THEN 'Eye Drops' WHEN lkdl01 like '%伤风通%' THEN 'Nasal Inhalers' 
+       WHEN lkdl01 like '%镇痛贴%' THEN 'Pain Patch' WHEN lkdl01 like '%樱桃%' THEN 'Cherry Chest Rub' 
+       WHEN lkdl01 like '%薄荷膏%' THEN 'Ointment' WHEN lkdl01 like '%摩擦膏%' THEN 'Deep Heating Rub' 
+       WHEN lkdl01 like '%AD软膏%' THEN 'AD Cream' WHEN lkdl01 like '%美国膏贴%' THEN 'WellPatch' 
+       WHEN lkdl01 like '%退热贴%' THEN 'Fever Patch' WHEN lkdl01 like '%润唇膏%' THEN 'Lipcare' 
+       WHEN lkdl01 like '%护手霜%' THEN 'Hand Cream' WHEN lkdl01 like '%止汗%' THEN 'Body Ice' 
+       WHEN lkdl01 like '%泡沫洁面%' THEN 'Face Wash' WHEN lkdl01 like '%快治%' THEN 'Oxy' 
+       WHEN lkdl01 like '%乐肤洁%' THEN 'Acnes' WHEN lkdl01 like '%男士%' THEN 'Mens' 
+       WHEN lkdl01 like '%肌研%' THEN 'Hada Labo' WHEN lkdl01 like '%沐浴露%' THEN 'Body Wash' 
+       WHEN lkdl01 like '%美活工房%' THEN 'Beauty Workshop' WHEN lkdl01 like '%润肤乳液%' THEN 'Body Veil' 
+       WHEN lkdl01 like '%－Der%' THEN 'Dermacept' WHEN lkdl01 like '%假牙垫' THEN 'Snug' 
+       WHEN lkdl01 like '%原材料' THEN 'Raw Materials' WHEN lkdl01 like '%防晒%' THEN 'Sunplay' 
+       WHEN lkdl01 like '%洗发露%' THEN 'Selsun' WHEN lkdl01 like '%怀孕乐%' THEN 'Happy Event' 
+       WHEN lkdl01 like '%面膜%' THEN 'Masque' WHEN lkdl01 like '%其他%' THEN 'OTHER' 
+       WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
+       else 'Raw Materials' end as Product,  'Last Year' as grp, to_char(yyyy+1) , mm,
+       case when gbobj like '5_____' then amt else 0 end  SalesAmt, case when gbobj like '5_____' then ytd else 0 end  SalesAmtYtd, 
+       case when gbobj like '6_____' then amt  else 0 end as COGS,  case when
+gbobj like '6_____' then ytd  else 0 end as COGSYtd
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+        where gblt in ('AA') and gbobj > '500000' and gbobj < '630000'
+    */ 
+     
+
+
+Prc PL mis openorder
+------------------------------------------------------------------------
+
+select division,product, yyyy, mm,  0 as salesamt,  sum(salesamt) as salesamtytd,
+   0 as gp, 0 as cogs, sum(cogs) as cogsytd,
+   case when sum(salesamt)=0 then 0 else sum(salesamt - cogs)/sum(salesamt) end as ytdgp
+  from (
+   select case when not in ('NB') then  'Local Sales' else 'Export Sales' end as Division ,
+    CASE WHEN sdglc LIKE '__34' THEN 'Oxy'  WHEN sdglc  LIKE '__41' THEN 'Lipcare'
+     WHEN sdglc  LIKE '__66' THEN 'Selsun' WHEN sdglc  LIKE '__98' THEN 'Raw Materials'
+     WHEN sdglc  LIKE '__35' THEN 'Oxy' WHEN sdglc  LIKE '__45' THEN 'Lipcare'
+     WHEN sdglc  LIKE '__67' THEN 'Selsun' WHEN sdglc  LIKE '__99' THEN 'Raw Materials'
+     WHEN sdglc like '__11' THEN 'Eye Drops' WHEN sdglc like '__12' THEN 'Inhalers'
+     WHEN sdglc like '__20' THEN 'Fever Patch' WHEN sdglc like '__21' THEN 'Pain Patch'
+     WHEN sdglc like '__22' THEN 'Cherry Chest Rub' WHEN sdglc like '__23' THEN 'Ointment'
+     WHEN sdglc like '__24' THEN 'DHR' WHEN sdglc like '__29' THEN 'WellPatch'
+     WHEN sdglc like '__33' THEN 'Body Ice' WHEN sdglc like '__36' THEN 'Body Veil'
+     WHEN sdglc like '__37' THEN 'Beauty Workshop' WHEN sdglc like '__42' THEN 'Happy Event'
+     WHEN sdglc like '__46' THEN 'Hand Cream' WHEN sdglc like '__48' THEN 'Body Wash'
+     WHEN sdglc like '__49' THEN 'Child Care-Mamahug' WHEN sdglc like '__53' THEN 'Masque'
+     WHEN sdglc like '__52' THEN 'Face Wash' WHEN sdglc like '__54' THEN 'Acnes'
+     WHEN sdglc like '__55' THEN 'Mens' WHEN sdglc like '__56' THEN 'Hada Labo'
+     WHEN sdglc like '__61' THEN 'Snug' WHEN sdglc like '__63' THEN 'Sunplay'
+     WHEN sdglc like '__40' THEN 'Megumi'  ELSE 'Other' END as Product, 
+      to_char(jde.rpttools.NTOD(sdtrdj),'yyyy') as yyyy, 
+      to_char(jde.rpttools.NTOD(sdtrdj),'mm') as mm,
+       sdsoqs/100 as Qty,  sdaexp/100 as SalesAmt,  sdecst/100 as  COGS       
+   from proddta.f4211
+    where sdlttr < 560 and sddcto not in ('NW','NR','NF','NL','NT','NQ','SB')
+      and  to_char(jde.rpttools.NTOD(sdtrdj),'yyyy') = :p_yyyy  
+       and to_char(jde.rpttools.NTOD(sdtrdj),'mm') <= :p_mm
+      
+  /*以下从总帐取数 , 销售金额取反
+   select  case when (gbmcu like '%0001') then  'Local Sales' else 'Export Sales' end as Division ,
+     case when lkdl01 like '%眼药水%' THEN 'Eye Drops' WHEN lkdl01 like '%伤风通%' THEN 'Nasal Inhalers' 
+       WHEN lkdl01 like '%镇痛贴%' THEN 'Pain Patch' WHEN lkdl01 like '%樱桃%' THEN 'Cherry Chest Rub' 
+       WHEN lkdl01 like '%薄荷膏%' THEN 'Ointment' WHEN lkdl01 like '%摩擦膏%' THEN 'Deep Heating Rub' 
+       WHEN lkdl01 like '%AD软膏%' THEN 'AD Cream' WHEN lkdl01 like '%美国膏贴%' THEN 'WellPatch' 
+       WHEN lkdl01 like '%退热贴%' THEN 'Fever Patch' WHEN lkdl01 like '%润唇膏%' THEN 'Lipcare' 
+       WHEN lkdl01 like '%护手霜%' THEN 'Hand Cream' WHEN lkdl01 like '%止汗%' THEN 'Body Ice' 
+       WHEN lkdl01 like '%泡沫洁面%' THEN 'Face Wash' WHEN lkdl01 like '%快治%' THEN 'Oxy' 
+       WHEN lkdl01 like '%乐肤洁%' THEN 'Acnes' WHEN lkdl01 like '%男士%' THEN 'Mens' 
+       WHEN lkdl01 like '%肌研%' THEN 'Hada Labo' WHEN lkdl01 like '%沐浴露%' THEN 'Body Wash' 
+       WHEN lkdl01 like '%美活工房%' THEN 'Beauty Workshop' WHEN lkdl01 like '%润肤乳液%' THEN 'Body Veil' 
+       WHEN lkdl01 like '%－Der%' THEN 'Dermacept' WHEN lkdl01 like '%假牙垫' THEN 'Snug' 
+       WHEN lkdl01 like '%原材料' THEN 'Raw Materials' WHEN lkdl01 like '%防晒%' THEN 'Sunplay' 
+       WHEN lkdl01 like '%洗发露%' THEN 'Selsun' WHEN lkdl01 like '%怀孕乐%' THEN 'Happy Event' 
+       WHEN lkdl01 like '%面膜%' THEN 'Masque' WHEN lkdl01 like '%其他%' THEN 'OTHER' 
+       WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
+       else 'Raw Materials' end as Product,  yyyy, mm,
+       case when gbobj like '5_____' then amt else 0 end  SalesAmt, 
+       case when gbobj like '5_____' then ytd else 0 end  SalesAmtYtd, 
+       case when gbobj like '6_____' then amt  else 0 end as COGS, 
+       case when gbobj like '6_____' then ytd  else 0 end as COGSYtd
+      from v_f0902ytd    left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+        where gblt in ('AA') and  
+         (( gbobj >= '500501' and gbobj < '513600' ) or 
+                 (gbobj> '600000' and gbobj <'630000')    )  */
+
+   )   v_core  
+ -- where  yyyy = :p_yyyy  and mm=:p_mm
+   group by division,product,yyyy,mm
+     
+     
+
+Prc_pl MIS
+------------------------------------------------------------------------
+
+ select division,product,  'This Year' as grp ,yyyy,mm,
+   - sum(salesamt) as salesamt, - sum(salesamtytd) as salesamtytd,
+   case when sum(salesamt)=0 then 0 else sum(-salesamt-cogs)/sum(-salesamt) end as gp,
+   sum(cogs) as cogs,sum(cogsytd) as cogsytd,
+   case when sum(salesamtytd)=0 then 0 else sum(-salesamtytd-cogsytd)/sum(-salesamtytd) end as ytdgp
+  from (
+    select  case when (gbmcu like '%0001') then  'Local Mentholatum Division' 
+        else  'Export Mentholatum Division' end  as Division ,
+     case when lkdl01 like '%眼药水%' THEN 'Eye Drops' WHEN lkdl01 like '%伤风通%' THEN 'Nasal Inhalers' 
+       WHEN lkdl01 like '%镇痛贴%' THEN 'Pain Patch' WHEN lkdl01 like '%樱桃%' THEN 'Cherry Chest Rub' 
+       WHEN lkdl01 like '%薄荷膏%' THEN 'Ointment' WHEN lkdl01 like '%摩擦膏%' THEN 'Deep Heating Rub' 
+       WHEN lkdl01 like '%AD软膏%' THEN 'AD Cream' WHEN lkdl01 like '%美国膏贴%' THEN 'WellPatch' 
+       WHEN lkdl01 like '%退热贴%' THEN 'Fever Patch' WHEN lkdl01 like '%润唇膏%' THEN 'Lipcare' 
+       WHEN lkdl01 like '%护手霜%' THEN 'Hand Cream' WHEN lkdl01 like '%止汗%' THEN 'Body Ice' 
+       WHEN lkdl01 like '%泡沫洁面%' THEN 'Face Wash' WHEN lkdl01 like '%快治%' THEN 'Oxy' 
+       WHEN lkdl01 like '%乐肤洁%' THEN 'Acnes' WHEN lkdl01 like '%男士%' THEN 'Mens' 
+       WHEN lkdl01 like '%肌研%' THEN 'Hada Labo' WHEN lkdl01 like '%沐浴露%' THEN 'Body Wash' 
+       WHEN lkdl01 like '%美活工房%' THEN 'Beauty Workshop' WHEN lkdl01 like '%润肤乳液%' THEN 'Body Veil' 
+       WHEN lkdl01 like '%－Der%' THEN 'Dermacept' WHEN lkdl01 like '%假牙垫' THEN 'Snug' 
+       WHEN lkdl01 like '%原材料' THEN 'Raw Materials' WHEN lkdl01 like '%防晒%' THEN 'Sunplay' 
+       WHEN lkdl01 like '%洗发露%' THEN 'Selsun' WHEN lkdl01 like '%怀孕乐%' THEN 'Happy Event' 
+       WHEN lkdl01 like '%面膜%' THEN 'Masque' WHEN lkdl01 like '%其他%' THEN 'OTHER' 
+       WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
+          else 'Raw Materials' end as Product, yyyy,mm,
+       case when gbobj like '5_____' then amt else 0 end  SalesAmt,
+       case when gbobj like '5_____' then ytd else 0 end  SalesAmtYtd, 
+       case when gbobj like '6_____' then amt  else 0 end as COGS,  
+       case when gbobj like '6_____' then ytd  else 0 end as COGSYtd
+        from v_f0902ytd      left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+        where gblt in ('AA') and
+           (( gbobj >= '500501' and gbobj < '513600' ) or 
+                 (gbobj> '600000' and gbobj <'630000')    )
+
+      union all
+      select  case when (glmcu like '%0001') then 'Local Mentholatum Division' 
+           else 'Export Mentholatum Division' end   as Division ,
+      case when lkdl01 like '%眼药水%' THEN 'Eye Drops' WHEN lkdl01 like '%伤风通%' THEN 'Nasal Inhalers' 
+       WHEN lkdl01 like '%镇痛贴%' THEN 'Pain Patch' WHEN lkdl01 like '%樱桃%' THEN 'Cherry Chest Rub' 
+       WHEN lkdl01 like '%薄荷膏%' THEN 'Ointment' WHEN lkdl01 like '%摩擦膏%' THEN 'Deep Heating Rub' 
+       WHEN lkdl01 like '%AD软膏%' THEN 'AD Cream' WHEN lkdl01 like '%美国膏贴%' THEN 'WellPatch' 
+       WHEN lkdl01 like '%退热贴%' THEN 'Fever Patch' WHEN lkdl01 like '%润唇膏%' THEN 'Lipcare' 
+       WHEN lkdl01 like '%护手霜%' THEN 'Hand Cream' WHEN lkdl01 like '%止汗%' THEN 'Body Ice' 
+       WHEN lkdl01 like '%泡沫洁面%' THEN 'Face Wash' WHEN lkdl01 like '%快治%' THEN 'Oxy' 
+       WHEN lkdl01 like '%乐肤洁%' THEN 'Acnes' WHEN lkdl01 like '%男士%' THEN 'Mens' 
+       WHEN lkdl01 like '%肌研%' THEN 'Hada Labo' WHEN lkdl01 like '%沐浴露%' THEN 'Body Wash' 
+       WHEN lkdl01 like '%美活工房%' THEN 'Beauty Workshop' WHEN lkdl01 like '%润肤乳液%' THEN 'Body Veil' 
+       WHEN lkdl01 like '%－Der%' THEN 'Dermacept' WHEN lkdl01 like '%假牙垫' THEN 'Snug' 
+       WHEN lkdl01 like '%原材料' THEN 'Raw Materials' WHEN lkdl01 like '%防晒%' THEN 'Sunplay' 
+       WHEN lkdl01 like '%洗发露%' THEN 'Selsun' WHEN lkdl01 like '%怀孕乐%' THEN 'Happy Event' 
+       WHEN lkdl01 like '%面膜%' THEN 'Masque' WHEN lkdl01 like '%其他%' THEN 'OTHER' 
+       WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
+          else 'Raw Materials' end as Product,
+        glctry || glfy ,  :p_mm ,  -- to_char(jde.rpttools.NTOD(gldgj),'mm') as MM, 
+        0  as SalesAmt,
+       - sum(case when globj like '5_____' then glaa/100 else 0 end)  SalesAmtYtd, 
+        0  as COGS,  
+       - sum(case when globj like '6_____' then glaa/100  else 0 end) as COGSYt
+      from proddta.f0911  left join proddta.f0901d on lklngp='CS' and lkaid=glaid
+       where  (glctry || glfy) = :p_yyyy  and glpn <= :p_mm
+        and gllt='AA' and gldct='JE' and glsbl='JE' and glsblt='X'
+         and  ((globj>='500501' and globj<'513600')
+              or (globj>'600000' and globj<'630000'))
+
+      group by case when (glmcu like '%0001') then 'Local Mentholatum Division' 
+           else 'Export Mentholatum Division' end  ,
+      case when lkdl01 like '%眼药水%' THEN 'Eye Drops' WHEN lkdl01 like '%伤风通%' THEN 'Nasal Inhalers' 
+       WHEN lkdl01 like '%镇痛贴%' THEN 'Pain Patch' WHEN lkdl01 like '%樱桃%' THEN 'Cherry Chest Rub' 
+       WHEN lkdl01 like '%薄荷膏%' THEN 'Ointment' WHEN lkdl01 like '%摩擦膏%' THEN 'Deep Heating Rub' 
+       WHEN lkdl01 like '%AD软膏%' THEN 'AD Cream' WHEN lkdl01 like '%美国膏贴%' THEN 'WellPatch' 
+       WHEN lkdl01 like '%退热贴%' THEN 'Fever Patch' WHEN lkdl01 like '%润唇膏%' THEN 'Lipcare' 
+       WHEN lkdl01 like '%护手霜%' THEN 'Hand Cream' WHEN lkdl01 like '%止汗%' THEN 'Body Ice' 
+       WHEN lkdl01 like '%泡沫洁面%' THEN 'Face Wash' WHEN lkdl01 like '%快治%' THEN 'Oxy' 
+       WHEN lkdl01 like '%乐肤洁%' THEN 'Acnes' WHEN lkdl01 like '%男士%' THEN 'Mens' 
+       WHEN lkdl01 like '%肌研%' THEN 'Hada Labo' WHEN lkdl01 like '%沐浴露%' THEN 'Body Wash' 
+       WHEN lkdl01 like '%美活工房%' THEN 'Beauty Workshop' WHEN lkdl01 like '%润肤乳液%' THEN 'Body Veil' 
+       WHEN lkdl01 like '%－Der%' THEN 'Dermacept' WHEN lkdl01 like '%假牙垫' THEN 'Snug' 
+       WHEN lkdl01 like '%原材料' THEN 'Raw Materials' WHEN lkdl01 like '%防晒%' THEN 'Sunplay' 
+       WHEN lkdl01 like '%洗发露%' THEN 'Selsun' WHEN lkdl01 like '%怀孕乐%' THEN 'Happy Event' 
+       WHEN lkdl01 like '%面膜%' THEN 'Masque' WHEN lkdl01 like '%其他%' THEN 'OTHER' 
+       WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
+          else 'Raw Materials' end ,     glctry || glfy 
+
+ 
+         )   v_core  
+  where  yyyy = :p_yyyy  and mm=:p_mm
+   group by division,product,yyyy,mm
+    order by division,product,yyyy,mm
+
+
+--Adj Amt
+
+select yyyy,-sum(SalesLocalAmt) as SalesLocalAmt, -sum(SalesExportAmt) as SalesExportAmt,
+  sum(OthLocalAmt) as OthLocalAmt ,sum(OthExportAmt) as OthExportAmt,
+  sum(cogslocalamt) as CogsLocalAmt,sum(cogsexportamt) as CogsExportAmt 
+ from (  
+   select glctry || glfy as yyyy, glpn as MM,  
+  sum(case when glmcu like '%0001' and globj>='500501' and globj<'513600' then glaa/100 else 0 end) as SalesLocalAmt ,
+  sum(case when glmcu not like '%0001' and globj>='500501' and globj<'513600' then glaa/100 else 0 end) as SalesExportAmt,
+  sum(case when glmcu like '%0001' and globj='613507' then glaa/100 else 0 end) as OthLocalAmt ,
+  sum(case when glmcu not like '%0001' and globj='613507' then glaa/100 else 0 end) as OthExportAmt,
+  sum(case when glmcu like '%0001' and globj<>'613507' and globj>'600000' and globj<'630000' then glaa/100 else 0 end) as CogsLocalAmt,
+  sum(case when glmcu not like '%0001' and globj<>'613507'  and globj>'600000' and globj<'630000' then glaa/100 else 0 end) as CogsExportAmt 
+        from proddta.f0911
+          where gllt='AA' and gldct='JE' and glsbl='JE' and glsblt='X'
+            and ((globj>=500501 and globj<513600) 
+                   or (globj>'600000' and globj <'630000'))
+          and  (glctry || glfy) = :p_yyyy
+           and glpn <= :p_mm
+        group by glctry || glfy, glpn,glmcu,globj
+  )  v_core
+  group by yyyy
+
+
+Sales Analysis by product line
+------------------------------------------------------------------------
+
+销售金额取反
+select yyyy,mm,division, product,
+   sum(case when grp='Budgetting' then salesamt else 0 end) as SalesAmt_B,
+   sum(case when grp='Budgetting' then cogs else 0 end) as COGS_B,
+   sum(case when grp='Budgetting' then gp else 0 end) as GP_B,
+   sum(case when grp='Budgetting' then salesamtytd else 0 end) as SalesAmtYTD_B,
+   sum(case when grp='Budgetting' then cogsytd else 0 end) as COGSYTD_B,
+   sum(case when grp='Budgetting' then ytdgp else 0 end) as YTDGP_B,
+   sum(case when grp='This Year' then salesamt else 0 end) as SalesAmt_T,
+   sum(case when grp='This Year' then cogs else 0 end) as COGS_T,
+   sum(case when grp='This Year' then gp else 0 end) as GP_T,
+   sum(case when grp='This Year' then salesamtytd else 0 end) as SalesAmtYTD_T,
+   sum(case when grp='This Year' then cogsytd else 0 end) as COGSYTD_T,
+   sum(case when grp='This Year' then ytdgp else 0 end) as YTDGP_T,
+   sum(case when grp='Last Year' then salesamt else 0 end) as SalesAmt_L,
+   sum(case when grp='Last Year' then cogs else 0 end) as COGS_L,
+   sum(case when grp='Last Year' then gp else 0 end) as GP_L,
+   sum(case when grp='Last Year' then salesamtytd else 0 end) as SalesAmtYTD_L,
+   sum(case when grp='Last Year' then cogsytd else 0 end) as COGSYTD_L,
+   sum(case when grp='Last Year' then ytdgp else 0 end) as YTDGP_L
+
+from ( 
+ 
+ select division,product,  grp ,yyyy,mm,
+   - sum(salesamt) as salesamt, - sum(salesamtytd) as salesamtytd,
+   case when sum(salesamt)=0 then 0 else sum(-salesamt-cogs)/sum(-salesamt) end as gp,
+   sum(cogs) as cogs,sum(cogsytd) as cogsytd,
+   case when sum(salesamtytd)=0 then 0 else sum(-salesamtytd-cogsytd)/sum(-salesamtytd) end as ytdgp
+  from (
+     select  case when (gbmcu like '%0001') then 
+         case when gbobj in ('500501','505001','510501','610501')  then 'Local Rohto' else 'Local Mentholatum Division' end
+        else case when gbobj in ('500501','505001','510501','610501')  then 'Export Rohto' else 'Export Mentholatum Division' end
+         end as Division ,
+     case when lkdl01 like '%眼药水%' THEN 'Eye Drops' WHEN lkdl01 like '%伤风通%' THEN 'Nasal Inhalers' 
+       WHEN lkdl01 like '%镇痛贴%' THEN 'Pain Patch' WHEN lkdl01 like '%樱桃%' THEN 'Cherry Chest Rub' 
+       WHEN lkdl01 like '%薄荷膏%' THEN 'Ointment' WHEN lkdl01 like '%摩擦膏%' THEN 'Deep Heating Rub' 
+       WHEN lkdl01 like '%AD软膏%' THEN 'AD Cream' WHEN lkdl01 like '%美国膏贴%' THEN 'WellPatch' 
+       WHEN lkdl01 like '%退热贴%' THEN 'Fever Patch' WHEN lkdl01 like '%润唇膏%' THEN 'Lipcare' 
+       WHEN lkdl01 like '%护手霜%' THEN 'Hand Cream' WHEN lkdl01 like '%止汗%' THEN 'Body Ice' 
+       WHEN lkdl01 like '%泡沫洁面%' THEN 'Face Wash' WHEN lkdl01 like '%快治%' THEN 'Oxy' 
+       WHEN lkdl01 like '%乐肤洁%' THEN 'Acnes' WHEN lkdl01 like '%男士%' THEN 'Mens' 
+       WHEN lkdl01 like '%肌研%' THEN 'Hada Labo' WHEN lkdl01 like '%沐浴露%' THEN 'Body Wash' 
+       WHEN lkdl01 like '%美活工房%' THEN 'Beauty Workshop' WHEN lkdl01 like '%润肤乳液%' THEN 'Body Veil' 
+       WHEN lkdl01 like '%－Der%' THEN 'Dermacept' WHEN lkdl01 like '%假牙垫' THEN 'Snug' 
+       WHEN lkdl01 like '%原材料' THEN 'Raw Materials' WHEN lkdl01 like '%防晒%' THEN 'Sunplay' 
+       WHEN lkdl01 like '%洗发露%' THEN 'Selsun' WHEN lkdl01 like '%怀孕乐%' THEN 'Happy Event' 
+       WHEN lkdl01 like '%面膜%' THEN 'Masque' WHEN lkdl01 like '%其他%' THEN 'OTHER' 
+       WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
+       else 'Raw Materials' end as Product, case when gblt='AA' then 'This Year' else 'Budgetting' end as grp,
+       yyyy,mm,
+       case when gbobj like '5_____' then amt else 0 end  SalesAmt, case when gbobj like '5_____' then ytd else 0 end  SalesAmtYtd, 
+       case when gbobj like '6_____' then amt  else 0 end as COGS,  case when
+gbobj like '6_____' then ytd  else 0 end as COGSYtd
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+        where gblt in ('AA','BA') 
+   -- and gbobj > '500000' and gbobj < '630000'
+          and  ((gbobj>='500501' and gbobj<'513600')
+              or (gbobj>'600000' and gbobj<'630000')) 
+  union all
+   select  case when (gbmcu like '%0001') then 
+         case when gbobj in ('500501','505001','510501','610501')  then 'Local Rohto' else 'Local Mentholatum Division' end
+        else case when gbobj in ('500501','505001','510501','610501')  then 'Export Rohto' else 'Export Mentholatum Division' end
+         end as Division ,
+     case when lkdl01 like '%眼药水%' THEN 'Eye Drops' WHEN lkdl01 like '%伤风通%' THEN 'Nasal Inhalers' 
+       WHEN lkdl01 like '%镇痛贴%' THEN 'Pain Patch' WHEN lkdl01 like '%樱桃%' THEN 'Cherry Chest Rub' 
+       WHEN lkdl01 like '%薄荷膏%' THEN 'Ointment' WHEN lkdl01 like '%摩擦膏%' THEN 'Deep Heating Rub' 
+       WHEN lkdl01 like '%AD软膏%' THEN 'AD Cream' WHEN lkdl01 like '%美国膏贴%' THEN 'WellPatch' 
+       WHEN lkdl01 like '%退热贴%' THEN 'Fever Patch' WHEN lkdl01 like '%润唇膏%' THEN 'Lipcare' 
+       WHEN lkdl01 like '%护手霜%' THEN 'Hand Cream' WHEN lkdl01 like '%止汗%' THEN 'Body Ice' 
+       WHEN lkdl01 like '%泡沫洁面%' THEN 'Face Wash' WHEN lkdl01 like '%快治%' THEN 'Oxy' 
+       WHEN lkdl01 like '%乐肤洁%' THEN 'Acnes' WHEN lkdl01 like '%男士%' THEN 'Mens' 
+       WHEN lkdl01 like '%肌研%' THEN 'Hada Labo' WHEN lkdl01 like '%沐浴露%' THEN 'Body Wash' 
+       WHEN lkdl01 like '%美活工房%' THEN 'Beauty Workshop' WHEN lkdl01 like '%润肤乳液%' THEN 'Body Veil' 
+       WHEN lkdl01 like '%－Der%' THEN 'Dermacept' WHEN lkdl01 like '%假牙垫%' THEN 'Snug' 
+       WHEN lkdl01 like '%原材料%' THEN 'Raw Materials' WHEN lkdl01 like '%防晒%' THEN 'Sunplay' 
+       WHEN lkdl01 like '%洗发露%' THEN 'Selsun' WHEN lkdl01 like '%怀孕乐%' THEN 'Happy Event' 
+       WHEN lkdl01 like '%面膜%' THEN 'Masque' WHEN lkdl01 like '%其他%' THEN 'OTHER' 
+       WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
+       else 'Raw Materials' end as Product,  'Last Year' as grp, to_char(yyyy+1) , mm,
+       case when gbobj like '5_____' then amt else 0 end  SalesAmt, case when gbobj like '5_____' then ytd else 0 end  SalesAmtYtd, 
+       case when gbobj like '6_____' then amt  else 0 end as COGS,  case when
+gbobj like '6_____' then ytd  else 0 end as COGSYtd
+        from v_f0902ytd 
+     left join proddta.f0901d on lklngp='CS' and lkaid=gbaid
+        where gblt in ('AA') 
+     -- and gbobj > '500000' and gbobj < '630000'
+        and  ((gbobj>='500501' and gbobj<'513600')
+              or (gbobj>'600000' and gbobj<'630000'))
+     
+   )   v_core  
+  where  yyyy = :p_yyyy  and mm=:p_mm
+   group by division,product,grp,yyyy,mm
+    order by division,product,grp,yyyy,mm
+
+) group by   yyyy,mm,division, product
+
+
+
+Budget Selling
+------------------------------------------------------------------------
+
+select case when gbobj in ('703001','703018') then '1' else '2' end  as grp,
+ gbctry || gbfy as yyyy, gbmcu ||'.'||gbobj||'.'||gbsub as AccId,gmdl01,
+ gban01/100 as gban01,gban02/100 as gban02,gban03/100 as gban03,
+ gban04/100 as gban04,gban05/100 as gban05,gban06/100 as gban06,
+ gban07/100 as gban07,gban08/100 as gban08,gban09/100 as gban09,
+ gban10/100 as gban10,gban11/100 as gban11,gban12/100 as gban12
+  from proddta.f0902 left join proddta.f0901
+  on gbaid=gmaid
+  where gblt='BA' and (gbctry || gbfy) = :p_yyyy
+       and (gbobj >'679999' or gbobj<'500000')
+   and (gbmcu like '%001' or gbmcu like '%100' or gbmcu like '%MAP' )
+
+
+Budget General and Admministration
+------------------------------------------------------------------------
+
+select case when gbobj in ('892610') and gbsub='016' then '2' else '1' end  as grp,
+ gbctry || gbfy as yyyy, gbmcu ||'.'||gbobj||'.'||gbsub as AccId,gmdl01,
+ gban01/100 as gban01,gban02/100 as gban02,gban03/100 as gban03,
+ gban04/100 as gban04,gban05/100 as gban05,gban06/100 as gban06,
+ gban07/100 as gban07,gban08/100 as gban08,gban09/100 as gban09,
+ gban10/100 as gban10,gban11/100 as gban11,gban12/100 as gban12
+  from proddta.f0902 left join proddta.f0901
+  on gbaid=gmaid
+  where gblt='BA' and (gbctry || gbfy) = :p_yyyy
+   and gbobj>'700000' and gbobj<'900000' 
+      and ( not (gbmcu like '%001' or gbmcu like '%100' or gbmcu like '%MAP' ))
+
+union all
+select case when gbobj in ('892610') and gbsub='016' then '2' else '1' end  as grp,
+ gbctry || gbfy as yyyy, gbmcu ||'.'||gbobj||'.'||gbsub as AccId,gmdl01,
+ gban01/100 as gban01,gban02/100 as gban02,gban03/100 as gban03,
+ gban04/100 as gban04,gban05/100 as gban05,gban06/100 as gban06,
+ gban07/100 as gban07,gban08/100 as gban08,gban09/100 as gban09,
+ gban10/100 as gban10,gban11/100 as gban11,gban12/100 as gban12
+  from proddta.f0902 left join proddta.f0901
+  on gbaid=gmaid
+  where gblt='BA' and (gbctry || gbfy) = :p_yyyy
+    and gbobj in ('910900')
+     
+
+
+Budget Profit Loss
+------------------------------------------------------------------------
+
+select '1'  as grp, gbctry || gbfy as yyyy, '01' as AccId, 'NET SALES' as gmdl01,
+ -sum(gban01/100) as gban01,-sum(gban02/100) as gban02,-sum(gban03/100) as gban03,
+ -sum(gban04/100) as gban04,-sum(gban05/100) as gban05,-sum(gban06/100) as gban06,
+ -sum(gban07/100) as gban07,-sum(gban08/100) as gban08,-sum(gban09/100) as gban09,
+ -sum(gban10/100) as gban10,-sum(gban11/100) as gban11,-sum(gban12/100) as gban12
+  from proddta.f0902    where gblt='BA' and (gbctry || gbfy) = :p_yyyy
+     and   gbobj>'500000' and gbobj<'600000'      group by gbctry || gbfy  
+     
+union all
+select '1'  as grp, gbctry || gbfy as yyyy, '02' as AccId, 'COST OF SALES' as gmdl01,
+ sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+ sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+ sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+ sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+  from proddta.f0902    where gblt='BA' and (gbctry || gbfy) = :p_yyyy
+     and   gbobj>'600000' and gbobj<'630000'      group by gbctry || gbfy 
+     
+union all
+select '1'  as grp, gbctry || gbfy as yyyy, '03' as AccId, 'GROSS PROFIT' as gmdl01,
+ -sum(gban01/100) as gban01,-sum(gban02/100) as gban02,-sum(gban03/100) as gban03,
+ -sum(gban04/100) as gban04,-sum(gban05/100) as gban05,-sum(gban06/100) as gban06,
+ -sum(gban07/100) as gban07,-sum(gban08/100) as gban08,-sum(gban09/100) as gban09,
+ -sum(gban10/100) as gban10,-sum(gban11/100) as gban11,-sum(gban12/100) as gban12
+  from proddta.f0902    where gblt='BA' and (gbctry || gbfy) = :p_yyyy
+     and   gbobj>'500000' and gbobj<'630000'       group by gbctry || gbfy 
+     
+    
+union all
+select '1'  as grp, gbctry || gbfy as yyyy, '04' as AccId, '比例(%)' as gmdl01,
+  100 * (select -sum(gban01/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) / -sum(gban01/100) as gban01,
+  100 * (select -sum(gban02/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) /  -sum(gban02/100) as gban02,
+  100 * (select -sum(gban03/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) /  -sum(gban03/100) as gban03,
+  100 * (select -sum(gban04/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) / -sum(gban04/100) as gban04,
+  100 * (select -sum(gban05/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) /  -sum(gban05/100) as gban05,
+  100 * (select -sum(gban06/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) / -sum(gban06/100) as gban06,
+ 100 * (select -sum(gban07/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) / -sum(gban07/100) as gban07,
+ 100 * (select -sum(gban08/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) /   -sum(gban08/100) as gban08,
+ 100 * (select -sum(gban09/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) /   -sum(gban09/100) as gban09,
+ 100 * (select -sum(gban10/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) / -sum(gban10/100) as gban10,
+  100 * (select -sum(gban11/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) /  -sum(gban11/100) as gban11,
+  100 * (select -sum(gban12/100) from proddta.f0902   where gblt='BA' 
+  and (gbctry || gbfy) = :p_yyyy  and   gbobj>'500000' and gbobj<'700000'
+    group by gbctry || gbfy) /  -sum(gban12/100) as gban12
+  from proddta.f0902    where gblt='BA' and (gbctry || gbfy) = :p_yyyy
+     and   gbobj>'500000' and gbobj<'600000'      group by gbctry || gbfy  
+     
+ union all
+ select '1'  as grp, gbctry || gbfy as yyyy, '05' as AccId, 'GENERAL ADMINISTRATION' as gmdl01,
+ sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+ sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+ sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+ sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+   from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+   and ( gbobj>'700000' and gbobj<'900000' 
+      and ( not (gbmcu like '%001' or gbmcu like '%100' or gbmcu like '%MAP' ))
+        and (not (gbobj='850000' and gbsub=' '))  
+      or (gbobj in ('910900'))    )
+    group by gbctry || gbfy 
+    
+ union all
+ select '1'  as grp, gbctry || gbfy as yyyy, '06' as AccId, 'ADVERTISING' as gmdl01,
+ sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+ sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+ sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+ sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+   from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+     and   gbobj>'700000' and gbobj<'900000' 
+      and  gbmcu='  ZZS0760001' and gbobj='703001' and gbsub=' ' 
+    group by gbctry || gbfy    
+
+ union all
+ select '1'  as grp, gbctry || gbfy as yyyy, '07' as AccId, 'PROMOTION' as gmdl01,
+ sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+ sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+ sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+ sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+   from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+     and   gbobj>'700000' and gbobj<'900000' 
+      and  gbmcu='  ZZS0760001' and gbobj='703018' and gbsub=' ' 
+    group by gbctry || gbfy    
+    
+ union all
+ select '1'  as grp, gbctry || gbfy as yyyy, '08' as AccId, 'SELLING' as gmdl01,
+ sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+ sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+ sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+ sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+   from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+     and (gbobj >'679999' or gbobj<'500000')
+   and (gbmcu like '%001' or gbmcu like '%100' or gbmcu like '%MAP' )
+      and  gbobj not in ('703001','703018')
+    group by gbctry || gbfy  
+    
+ union all
+ select '1'  as grp, gbctry || gbfy as yyyy, '11' as AccId, 'R & D' as gmdl01,
+ sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+ sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+ sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+ sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+   from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760120' and gbobj='850000' and gbsub=' ' 
+    group by gbctry || gbfy      
+ 
+ union all
+ select grp, yyyy, '12' as AccId, 'TOTAL OPERATING EXPENSES' as gmdl01,
+ sum(gban01) as gban01,sum(gban02) as gban02,sum(gban03) as gban03,
+ sum(gban04) as gban04,sum(gban05) as gban05,sum(gban06) as gban06,
+ sum(gban07) as gban07,sum(gban08) as gban08,sum(gban09) as gban09,
+ sum(gban10) as gban10,sum(gban11) as gban11,sum(gban12) as gban12
+   from (
+   select '1'  as grp, gbctry || gbfy as yyyy, '05' as AccId, 'GENERAL ADMINISTRATION' as gmdl01,
+    sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+    sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+    sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+    sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and ( gbobj>'700000' and gbobj<'900000' 
+      and ( not (gbmcu like '%001' or gbmcu like '%100' or gbmcu like '%MAP' ))
+        and (not (gbobj='850000' and gbsub=' '))  
+      or (gbobj in ('910900'))    )
+    group by gbctry || gbfy 
+    
+   union all
+   select '1'  as grp, gbctry || gbfy as yyyy, '06' as AccId, 'ADVERTISING' as gmdl01,
+   sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+   sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+   sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+   sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+    from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+     and   gbobj>'700000' and gbobj<'900000' 
+      and  gbmcu='  ZZS0760001' and gbobj='703001' and gbsub=' ' 
+      group by gbctry || gbfy    
+
+   union all
+   select '1'  as grp, gbctry || gbfy as yyyy, '07' as AccId, 'PROMOTION' as gmdl01,
+    sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+    sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+    sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+    sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+     from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+       and   gbobj>'700000' and gbobj<'900000' 
+      and  gbmcu='  ZZS0760001' and gbobj='703018' and gbsub=' ' 
+      group by gbctry || gbfy    
+    
+    union all
+    select '1'  as grp, gbctry || gbfy as yyyy, '08' as AccId, 'SELLING' as gmdl01,
+     sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+     sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+     sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+     sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+       and (gbobj >'679999' or gbobj<'500000')
+        and (gbmcu like '%001' or gbmcu like '%100' or gbmcu like '%MAP' )
+         and  gbobj not in ('703001','703018')
+       group by gbctry || gbfy  
+    
+    union all
+    select '1'  as grp, gbctry || gbfy as yyyy, '11' as AccId, 'R & D' as gmdl01,
+     sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+     sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+     sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+     sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760120' and gbobj='850000' and gbsub=' ' 
+         group by gbctry || gbfy    
+     )    v_core group by grp,yyyy
+  
+ union all
+ select '1'  as grp, gbctry || gbfy as yyyy, '13' as AccId, 'DISPOSAL OF FIXED ASSETS' as gmdl01,
+ sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+ sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+ sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+ sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+   from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760110' and gbobj='910700' and gbsub=' ' 
+    group by gbctry || gbfy   
+    
+ union all
+ select '1'  as grp, gbctry || gbfy as yyyy, '14' as AccId, 'OTHER EXPENSES / (INCOMES)' as gmdl01,
+ sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+ sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+ sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+ sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+   from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760110' and gbobj='910210' and gbsub=' ' 
+    group by gbctry || gbfy
+  
+ union all
+ select  grp,  yyyy, '15' as AccId, 'INCOME BEFORE TAX' as gmdl01,
+ sum(gban01) as gban01,sum(gban02) as gban02,sum(gban03) as gban03,
+ sum(gban04) as gban04,sum(gban05) as gban05,sum(gban06) as gban06,
+ sum(gban07) as gban07,sum(gban08) as gban08,sum(gban09) as gban09,
+ sum(gban10) as gban10,sum(gban11) as gban11,sum(gban12) as gban12
+   from (
+    select '1'  as grp, gbctry || gbfy as yyyy, '03' as AccId, 'GROSS PROFIT' as gmdl01,
+    -sum(gban01/100) as gban01,-sum(gban02/100) as gban02,-sum(gban03/100) as gban03,
+    -sum(gban04/100) as gban04,-sum(gban05/100) as gban05,-sum(gban06/100) as gban06,
+    -sum(gban07/100) as gban07,-sum(gban08/100) as gban08,-sum(gban09/100) as gban09,
+    -sum(gban10/100) as gban10,-sum(gban11/100) as gban11,-sum(gban12/100) as gban12
+      from proddta.f0902    where gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and   gbobj>'500000' and gbobj<'630000'       group by gbctry || gbfy 
+     
+   union all
+   select grp, yyyy, '12' as AccId, 'TOTAL OPERATING EXPENSES' as gmdl01,
+   -sum(gban01) as gban01,-sum(gban02) as gban02,-sum(gban03) as gban03,
+   -sum(gban04) as gban04,-sum(gban05) as gban05,-sum(gban06) as gban06,
+   -sum(gban07) as gban07,-sum(gban08) as gban08,-sum(gban09) as gban09,
+   -sum(gban10) as gban10,-sum(gban11) as gban11,-sum(gban12) as gban12
+   from (
+    select '1'  as grp, gbctry || gbfy as yyyy, '05' as AccId, 'GENERAL ADMINISTRATION' as gmdl01,
+     sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+     sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+     sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+     sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and ( gbobj>'700000' and gbobj<'900000' 
+      and ( not (gbmcu like '%001' or gbmcu like '%100' or gbmcu like '%MAP' ))
+        and (not (gbobj='850000' and gbsub=' '))  
+      or (gbobj in ('910900'))    )
+      group by gbctry || gbfy 
+    
+    union all
+    select '1'  as grp, gbctry || gbfy as yyyy, '06' as AccId, 'ADVERTISING' as gmdl01,
+    sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+    sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+    sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+    sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+     from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+     and   gbobj>'700000' and gbobj<'900000' 
+      and  gbmcu='  ZZS0760001' and gbobj='703001' and gbsub=' ' 
+       group by gbctry || gbfy    
+
+    union all
+    select '1'  as grp, gbctry || gbfy as yyyy, '07' as AccId, 'PROMOTION' as gmdl01,
+     sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+     sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+     sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+     sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+       and   gbobj>'700000' and gbobj<'900000' 
+      and  gbmcu='  ZZS0760001' and gbobj='703018' and gbsub=' ' 
+      group by gbctry || gbfy    
+    
+     union all
+     select '1'  as grp, gbctry || gbfy as yyyy, '08' as AccId, 'SELLING' as gmdl01,
+      sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+      sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+      sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+      sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+       from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and (gbobj >'679999' or gbobj<'500000')
+         and (gbmcu like '%001' or gbmcu like '%100' or gbmcu like '%MAP' )
+          and  gbobj not in ('703001','703018')
+        group by gbctry || gbfy  
+    
+     union all
+     select '1'  as grp, gbctry || gbfy as yyyy, '11' as AccId, 'R & D' as gmdl01,
+      sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+      sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+      sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+      sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760120' and gbobj='850000' and gbsub=' ' 
+         group by gbctry || gbfy    
+     )    v_tt group by grp,yyyy 
+   
+    union all
+    select '1'  as grp, gbctry || gbfy as yyyy, '13' as AccId, 'DISPOSAL OF FIXED ASSETS' as gmdl01,
+    -sum(gban01/100) as gban01,-sum(gban02/100) as gban02,-sum(gban03/100) as gban03,
+    -sum(gban04/100) as gban04,-sum(gban05/100) as gban05,-sum(gban06/100) as gban06,
+    -sum(gban07/100) as gban07,-sum(gban08/100) as gban08,-sum(gban09/100) as gban09,
+    -sum(gban10/100) as gban10,-sum(gban11/100) as gban11,-sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760110' and gbobj='910700' and gbsub=' ' 
+      group by gbctry || gbfy   
+    
+   union all
+   select '1'  as grp, gbctry || gbfy as yyyy, '14' as AccId, 'OTHER EXPENSES / (INCOMES)' as gmdl01,
+    -sum(gban01/100) as gban01,-sum(gban02/100) as gban02,-sum(gban03/100) as gban03,
+    -sum(gban04/100) as gban04,-sum(gban05/100) as gban05,-sum(gban06/100) as gban06,
+    -sum(gban07/100) as gban07,-sum(gban08/100) as gban08,-sum(gban09/100) as gban09,
+    -sum(gban10/100) as gban10,-sum(gban11/100) as gban11,-sum(gban12/100) as gban12
+     from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760110' and gbobj='910210' and gbsub=' ' 
+      group by gbctry || gbfy
+     )  v_core  group by grp ,yyyy
+     
+ union all
+ select '1'  as grp, gbctry || gbfy as yyyy, '16' as AccId, 'PROFIT TAX' as gmdl01,
+ sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+ sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+ sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+ sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+   from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760110' and gbobj='970020' and gbsub=' ' 
+    group by gbctry || gbfy   
+    
+union all
+select  grp,   yyyy, '17' as AccId, 'NET INCOME / (LOSS)' as gmdl01,
+ sum(gban01) as gban01,sum(gban02) as gban02,sum(gban03) as gban03,
+ sum(gban04) as gban04,sum(gban05) as gban05,sum(gban06) as gban06,
+ sum(gban07) as gban07,sum(gban08) as gban08,sum(gban09) as gban09,
+ sum(gban10) as gban10,sum(gban11) as gban11,sum(gban12) as gban12
+   from (
+  select  grp,  yyyy, '15' as AccId, 'INCOME BEFORE TAX' as gmdl01,
+ sum(gban01) as gban01,sum(gban02) as gban02,sum(gban03) as gban03,
+ sum(gban04) as gban04,sum(gban05) as gban05,sum(gban06) as gban06,
+ sum(gban07) as gban07,sum(gban08) as gban08,sum(gban09) as gban09,
+ sum(gban10) as gban10,sum(gban11) as gban11,sum(gban12) as gban12
+   from (
+    select '1'  as grp, gbctry || gbfy as yyyy, '03' as AccId, 'GROSS PROFIT' as gmdl01,
+    -sum(gban01/100) as gban01,-sum(gban02/100) as gban02,-sum(gban03/100) as gban03,
+    -sum(gban04/100) as gban04,-sum(gban05/100) as gban05,-sum(gban06/100) as gban06,
+    -sum(gban07/100) as gban07,-sum(gban08/100) as gban08,-sum(gban09/100) as gban09,
+    -sum(gban10/100) as gban10,-sum(gban11/100) as gban11,-sum(gban12/100) as gban12
+      from proddta.f0902    where gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and   gbobj>'500000' and gbobj<'630000'       group by gbctry || gbfy 
+     
+   union all
+   select grp, yyyy, '12' as AccId, 'TOTAL OPERATING EXPENSES' as gmdl01,
+   -sum(gban01) as gban01,-sum(gban02) as gban02,-sum(gban03) as gban03,
+   -sum(gban04) as gban04,-sum(gban05) as gban05,-sum(gban06) as gban06,
+   -sum(gban07) as gban07,-sum(gban08) as gban08,-sum(gban09) as gban09,
+   -sum(gban10) as gban10,-sum(gban11) as gban11,-sum(gban12) as gban12
+   from (
+    select '1'  as grp, gbctry || gbfy as yyyy, '05' as AccId, 'GENERAL ADMINISTRATION' as gmdl01,
+     sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+     sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+     sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+     sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and ( gbobj>'700000' and gbobj<'900000' 
+      and ( not (gbmcu like '%001' or gbmcu like '%100' or gbmcu like '%MAP' ))
+        and (not (gbobj='850000' and gbsub=' '))  
+      or (gbobj in ('910900'))    )
+      group by gbctry || gbfy 
+    
+    union all
+    select '1'  as grp, gbctry || gbfy as yyyy, '06' as AccId, 'ADVERTISING' as gmdl01,
+    sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+    sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+    sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+    sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+     from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+     and   gbobj>'700000' and gbobj<'900000' 
+      and  gbmcu='  ZZS0760001' and gbobj='703001' and gbsub=' ' 
+       group by gbctry || gbfy    
+
+    union all
+    select '1'  as grp, gbctry || gbfy as yyyy, '07' as AccId, 'PROMOTION' as gmdl01,
+     sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+     sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+     sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+     sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+       and   gbobj>'700000' and gbobj<'900000' 
+      and  gbmcu='  ZZS0760001' and gbobj='703018' and gbsub=' ' 
+      group by gbctry || gbfy    
+    
+     union all
+     select '1'  as grp, gbctry || gbfy as yyyy, '08' as AccId, 'SELLING' as gmdl01,
+      sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+      sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+      sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+      sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+       from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and (gbobj >'679999' or gbobj<'500000')
+         and (gbmcu like '%001' or gbmcu like '%100' or gbmcu like '%MAP' )
+          and  gbobj not in ('703001','703018')
+        group by gbctry || gbfy  
+    
+     union all
+     select '1'  as grp, gbctry || gbfy as yyyy, '11' as AccId, 'R & D' as gmdl01,
+      sum(gban01/100) as gban01,sum(gban02/100) as gban02,sum(gban03/100) as gban03,
+      sum(gban04/100) as gban04,sum(gban05/100) as gban05,sum(gban06/100) as gban06,
+      sum(gban07/100) as gban07,sum(gban08/100) as gban08,sum(gban09/100) as gban09,
+      sum(gban10/100) as gban10,sum(gban11/100) as gban11,sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760120' and gbobj='850000' and gbsub=' ' 
+         group by gbctry || gbfy    
+     )    v_tt group by grp,yyyy 
+   
+    union all
+    select '1'  as grp, gbctry || gbfy as yyyy, '13' as AccId, 'DISPOSAL OF FIXED ASSETS' as gmdl01,
+    -sum(gban01/100) as gban01,-sum(gban02/100) as gban02,-sum(gban03/100) as gban03,
+    -sum(gban04/100) as gban04,-sum(gban05/100) as gban05,-sum(gban06/100) as gban06,
+    -sum(gban07/100) as gban07,-sum(gban08/100) as gban08,-sum(gban09/100) as gban09,
+    -sum(gban10/100) as gban10,-sum(gban11/100) as gban11,-sum(gban12/100) as gban12
+      from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760110' and gbobj='910700' and gbsub=' ' 
+      group by gbctry || gbfy   
+    
+   union all
+   select '1'  as grp, gbctry || gbfy as yyyy, '14' as AccId, 'OTHER EXPENSES / (INCOMES)' as gmdl01,
+    -sum(gban01/100) as gban01,-sum(gban02/100) as gban02,-sum(gban03/100) as gban03,
+    -sum(gban04/100) as gban04,-sum(gban05/100) as gban05,-sum(gban06/100) as gban06,
+    -sum(gban07/100) as gban07,-sum(gban08/100) as gban08,-sum(gban09/100) as gban09,
+    -sum(gban10/100) as gban10,-sum(gban11/100) as gban11,-sum(gban12/100) as gban12
+     from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760110' and gbobj='910210' and gbsub=' ' 
+      group by gbctry || gbfy
+     )  v_core  group by grp ,yyyy
+     
+ union all
+ select '1'  as grp, gbctry || gbfy as yyyy, '16' as AccId, 'PROFIT TAX' as gmdl01,
+ -sum(gban01/100) as gban01,-sum(gban02/100) as gban02,-sum(gban03/100) as gban03,
+ -sum(gban04/100) as gban04,-sum(gban05/100) as gban05,-sum(gban06/100) as gban06,
+ -sum(gban07/100) as gban07,-sum(gban08/100) as gban08,-sum(gban09/100) as gban09,
+ -sum(gban10/100) as gban10,-sum(gban11/100) as gban11,-sum(gban12/100) as gban12
+   from proddta.f0902  where  gblt='BA' and (gbctry || gbfy) = :p_yyyy
+        and  gbmcu='  ZZS0760110' and gbobj='970020' and gbsub=' ' 
+    group by gbctry || gbfy    
+     ) v_xcore     group by grp, yyyy
+
+
+New BU 费用
+------------------------------------------------------------------------
+
+汇总表
+select glctry || glfy as yyyy, to_char(jde.rpttools.NTOD(gldgj),'mm') as mm, 
+  globj,lkdl01,gmdl01, -- glexa,glexr,
+ sum(case when glsbl='SHEJI' or gldoc='81902227'  then glaa/100 else 0  end) as DesignFee,-- 'Design Fee'
+ sum(case when glsbl='COLOR' then glaa/100 else 0 end) as ColorProof, --'Color Proof'
+ sum(case when glsbl='DAYANG' then glaa/100 else 0 end) as SampleCost, --'Sample Cost (打樣費)'
+ sum(case when glsbl='BANFEI' then glaa/100 else 0 end) as PlatingCost, --'Plating Cost (版費)'
+ sum(case when glsbl='MOJU' then glaa/100 else 0 end) as MoldingCost, --'Molding Cost (模具費)'
+ sum(case when glsbl='XUANCHE' then glaa/100 else 0 end) as ThroughRA, -- 試驗費  -- 作包裝宣稱用途 --   
+ sum(case when glsbl='ZHUCE' then glaa/100 else 0 end) as TestRA, -- '測試費/ 檢測費-- 作產品注冊用途 --
+ sum(case when not (gldoc='81902227' or glsbl in ('SHEJI','COLOR','DAYANG','BANFEI','MOJU','XUANCHE','ZHUCE'))
+  then glaa/100 else 0 end) as Other -- Other --
+    from proddta.f0911 left join proddta.f0901d on lklngp='CS' and glaid=lkaid
+  left join proddta.f0901 on glaid=gmaid
+ where glmcu in ('  ZZS0760NEW')  and glco = '90000' and gllt='AA' and glpost='P'
+   and  (glctry || glfy) = :p_yyyy  and to_char(jde.rpttools.NTOD(gldgj),'mm') <= :p_mm
+group by glctry || glfy,to_char(jde.rpttools.NTOD(gldgj),'mm'), globj,lkdl01,gmdl01 --, glexa,glexr 
+
+
+
+科目明细表
+
+--select to_char(jde.rpttools.NTOD(gldgj),'yyyy') as yyyy, 
+
+select glctry || glfy as yyyy, to_char(jde.rpttools.NTOD(gldgj),'mm') as mm, 
+  globj,lkdl01,gmdl01, glexa,glexr,
+ sum(case when glsbl='SHEJI' or gldoc='81902227'  then glaa/100 else 0  end)
+as DesignFee2,-- 'Design Fee'
+ sum(case when glsbl='COLOR' then glaa/100 else 0 end) as ColorProof2, --'Color Proof'
+ sum(case when glsbl='DAYANG' then glaa/100 else 0 end) as SampleCost2, --'Sample Cost (打樣費)'
+ sum(case when glsbl='BANFEI' then glaa/100 else 0 end) as PlatingCost2, --'Plating Cost (版費)'
+ sum(case when glsbl='MOJU' then glaa/100 else 0 end) as MoldingCost2, --'Molding Cost (模具費)'
+ sum(case when glsbl='XUANCHE' then glaa/100 else 0 end) as ThroughRA2, -- 試驗費  -- 作包裝宣稱用途 --   
+ sum(case when glsbl='ZHUCE' then glaa/100 else 0 end) as TestRA2, -- '測試費/ 檢測費-- 作產品注冊用途 --
+ sum(case when not (gldoc='81902227' or glsbl in ('SHEJI','COLOR','DAYANG','BANFEI','MOJU','XUANCHE','ZHUCE'))
+  then glaa/100 else 0 end) as Other2 -- Other --
+    from proddta.f0911 left join proddta.f0901d on lklngp='CS' and glaid=lkaid
+  left join proddta.f0901 on glaid=gmaid
+ where glmcu in ('  ZZS0760NEW')  and glco = '90000' and gllt='AA' and glpost='P'
+   and  (glctry || glfy) = :p_yyyy  and to_char(jde.rpttools.NTOD(gldgj),'mm') <= :p_mm
+     and globj = :p_obj
+group by glctry || glfy,to_char(jde.rpttools.NTOD(gldgj),'mm'), globj,lkdl01,gmdl01, glexa,glexr 
+
+
+
+R&D 费用
+------------------------------------------------------------------------
+
+select ' ' as kind,grp,sum(amt01) as Amt01,sum(amt02) as Amt02, sum(amt03) as Amt03,
+ sum(amt04) as Amt04, sum(amt05) as Amt05,sum(amt06) as Amt06, sum(amt07) as Amt07, 
+ sum(amt08) as Amt08, sum(amt09) as Amt09,sum(amt10) as Amt10, sum(amt11) as Amt11,
+ sum(amt12) as Amt12, sum(ThisAmt) as ThisAmt, sum(preamt) as PreAmt
+from (
+ select  case when glsbl = 'RD' THEN '1.1开发费用Metro R&D'
+  when glsbl NOT LIKE 'RD' AND glmcu ='  ZZS0760126' AND glsub NOT in 
+  ('001','002','004','006','007','008','009','012','010','014','015',
+  '017','018','025','026','027','029','030','031','032','033','034',
+  '036','038','039','040','041','046','04614') THEN '1.1开发费用Metro R&D'
+  when glmcu = '  ZZS0760NEW' THEN  '1.2NEW BU'
+  WHEN glsub in  ('017','018','027') THEN '1.3工资'
+  WHEN glsub in  ('025') THEN '1.4社保'
+  WHEN glsub in  ('026') THEN '1.5医保'
+  WHEN globj = '892610' AND glsub IN ('034')AND glsbl = 'JSCF' THEN '1.6公司车接送'
+  WHEN globj = '892610' AND glsub IN ('034')AND glsbl in ('90120041','90121368') 
+    AND (glexa LIKE'%宿舍% 'OR  glexr LIKE'%宿舍%' )  THEN '2.14职工住宿费'
+  WHEN globj = '892610' AND glsub in ('034') AND glexr  LIKE '%交通费%' THEN '2.05差费' 
+  WHEN glsub in  ('034') THEN '1.8职工福利'
+  WHEN glsub in  ('029') THEN '1.9住房公积金'
+  when glsbl NOT LIKE 'RD' AND glmcu ='  ZZS0760120' AND glsub not in
+   ('001','002','004','006','007','008','009','012','010','014','015',
+    '017','018','025','026','027','029','030','031','032','034','036',
+    '038','039','040','041','046') THEN  '2.01开发费用Reg R&D'
+  WHEN glsub in  ('046','04614') AND glmcu IN ('  ZZS0760132','  ZZS0760126','  ZZS0760120') THEN '2.02样品费用'
+  WHEN glsub in  ('001') THEN '2.03书刊费'
+  WHEN glsub in  ('002') THEN '2.04电话费'
+  WHEN (glsub in  ('004') AND glexa not LIKE '%安达%') THEN '2.05差费' 
+  WHEN glsub in  ('006') THEN '2.06快递费'
+  WHEN glsub in  ('007') THEN '2.07文具和印刷费'
+  WHEN glsub in  ('008') THEN '2.08影印费'
+  WHEN (glsub in  ('012') AND glsbl NOT LIKE 'RD') THEN '2.09顾问费'
+  WHEN glsub in  ('009') THEN '2.10一般费用'
+  WHEN glsub in  ('014') THEN '2.11修理费用'
+  WHEN glsub in  ('015') THEN '2.12交际应酬'
+  WHEN glsub in  ('020','021') THEN '2.13加班工资'
+  WHEN glsub in  ('030') THEN '2.14职工住宿费'
+  WHEN glsub in  ('031') THEN '2.15电脑耗材费'
+  WHEN glsub in  ('033') THEN '2.16职工培训费'
+  WHEN glsub in  ('035') THEN '2.17办公室租金'
+  WHEN glsub in  ('038') THEN '2.18清洁费'
+  WHEN (glsub in  ('013','01314') AND glsbl NOT IN ('RD')) THEN '2.19翻译费'
+  WHEN glsub in  ('040') THEN '2.20折旧-办公室设备'
+  WHEN glsub in  ('041') THEN '2.21折旧-办公室家私'
+  WHEN glsub in  ('039') THEN '2.22折旧-厂房'
+  WHEN glsub in  ('036') THEN '2.24电费/水费'
+  WHEN glsub in  ('032') THEN '2.25电脑租线费'
+  WHEN (glsub in  ('010') AND glsbl NOT LIKE 'RD') THEN '2.26法律和专业'
+   else 'Other' end as Grp,
+  
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '01' then glaa/100 else 0 end as Amt01,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '02' then glaa/100 else 0 end as Amt02,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '03' then glaa/100 else 0 end as Amt03,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '04' then glaa/100 else 0 end as Amt04,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '05' then glaa/100 else 0 end as Amt05,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '06' then glaa/100 else 0 end as Amt06,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '07' then glaa/100 else 0 end as Amt07,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '08' then glaa/100 else 0 end as Amt08,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '09' then glaa/100 else 0 end as Amt09,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '10' then glaa/100 else 0 end as Amt10,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '11' then glaa/100 else 0 end as Amt11,
+  case when (glctry || glfy) = :p_yyyy and to_char(jde.rpttools.NTOD(gldgj),'mm') = '12' then glaa/100 else 0 end as Amt12,
+  case when (glctry || glfy) = :p_yyyy then glaa/100 else 0 end as ThisAmt,
+  case when (glctry || glfy) = :p_yyyy - 1 then glaa/100 else 0 end as PreAmt
+  
+     from proddta.f0911  
+        where gllt in ('AA') and glpost='P' and glco='90000'  and glmcu = '  ZZS0760120'
+         and  globj like '892%'  and  (glctry || glfy) in ( :p_yyyy , :p_yyyy - 1)
+   ) v_core
+   
+   group by grp   order by grp
+ 
+ 
+
+EXP Sales
+------------------------------------------------------------------------
+
+SELECT  CASE WHEN sdlitm LIKE '__7____%' THEN 'Other' WHEN sdlitm LIKE '__4____%' THEN 'Other'
+ WHEN sdlitm LIKE '_____01%' THEN '香港' WHEN sdlitm LIKE '_____11%' THEN '美国'
+ WHEN sdlitm LIKE '_____12%' THEN '英国' WHEN sdlitm LIKE '_____13%' THEN '加拿大'
+ WHEN sdlitm LIKE '_____14%' THEN '澳洲' WHEN sdlitm LIKE '_____15%' THEN '南非'
+ WHEN sdlitm LIKE '_____16%' THEN '日本' WHEN sdlitm LIKE '_____17%' THEN '内销版'
+ WHEN sdlitm LIKE '_____18%' THEN '台湾' WHEN sdlitm LIKE '_____19%' THEN '马来西亚'
+ WHEN sdlitm LIKE '_____20%' THEN '泰国' WHEN sdlitm LIKE '_____21%' THEN '韩国'
+ WHEN sdlitm LIKE '_____22%' THEN '新加坡' WHEN sdlitm LIKE '_____23%' THEN '越南'
+ WHEN sdlitm LIKE '_____24%' THEN '新西兰' WHEN sdlitm LIKE '_____25%' THEN '印尼'
+ WHEN sdlitm LIKE '_____26%' THEN '菲律宾' WHEN sdlitm LIKE '_____27%' THEN '巴西'
+ WHEN sdlitm LIKE '_____28%' THEN '墨西哥' WHEN sdlitm LIKE '_____29%' THEN '智利'
+ WHEN sdlitm LIKE '_____30%' THEN '拉美' ELSE '其他' END AS country,
+
+ CASE WHEN sdglc like '__34' THEN 'Oxy' WHEN sdglc like '__50' THEN 'Oxy'
+  WHEN sdglc like '__41' THEN 'Lipcare' WHEN sdglc like '__66' THEN 'Selsun'
+  WHEN sdglc like '__98' THEN 'Packaging' WHEN sdglc like '__35' THEN 'Oxy'
+  WHEN sdglc like '__45' THEN 'Lipcare' WHEN sdglc like '__67' THEN 'Selsun'
+  WHEN sdglc like '__99' THEN 'Raw Materials' WHEN sdglc like '__11' THEN 'Eye Drops'
+  WHEN sdglc like '__13' THEN 'Eye Drops' WHEN sdglc like '__12' THEN 'Inhalers'
+  WHEN sdglc like '__14' THEN 'Inhalers' WHEN sdglc like '__20' THEN 'Fever Patch'
+  WHEN sdglc like '__21' THEN 'Pain Patch' WHEN sdglc like '__22' THEN 'Cherry Chest Rub'
+  WHEN sdglc like '__23' THEN 'Ointment' WHEN sdglc like '__24' THEN 'DHR'
+  WHEN sdglc like '__29' THEN 'WellPatch' WHEN sdglc like '__33' THEN 'Body Ice'
+  WHEN sdglc like '__36' THEN 'Body Veil' WHEN sdglc like '__37' THEN 'Beauty Workshop'
+  WHEN sdglc like '__42' THEN 'Happy Event' WHEN sdglc like '__46' THEN 'Hand Cream'
+  WHEN sdglc like '__48' THEN 'Body Wash' WHEN sdglc like '__49' THEN 'Child Care-Mamahug'
+  WHEN sdglc like '__53' THEN 'Masque' WHEN sdglc like '__52' THEN 'Face Wash'
+  WHEN sdglc like '__54' THEN 'Acnes' WHEN sdglc like '__15' THEN 'Acnes'
+  WHEN sdglc like '__55' THEN 'Mens' WHEN sdglc like '__56' THEN 'Hada Labo'
+  WHEN sdglc like '__61' THEN 'Snug' WHEN sdglc like '__63' THEN 'Sunplay'
+  WHEN sdglc like '__30' THEN 'AD Cream' WHEN sdglc like '__58' THEN 'Dermacept'
+  WHEN sdglc like '__38' THEN 'AD Cream' WHEN sdglc like '__40' THEN 'Megumi'
+   ELSE '未定义' END AS Product,
+
+ CASE WHEN sdglc like 'WI__' THEN '半成品' WHEN sdglc like 'IN98' THEN '材料'
+  WHEN sdglc like 'IN99' THEN '原料' WHEN sdglc like 'IN__' THEN '成品'  ELSE '未定义' END AS kind
+
+ , sd
+--,OrderUOM,SalesOrder.DocumentType, SalesOrder.OrderNumber, 
+ --SalesOrder.OrderType, SalesOrder.AddressNumber,  SalesOrder.MonthNumber,
+ -- SalesOrder.ItemNumber, SalesOrder.QuantityShipped as QtyShipped, SalesOrder.SalesAmount,
+  -- SalesOrder.TotalCost, SalesOrder.DocumentNumber, SalesOrder.GLClass,f4101d.IMDSC,f4102.IBSRP1,
+   -- f4102.IBSRP2, f4102.IBSRP3,f4102.IBSRP4, f4102.IBSRP5, f4102.IBSRP6,
+
+  FROM  proddta.f4211 SalesOrder
+     where sdmcu like '%ZZS%' and sddcto='NX' and sdglc not in ('FT3','FT4','FT23','FT60','FT99','INZA','VA')
+ 
+
+
+
+Mentholatum China Sales Report by Year
+========================================================================
+
+首先将F0902中的每月金额列转换为行
+select YYYY,substr(MM,5,2) as Month,Kind,Grp,LYTD,sum(amt/100) as Amt
+  from (
+    select gbctry || gbfy as yyyy
+       ,case when (gbmcu like '%0001') then 'Local' else 'Export' end as Kind 
+       ,case when gbobj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end as Grp
+       ,gbapyn as LYTD, MM, Amt
+        from proddta.f0902 unpivot (Amt for mm in (gban01,gban02,gban03,gban04,gban05,gban06,gban07,gban08,gban09,gban10,gban11,gban12))
+          where gblt='AA' and gbobj>=500000 and gbobj<600000
+    )   group by yyyy,substr(mm,5,2),kind,grp,lytd
+
+
+通过涵数OVER按分区计算YTD, 同时从F0911取调整数作为gban13
+select YYYY,substr(MM,5,2) as MM,Kind,Grp,LastAmt, Amt, sum(amt) over( partition by yyyy,kind,grp,lastamt order by mm) as YTD
+ ,sum(amt) over (partition by yyyy,kind,grp,lastamt) as CurrAmt, sum(amt) over (partition by yyyy) as TotalAmt
+  from (
+    select gbctry || gbfy as yyyy
+       ,case when (gbmcu like '%0001') then 'Local' else 'Export' end as Kind 
+       ,case when gbobj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end as Grp
+       ,sum(gbapyn/100) as LastAmt, MM, sum(Amt/100) as Amt
+        from proddta.f0902 unpivot (Amt for mm in (gban01,gban02,gban03,gban04,gban05,gban06,gban07,gban08,gban09,gban10,gban11,gban12))
+          where gblt='AA' and gbobj>=500000 and gbobj<600000
+          group by gbctry || gbfy, case when (gbmcu like '%0001') then 'Local' else 'Export' end
+           ,case when gbobj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end
+            , MM
+
+
+    union all
+    select glctry || glfy as yyyy
+    ,case when (glmcu like '%0001') then 'Local' else 'Export' end as Kind 
+       ,case when globj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end as Grp
+       ,0/100 as LastAmt, 'GBAN13' as MM, sum(glaa/100) as Amt
+    from proddta.f0911
+      where gllt='AA' and gldct='JE' and globj>=500000 and globj<600000
+      group by glctry || glfy  ,case when (glmcu like '%0001') then 'Local' else 'Export' end   
+       ,case when globj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end
+    ) 
+
+    where  yyyy = :p_yyyy
+
+
+建YTD视图 v_f0902ytd
+
+  select gbaid, yyyy, gblt, gbsbl,gbsblt, gbco, gbmcu,gbobj,gbsub, 
+    substr(mm,5,2) as mm, gbapyn as lastamt, gbapyc as pyc, amt,
+      sum(amt) over( partition by gbaid, yyyy, gblt, gbsbl,gbsblt, gbco,
+        gbmcu,gbobj,gbsub, gbapyn order by mm) as ytd
+     from (
+       select gbaid,gbctry || gbfy as yyyy, gblt, gbsbl,gbsblt, gbco,
+           gbmcu,gbobj,gbsub, sum(gbapyn/100) as gbapyn,
+             sum(gbapyc/100) as gbapyc,  sum(gban01/100) as gban01 , 
+            sum(gban02/100) as gban02,sum(gban03/100) as gban03,sum(gban04/100) as gban04, 
+            sum(gban05/100) as gban05,sum(gban06/100) as gban06,sum(gban07/100) as gban07, 
+            sum(gban08/100) as gban08,sum(gban09/100) as gban09,sum(gban10/100) as gban10,
+            sum(gban11/100) as gban11,sum(gban12/100) as gban12 
+           from proddta.f0902 
+            group by gbaid,gbctry || gbfy , gblt, gbsbl,gbsblt, gbco, gbmcu,gbobj,gbsub
+                 ) f0902 unpivot (Amt for mm in 
+    (gban01,gban02,gban03,gban04,gban05,gban06,gban07,gban08,gban09,gban10,gban11,gban12))
+
+
+
+加上条件，将行转为列，金额取反
+
+ select yyyy, case when mm='01' then 'Jan' when mm='02' then 'Feb' when mm='03' then 'Mar' when mm='04' then 'Apr' 
+   when mm='05' then 'May' when mm='06' then 'Jun' when mm='07' then 'Jul' when mm='08' then 'Aug' 
+   when mm='09' then 'Sep' when mm='10' then 'Oct' when mm='11' then 'Nov' when mm='12' then 'Dec' else 'Return' end as month
+  ,sum(case when (kind='Local' and grp='Mentholatum Division') then Amt else 0 end) as LocalCAmt
+  ,sum(case when (kind='Local' and grp='Mentholatum Division') then ytd else 0 end) as LocalCYTD
+  ,max(case when (kind='Local' and grp='Mentholatum Division') then curramt else 0 end) as LocalCTotalAmt
+  ,case when max(TotalAmt)=0 then 0 else 
+    max(case when (kind='Local' and grp='Mentholatum Division') then curramt else 0 end)/max(TotalAmt) end as LocalCRatio
+  ,sum(case when kind='Local' and grp='Rohto' then Amt else 0 end) as LocalDAmt
+  ,sum(case when kind='Local' and grp='Rohto' then ytd else 0 end) as LocalDYTD
+  ,max(case when kind='Local' and grp='Rohto' then curramt else 0 end) as LocalDTotalAmt
+  ,case when max(TotalAmt)=0 then 0 else
+     max(case when kind='Local' and grp='Rohto' then curramt else 0 end)/max(TotalAmt) end as LocalDRatio
+  ,sum(case when kind='Export' and grp='Mentholatum Division' then Amt else 0 end) as ExportCAmt
+  ,sum(case when kind='Export' and grp='Mentholatum Division' then ytd else 0 end) as ExportCYTD
+  ,max(case when kind='Export' and grp='Mentholatum Division' then curramt else 0 end) as ExportCTotalAmt
+  ,case when max(TotalAmt)=0 then 0 else
+    max(case when kind='Export' and grp='Mentholatum Division' then curramt else 0 end)/max(TotalAmt) end as ExportCRatio
+  ,sum(case when kind='Export' and grp='Rohto' then Amt else 0 end) as ExportDAmt
+  ,sum(case when kind='Export' and grp='Rohto' then ytd else 0 end) as ExportDYTD
+  ,max(case when kind='Export' and grp='Rohto' then curramt else 0 end) as ExportDTotalAmt
+  ,case when max(TotalAmt)=0 then 0 else
+    max(case when kind='Export' and grp='Rohto' then curramt else 0 end)/max(TotalAmt) end as ExportDRatio
+  ,max(TotalAmt) as TotalAmt, max(LastAmt) as LastAmt
+  ,case when max(TotalAmt)=0 then 0 else 
+    ( max(case when (kind='Local' and grp='Mentholatum Division') then curramt else 0 end)
+     + max(case when kind='Local' and grp='Rohto' then curramt else 0 end)
+     + max(case when kind='Export' and grp='Mentholatum Division' then curramt else 0 end)
+     + max(case when kind='Export' and grp='Rohto' then curramt else 0 end) )
+     /max(TotalAmt) end as TRatio
+  ,LCAmt , LDAmt, ECAmt,  EDAmt,  PTotal, PTotalRatio,  LCRatio, LDRatio, ECRatio,  EDRatio
+  
+ from (
+
+  select YYYY, MM,Kind,Grp,LastAmt, Amt, sum(amt) over( partition by yyyy,kind,grp,lastamt order by mm) as YTD
+    ,sum(amt) over (partition by yyyy,kind,grp,lastamt) as CurrAmt, sum(amt) over (partition by yyyy) as TotalAmt
+  from (
+     select  yyyy,kind,grp,mm,sum(lastamt) as lastamt,sum(amt) as amt 
+        from ( 
+         select yyyy, case when (gbmcu like '%0001') then 'Local' else 'Export' end as Kind 
+           ,case when gbobj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end as Grp
+            ,- lastamt as lastamt, mm, - amt as amt  --, - ytd 
+              from v_f0902ytd   where gblt='AA' and gbobj>=500501 and gbobj<513600 
+         union all
+         select glctry || glfy as yyyy ,case when (glmcu like '%0001') then 'Local' else 'Export' end as Kind 
+           ,case when globj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end as Grp
+            , 0/100 as LastAmt, to_char(jde.rpttools.NTOD(gldgj),'mm') as MM,  sum(glaa/100) as Amt
+             from proddta.f0911
+             where gllt='AA' and gldct='JE' and glsbl='JE' and glsblt='X' and globj>=500000 and globj<513600
+                group by glctry || glfy  ,case when (glmcu like '%0001') then 'Local' else 'Export' end   
+               ,case when globj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end
+                 ,to_char(jde.rpttools.NTOD(gldgj),'mm')
+         union all
+         select glctry || glfy as yyyy  ,case when (glmcu like '%0001') then 'Local' else 'Export' end as Kind 
+            ,case when globj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end as Grp
+             ,- 0/100 as LastAmt, '13' as MM, - sum(glaa/100) as Amt
+           from proddta.f0911
+            where gllt='AA' and gldct='JE' and glsbl='JE' and glsblt='X' and globj>=500000 and globj<513600
+              group by glctry || glfy  ,case when (glmcu like '%0001') then 'Local' else 'Export' end   
+               ,case when globj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end
+          ) xx group by  yyyy,kind,grp, mm 
+      )   
+    
+  )   v_core
+  left join (
+
+      select yy, sum(case when (kind='Local' and grp='Mentholatum Division') then Amt else 0 end) as LCAmt 
+     ,case when max(TotalAmt)=0 then 0 else 
+       max(case when (kind='Local' and grp='Mentholatum Division') then curramt else 0 end)/max(TotalAmt) end as LCRatio
+     ,sum(case when kind='Local' and grp='Rohto' then Amt else 0 end) as LDAmt
+     ,case when max(TotalAmt)=0 then 0 else
+       max(case when kind='Local' and grp='Rohto' then curramt else 0 end)/max(TotalAmt) end as LDRatio
+     ,sum(case when kind='Export' and grp='Mentholatum Division' then Amt else 0 end) as ECAmt
+     ,case when max(TotalAmt)=0 then 0 else
+       max(case when kind='Export' and grp='Mentholatum Division' then curramt else 0 end)/max(TotalAmt) end as ECRatio
+     ,sum(case when kind='Export' and grp='Rohto' then Amt else 0 end) as EDAmt
+     ,case when max(TotalAmt)=0 then 0 else
+       max(case when kind='Export' and grp='Rohto' then curramt else 0 end)/max(TotalAmt) end as EDRatio
+     ,max(TotalAmt) as PTotal, case when max(TotalAmt)=0 then 0 else 
+       ( max(case when (kind='Local' and grp='Mentholatum Division') then curramt else 0 end)
+         + max(case when kind='Local' and grp='Rohto' then curramt else 0 end)
+         + max(case when kind='Export' and grp='Mentholatum Division' then curramt else 0 end)
+         + max(case when kind='Export' and grp='Rohto' then curramt else 0 end) )
+        /max(TotalAmt) end as PTotalRatio
+     from (
+       select YYYY as yy, MM,Kind,Grp,LastAmt, Amt, sum(amt) over( partition by yyyy,kind,grp,lastamt order by mm) as YTD
+        ,sum(amt) over (partition by yyyy,kind,grp,lastamt) as CurrAmt, sum(amt) over (partition by yyyy) as TotalAmt
+      from (   select  yyyy,kind,grp,mm,sum(lastamt) as lastamt,sum(amt) as amt 
+        from ( 
+         select yyyy, case when (gbmcu like '%0001') then 'Local' else 'Export' end as Kind 
+           ,case when gbobj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end as Grp
+            ,- lastamt as lastamt, mm, - amt as amt  --, - ytd 
+              from v_f0902ytd   where gblt='AA' and gbobj>=500501 and gbobj<513600 
+         union all
+         select glctry || glfy as yyyy ,case when (glmcu like '%0001') then 'Local' else 'Export' end as Kind 
+           ,case when globj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end as Grp
+            , 0/100 as LastAmt, to_char(jde.rpttools.NTOD(gldgj),'mm') as MM,  sum(glaa/100) as Amt
+             from proddta.f0911
+             where gllt='AA' and gldct='JE' and glsbl='JE' and glsblt='X' and globj>=500000 and globj<513600
+                group by glctry || glfy  ,case when (glmcu like '%0001') then 'Local' else 'Export' end   
+               ,case when globj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end
+                 ,to_char(jde.rpttools.NTOD(gldgj),'mm')
+         union all
+         select glctry || glfy as yyyy  ,case when (glmcu like '%0001') then 'Local' else 'Export' end as Kind 
+            ,case when globj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end as Grp
+             ,- 0/100 as LastAmt, '13' as MM, - sum(glaa/100) as Amt
+           from proddta.f0911
+            where gllt='AA' and gldct='JE' and glsbl='JE' and glsblt='X' and globj>=500000 and globj<513600
+              group by glctry || glfy  ,case when (glmcu like '%0001') then 'Local' else 'Export' end   
+               ,case when globj in ('500501','505001','510501')  then 'Rohto' else 'Mentholatum Division' end
+          ) xx group by  yyyy,kind,grp, mm 
+             )  )  v_core  where  yy = (:p_yyyy - 1)   group by yy 
+    ) v_pre on v_pre.yy = (:p_yyyy - 1)
+  where  yyyy = :p_yyyy    group by yyyy,mm
+    ,LCAmt , LDAmt, ECAmt,  EDAmt,  PTotal, PTotalRatio,  LCRatio, LDRatio, ECRatio,  EDRatio
+   order by yyyy,mm 
+  
+
+ 
+
 
 Itemledger_no_gldate
 ========================================================================
@@ -190,16 +2332,16 @@ AP To GL By Offset Account (G0922/12/ZS01)
 ========================================================================
 
 select kgmcu||'.'||kgobj||'.'||kgsub as AccId
-  , sum(rpaap)/100 as AP
+  , sum(rpaap/100) as AP
   , GL/100 as GL 
-  , (GL + sum(rpaap))/100 as BL
+  , (GL  + sum(rpaap) )/100 as BL
  from proddta.f0411 left join proddta.f0012 
     on 'PC'||rpglc =KGitem and rpco=kgco
  left join ( 
-   select gbmcu,gbobj,gbsub,sum(gbawtd+gbapyn) as gl
+   select gbmcu,gbobj,gbsub,sum(gbawtd ) as gl 
     from proddta.f0902	
      where gbco in (90000,91000,92000,93000)
-       and gblt='AA'  and gbfy=18
+       and gblt='AA'  --and gbfy=19
       group by gbmcu,gbobj,gbsub
      )    v_gl on kgmcu=gbmcu and kgobj=gbobj and kgsub=gbsub
  where ( RPPOST='D' and  RPDCTA<>'PE'
@@ -207,47 +2349,6 @@ select kgmcu||'.'||kgobj||'.'||kgsub as AccId
 Or
   (RPPOST<>'D' and RPDCTA='PE'  and 
     RPCO in  (90000,91000,92000,93000) )
- group by  kgmcu||'.'||kgobj||'.'||kgsub, gl
+ group by  kgmcu||'.'||kgobj||'.'||kgsub, gl 
   having sum(rpaap)<>0
- 
 
-
-select AccId, sum(AP) as AP, sum(GL) as GL, sum(BL) as BL  from  (
-
-select kgmcu||'.'||kgobj||'.'||kgsub as AccId
-  , sum(rpaap)/100 as AP
-  , 0.00 as GL 
-  , sum(rpaap)/100 as BL
- from proddta.f0411 left join proddta.f0012 
-    on 'PC'||rpglc =KGitem and rpco=kgco
- where ( RPPOST='D' and  RPDCTA<>'PE'
-   and RPCO in  (90000,91000,92000,93000) )
-Or
-  (RPPOST<>'D' and RPDCTA='PE'  and 
-    RPCO in  (90000,91000,92000,93000) )
- group by  kgmcu||'.'||kgobj||'.'||kgsub 
-  having sum(rpaap)<>0
- 
-union all
-
-select kgmcu||'.'||kgobj||'.'||kgsub as AccId
-  , 0.00 as AP
-  , sum(gbawtd+gbapyn)/100 as GL 
-  , sum(gbawtd+gbapyn)/100 as BL
- from proddta.f0411 left join proddta.f0012 
-  on 'PC' ||rpglc =KGitem   and rpco=kgco
- left join proddta.f0902	
-     on gbco in (90000,91000,92000,93000)
-       and gblt='AA'  and gbfy=18 
-        and kgmcu=gbmcu and kgobj=gbobj  and kgsub=gbsub
- where ( RPPOST='D' and  RPDCTA<>'PE'
-   and RPCO in  (90000,91000,92000,93000) )
-Or
-  (RPPOST<>'D' and RPDCTA='PE'  and 
-    RPCO in  (90000,91000,92000,93000) )
- group by  kgmcu||'.'||kgobj||'.'||kgsub 
-  having sum(gbawtd+gbapyn) <> 0
-
-)   v_core  group by AccId
-
-   

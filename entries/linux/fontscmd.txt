@@ -1,0 +1,210 @@
+﻿.. 关于bunsenlabs的安装设置
+
+========================================================================
+Bunsenlabs Linux
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+
+检查字体是否已经安装
+========================================================================
+
+fc-list                   ----------检查所有已有的字体
+
+fc-list :lang=zh           -----------只检查中文：
+
+修改字体权限，使root以外的用户可以使用这些字体：
+
+cd /usr/share/fonts/zh_CN
+chmod 766 msyh.ttf。
+
+建立字体缓存：
+mkfontscale
+mkfontdir
+fc-cache -fv
+
+安装字体
+========================================================================
+
+安装Noto全系字体
+
+sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji
+
+安装Meslo字体
+
+yaourt -S ttf-meslo
+
+配置文件fonts.conf放到~/.config/fontconfig下
+
+<?xml version='1.0'?>
+<!DOCTYPE fontconfig SYSTEM 'fonts.dtd'>
+<fontconfig>
+
+  <match target="font">
+    <edit mode="assign" name="rgba">
+      <const>rgb</const>
+    </edit>
+  </match>
+
+  <match target="font">
+    <edit mode="assign" name="hintstyle">
+      <const>hintfull</const>
+    </edit>
+  </match>
+
+  <match target="font">
+    <edit mode="assign" name="antialias">
+      <bool>true</bool>
+    </edit>
+  </match>
+
+  <match target="font">
+    <edit name="lcdfilter" mode="assign">
+      <const>lcddefault</const>
+    </edit>
+  </match>
+
+<!-- Default font (no fc-match pattern) -->
+  <match>
+    <edit mode="prepend" name="family">
+      <string>Noto Sans</string>
+    </edit>
+  </match>
+
+<!-- Default font for the zh_CN locale (no fc-match pattern) -->
+  <match>
+    <test compare="contains" name="lang">
+      <string>zh_CN</string>
+    </test>
+    <edit mode="prepend" name="family">
+      <string>Noto Sans CJK SC</string>
+    </edit>
+  </match>
+
+<!-- Default sans-serif font -->
+  <match target="pattern">
+    <test qual="any" name="family">
+      <string>sans-serif</string></test>
+    <edit name="family" mode="prepend" binding="same">
+      <string>Noto Sans</string>
+    </edit>
+  </match>
+
+<!-- Default serif fonts -->
+  <match target="pattern">
+    <test qual="any" name="family">
+      <string>serif</string>
+    </test>
+    <edit name="family" mode="prepend" binding="same">
+      <string>Noto Serif</string>
+    </edit>
+  </match>
+
+<!-- Default monospace fonts -->
+  <match target="pattern">
+    <test qual="any" name="family">
+      <string>monospace</string>
+    </test>
+    <edit name="family" mode="prepend" binding="same">
+      <string>Meslo LG L DZ</string>
+    </edit>
+  </match>
+
+<!-- Fallback fonts preference order -->
+  <alias>
+    <family>sans-serif</family>
+    <prefer>
+      <family>Noto Sans</family>
+      <family>Noto Sans CJK SC</family>
+      <family>Noto Sans CJK TC</family>
+      <family>Noto Sans CJK JP</family>
+      <family>Noto Sans CJK KR</family>
+      <family>Noto Color Emoji</family>
+      <family>Noto Emoji</family>
+    </prefer>
+  </alias>
+  <alias>
+    <family>serif</family>
+    <prefer>
+      <family>Noto Serif</family>
+      <family>Noto Serif CJK SC</family>
+      <family>Noto Serif CJK TC</family>
+      <family>Noto Serif CJK JP</family>
+      <family>Noto Serif CJK KR</family>
+      <family>Noto Color Emoji</family>
+      <family>Noto Emoji</family>
+    </prefer>
+  </alias>
+  <alias>
+    <family>monospace</family>
+    <prefer>
+      <family>Meslo LG L DZ</family>
+      <family>Noto Sans CJK SC</family>
+      <family>Noto Sans CJK TC</family>
+      <family>Noto Sans CJK JP</family>
+      <family>Noto Sans CJK KR</family>
+      <family>Noto Color Emoji</family>
+      <family>Noto Emoji</family>
+    </prefer>
+  </alias>
+
+  <dir>~/.fonts</dir>
+</fontconfig>
+
+
+如果已存在配置文件，覆盖即可。
+
+
+刷新字体缓存
+
+fc-cache --force --verbose
+fc-cache-32 --force --verbose
+
+设置字体DPI
+
+用CX CALC这个工具计算出对应你显示器分辨率的DPI值，填入系统设置->外观->字体->固定字体DPI：
+注：个人感觉CX CALC计算的值偏小，可在按本文全部配置完成后适当调高。
+
+
+强制Firefox使用Noto Color Emoji
+========================================================================
+
+本想单独写篇Firefox字体问题的blog，又考虑到方案就包含在本篇使用的字体配置文件里面，还是顺便说了吧。Firefox唯一的问题就是其Linux版本从50.0开始使用内置的Emoji One。内置Emoji字体当然是有好处的，但也带来了一些问题：
+
+    很多Emoji不能显示为彩色
+    Emoji字体不按Fontconfig的回滚顺序进行匹配，给想使用其他Emoji字体的用户带来了麻烦
+    为了使更多Emoji显示为彩色以及与其他应用风格统一，针对Firefox添加了如下配置：
+
+fonts.conf
+
+<match target="pattern">
+  <test name="prgname">
+    <string>firefox</string>
+  </test>
+  <edit name="family" mode="prepend">
+    <string>Noto Color Emoji</string>
+  </edit>
+</match>
+
+经测试，Firefox、Firefox Developer Edition与Firefox Nightly都是生效的，如果你使用的是后两者之一而配置没有生效，升级至最新即可解决问题。
+已知Bug(Firefox Developer Edition/Firefox Nightly)：只要有一个标签页的标题中含有Emoji，就会撑高整个标签栏，关闭所有这样的标签页后标签栏高度才能恢复正常。

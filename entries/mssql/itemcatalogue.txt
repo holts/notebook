@@ -1,0 +1,55 @@
+﻿.. 这是关于itemcatalogue维护说明
+
+========================================================================
+itemcatalogue维护说明
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+========================================================================
+ 
+ itemcatalogue表存放于mzlserver14\dwprc数据库中
+
+需要维护的数据存放于excel文件中sheet1,colname是item，grp
+
+首先增加表中没有的记录
+
+ insert itemcatalogue(itemno,kind)
+     select item,grp  FROM  OPENQUERY([mzlserver14], 
+              'select *  from OpenRowSet(''Microsoft.ACE.OLEDB.12.0'',
+				 ''Excel 12.0;HDR=Yes;IMEX=1;Database=d:\holts\tmp.xlsx'' ,sheet1$ )   '
+			   ) where item not in 
+	(select itemno from itemcatalogue)
+ 
+  
+再更正分类为最新的类别
+
+ update itemcatalogue set kind=grp from itemcatalogue left join
+  (select item,grp  FROM  OPENQUERY([mzlserver14], 
+              'select *  from OpenRowSet(''Microsoft.ACE.OLEDB.12.0'',
+				 ''Excel 12.0;HDR=Yes;IMEX=1;Database=d:\holts\tmp.xlsx'' ,sheet1$ )   ' )
+			 )  as v_xx on itemno=item 
+  where itemno in
+    (  select item  FROM  OPENQUERY([mzlserver14], 
+              'select *  from OpenRowSet(''Microsoft.ACE.OLEDB.12.0'',
+				 ''Excel 12.0;HDR=Yes;IMEX=1;Database=d:\holts\tmp.xlsx'' ,sheet1$ )   '  )  
+	  )

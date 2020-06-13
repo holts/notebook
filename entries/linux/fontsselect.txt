@@ -25,137 +25,6 @@ Bunsenlabs Linux
 .. section-numbering::
 
 
-安装bunsenlabs helium
-========================================================================
-
-直接从官网下的ISO文件，采用硬盘安装方式, 从http://ftp.nl.debian.org/debian/dists/stable/main/installer-amd64/current/images/hd-media/下载引导文件，在gurb4dos按如下方式引导安装。
-
-注意：下载的版本必须和bunsenlabs的版本相同，否则安装时会找不到文件系统。
-
-title  bunsenlabs install
-find --set-root --ignore-floppies --ignore-cd  /debianboot
-kernel   /vmlinuz boot=casper noacpi iso-scan/filename=/helium-5-amd64.hybrid.iso ro quiet splash 
-initrd  /initrd.gz
-boot
-
-安装过程比较简单，基本是一路回车，由于对中文支持不好，选的是英文安装，国家也选的是美国，时区随意选了个，待安装完成后，首次进入系统后，Alt+Ctrl+F1切换控制台用Root登入系统执行以下安装。
-
-dpkg-reconfigure tzdata    更改时区为亚州的上海
-
-dpkg-reconfigure locales
-
-选中安装以下几种区域语言支技
-
-en_US.UTF-8
-zh_CN.GB2312
-zh_CN.GBK
-zh_CN.UTF-8
-zh_TW.BIG5
-zh_TW.UTF-8
-
-建议系统默认区域设置还是设成"en_US.UTF-8"
-
-
-在安装时建有Root用户和普通用户，普通用户是没有sudo权限的，而Root用户又不能登入到图型桌面，所以需要将普通用户增加sudo,　方便使用时随时安装系统。
-
-例如我的用户名是cycong 想要 sudo   登录到root
-visudo    进入sudo配置，找到“root ALL=(ALL:ALL) ALL”，在此行下追加一行，追加后结果如下：
-
-root ALL=(ALL:ALL) ALL
-cycong ALL=(ALL:ALL) ALL
-
-这时Alt+Ctrl+F7切回到图型界面，用普通用户cycong登录，就可能用sudo了
-
-
-重新登入图型界面后，如果我的电脑有一部分变成了中文，但是我希望全部显示为英文，所以进行如下操作：
-vim /etc/default/locale    把文本的内容替换为：
-
-LANG="en_US.UTF-8"
-LANGUAGE="en_US:en"
-
-
-bl-welcome
-========================================================================
-
-首次进入桌面，会在自动打开终端执行bl-welcome,先按q退出，把以下163的数据源
-
-# 163
-deb http://mirrors.163.com/debian/ stretch main non-free contrib
-deb http://mirrors.163.com/debian/ stretch-updates main non-free contrib
-deb http://mirrors.163.com/debian/ stretch-backports main non-free contrib
-deb-src http://mirrors.163.com/debian/ stretch main non-free contrib
-deb-src http://mirrors.163.com/debian/ stretch-updates main non-free contrib
-deb-src http://mirrors.163.com/debian/ stretch-backports main non-free contrib
-deb http://mirrors.163.com/debian-security/ stretch/updates main non-free contrib
-deb-src http://mirrors.163.com/debian-security/ stretch/updates main non-free contrib
-
-贴到 /etc/apt/sources.list，然后在终端执行bl-welcome
-
-
-sudo apt-get install neovim
-
-由于bunsenlabs默认的文本编辑器是geany,很不习惯，按以下方式将它改为熟习的NVIM,
-在 Openbox Main Menu → Help & resource → Bunsen Help Files → About Bunsen
-Alternatives 有具体的设置说明。
-
-System -> Edit Debian Alternatives 
-将bl-text-editor的默认程序(40 /usr/bin/geany)替换为 40 /usr/bin/nvim 
-
-
-卸载无用的软件：
-sudo apt-get remove --purge geany geany-common nano
-sudo apt-get autoclean
-
-安装中文输入法
-========================================================================
-
-sudo apt-get install fcitx fcitx-table-wbpy 
-vim /etc/X11/Xsession.d/70im-config_launch    如果没有则创建文件并添加以下内容：
-
-export LANG=en_US.UTF-8
-export LC_CTYPE=en_US.UTF-8
-export XMODIFIERS=@im=fcitx
-fcitx &
-
-重启后，在屏的右上方会出现个键盘的小图标，点图标在右键菜单中选取configure，在input
-method 窗口中加入wbbipinyin, 就可以使用中文输入法了。
-
-如果没有图标，也可以在Applications->Settings->Fcitx Configuration，配置输入法
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-终端字体美化
-========================================================================
-
-解决终端字体重叠难看问题,终于找到了一些比较好看的终端字体，尤其是 droid sans mono 字体，简直爱死了
-
-sudo apt-get install fonts-inconsolata
-
-sudo apt-get install ttf-droid
-sudo apt-get install ttf-dejavu
-sudo apt-get install ttf-liberation
-
-sudo apt-get install xfonts-terminus
-
-安装好后就可以在终端->编译->配置文件->编辑里面选择字体和大小了。
-
-
-
-
 
 安装中文字体包
 ========================================================================
@@ -165,6 +34,100 @@ sudo apt-get install xfonts-terminus
 sudo apt-get install ttf-droid
 
 有了这个字体，对于日常工作和生活而言已经非常足够了。如果你还需要更多中文字体的话，推荐可以安装“文泉驿正黑”，“文泉驿点阵宋体”等。文泉驿的安装包已经进入了 Debian/Ubuntu，直接安装 ttf-wqy-zenhei 就可以了。如果想直接使用点阵宋体的话，可以安装 xfonts-wqy。另外，还可以通过 ttf-wqy-microhei 安装文泉驿微米黑，那是一个 Droid 系列字体衍生出来的字体，效果也不错。装上这些字体后，应该就已经具备一个基本能用的中文环境了。
+
+http://www.jinbuguo.com/gui/linux_fontconfig.html
+
+西文等宽字体 
+
+来自日本的"Migu 1M"开源字体 http://mix-mplus-ipa.sourceforge.jp/migu/
+下载后解压，从中提取"migu-1m-bold.ttf"与"migu-1m-regular.ttf"两个文件即可。
+
+渲染参数：
+
+antialias=true
+hinting=true
+autohint=false
+hintstyle=hintslight
+lcdfilter=lcddefault
+
+西文无衬线字体
+
+来自Google的"Note"系列开源字体中的"Noto Sans"字体 https://code.google.com/p/noto/source/browse/，下载zip包后解压，从中提取"fonts/individual/hinted/NotoSans-*.ttf"四个文件即可。
+
+渲染参数：
+
+antialias=true
+hinting=true
+autohint=false
+hintstyle=hintslight(10px,12px)
+hintstyle=hintfull(其他)
+lcdfilter=lcddefault
+
+
+西文有衬线字体
+
+来自Google的"Note"系列开源字体中的"Tinos"字体，下载zip包后解压，从中提取"fonts/individual/hinted/Tinos-*.ttf"四个文件即可。
+
+渲染参数：
+
+antialias=true
+hinting=true
+autohint=false
+hintstyle=hintslight(Regular/Bold=10px)
+hintstyle=hintfull(其他)
+lcdfilter=lcddefault
+
+中文黑体(无衬线)
+
+来自Google的"Note"系列开源字体中的"思源黑体"，下载zip包后解压，从中提取"third_party/noto_cjk/NotoSansHans-*.otf"两个文件即可, 需要提醒的是，不要使用"NotoSansCJK"，因为需要解决'locl'问题(如果有谁解决了这个问题请告诉我)。至于被微软吹上天的雅黑，面对它的中文标点符号，我只能“呵呵”了。
+
+渲染参数：
+
+antialias=true
+hinting=true
+autohint=false
+hintstyle=hintslight
+lcdfilter=lcddefault
+
+中文宋体(有衬线)、中文仿宋(有衬线)、中文楷体(书法)
+
+来自Adobe CS 6的"Adobe 宋体 Std"、"Adobe 仿宋 Std"、"Adobe 楷体 Std"，下载任意一个软件的试用版，即可从中提取如下文件："AdobeSongStd-Light.otf","AdobeFangsongStd-Regular.otf","AdobeKaitiStd-Regular.otf"。
+
+渲染参数：
+
+antialias=true
+hinting=true
+autohint=false
+hintstyle=hintfull
+lcdfilter=lcddefault
+
+韩文字体
+
+来自Google的"Note"系列开源字体中的"思源黑体"，下载zip包后解压，从中提取"third_party/noto_cjk/NotoSansKR-*.otf"两个文件即可。
+
+渲染参数：
+
+antialias=true
+hinting=true
+autohint=false
+hintstyle=hintslight
+lcdfilter=lcddefault
+
+符号字体
+
+字体来源：C:\Windows\Fonts\seguisym.ttf
+
+渲染参数：
+
+antialias=true
+hinting=true
+autohint=false
+hintstyle=hintfull
+lcdfilter=lcddefault
+
+
+
+
 
 字体的美化
 ========================================================================
@@ -209,6 +172,20 @@ USE_STYLE="DEFAULT"
 重启你的计算机
 
 
+
+
+
+安装中文输入法
+========================================================================
+
+sudo apt-get install fcitx fcitx-table-wbpy fcitx-config-gtk 
+
+vim /etc/X11/Xsession.d/95im_init    创建文件并添加以下内容：
+export LANG=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+export XMODIFIERS=@im=fcitx
+fcitx &
+重启后，就可以在Applications->Settings->Fcitx Configuration，配置输入法
 
 
 
@@ -500,21 +477,6 @@ vi ./Shadowsocks/shadowsocks.json
 </fontconfig>
 
 　　
-终端字体美化
-========================================================================
-
-解决终端字体重叠难看问题,终于找到了一些比较好看的终端字体，尤其是 droid sans mono 字体，简直爱死了
-
-sudo apt-get install fonts-inconsolata
-
-sudo apt-get install ttf-droid
-sudo apt-get install ttf-dejavu
-sudo apt-get install ttf-liberation
-
-sudo apt-get install xfonts-terminus
-
-安装好后就可以在终端->编译->配置文件->编辑里面选择字体和大小了。
-
 修改完字体配置后，中文的显示效果应该可以上很大一个层次。但是，为了得到更好的效果，我们还需要对具体应用程序里的字体进行更多配置。
 
 
@@ -532,6 +494,21 @@ https://linux.cn/article-3019-1.html
 
 https://launchpad.net/~no1wantdthisname/+archive/ubuntu/ppa
 
+
+终端字体美化
+========================================================================
+
+解决终端字体重叠难看问题,终于找到了一些比较好看的终端字体，尤其是 droid sans mono 字体，简直爱死了
+
+sudo apt-get install fonts-inconsolata
+
+sudo apt-get install ttf-droid
+sudo apt-get install ttf-dejavu
+sudo apt-get install ttf-liberation
+
+sudo apt-get install xfonts-terminus
+
+安装好后就可以在终端->编译->配置文件->编辑里面选择字体和大小了。
 
 
 字体
