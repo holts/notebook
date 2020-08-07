@@ -1,0 +1,849 @@
+﻿.. 关于openbox and bspwm的安装设置
+
+========================================================================
+Debian Linux for openbox and bspwm 
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+安装Debian buster
+========================================================================
+
+直接从官网下的ISO文件，Debian 10 netinstall (non-free firmware)https://cdimage.debian.org/cdimage/unofficial/non-free/images-including-firmware/current/amd64/iso-cd/
+Debian 10 netinstallhttps://cdimage.debian.org/cdimage/release/current/amd64/iso-cd/
+注意：下载的版本优选contrib and Non-free的版本，因为Free版本受限太多，就算将来要切换回去，也是很简单的事。
+
+启动linux live, 插入U盘,用fdisk看U盘的设备号(这里假设为sdb1)，卸载U盘后，用dd写入光盘文件。
+
+sudo fdisk -l
+umount /dev/sdb1
+sudo dd if=/path/to/iso/file of=/dev/sdb1
+sudo eject /dev/sdb1
+
+重新开机，从U盘启动开始Debian的安装。
+
+安装过程比较简单，基本是一路回车，由于对中文支持不好，选的是英文安装，国家选的是中国，但locale用的是美国,待装好基本系统后再更改，软件选择我只勾选了Standard system utilities为最小安装,待安装完成后，重启电脑。
+
+
+无线网卡的安装
+========================================================================
+
+首次用Root登入系统控制台，如果网线一直插在电脑上，此时就该就可以通过网线上网了，如果没插网线，进入系统后再插上，此时电脑是上不了网的，需要做如下处理。
+
+最小安装是没有无线wifi的，我的无线网卡是Intel的，查debian官网得知驱动
+apt-get install firmware-iwlwifi
+
+安装后重新载入模块，它自动加载支持设备
+modprobe -r iwlwifi
+modprobe iwlwifi
+
+apt-get install network-manager
+
+nmtui
+
+在窗口中选择无线连接并输入密码，无线就可以使用了
+
+
+基本软件安装
+========================================================================
+
+deb http://mirrors.163.com/debian/ buster main non-free contrib
+deb http://mirrors.163.com/debian/ buster-updates main non-free contrib
+deb http://mirrors.163.com/debian/ buster-backports main non-free contrib
+deb-src http://mirrors.163.com/debian/ buster main non-free contrib
+deb-src http://mirrors.163.com/debian/ buster-updates main non-free contrib
+deb-src http://mirrors.163.com/debian/ buster-backports main non-free contrib
+deb http://mirrors.163.com/debian-security/ buster/updates main non-free contrib
+deb-src http://mirrors.163.com/debian-security/ buster/updates main non-free contrib
+
+将上面的内容贴到 /etc/apt/sources.list的前面，这样安装程序会优先用国内的源，速度会快些。
+
+apt-get update
+
+/etc/default/console-setup
+
+ACTIVE_CONSOLES="/dev/tty(1-6)"
+CHARMAP="UTF-8"
+CODESET="Lat15"
+FONTFACE="Fixed"
+FONTSIZE="12x24"
+
+通过更改这个文件的内容，更改终端字体及大小。
+
+安装locales包，安装完成会自动运行，在打开的窗口中设置正确的locales
+apt-get install locales 
+
+如果没有运行，可以手动执行
+dpkg-reconfigure locales
+
+选中安装以下几种区域语言支技
+
+en_US.UTF-8
+zh_CN.GB2312
+zh_CN.GBK
+zh_CN.UTF-8
+zh_TW.BIG5
+zh_TW.UTF-8
+
+建议系统默认区域设置还是设成"en_US.UTF-8"
+
+dpkg-reconfigure tzdata    更改时区为亚州的上海
+
+
+重新登入图型界面后，如果我的电脑有一部分变成了中文，但是我希望全部显示为英文，所以进行如下操作：
+vim /etc/default/locale    把文本的内容替换为：
+
+LANG="en_US.UTF-8"
+LANGUAGE="en_US:en"
+
+在安装时建有Root用户和普通用户，普通用户是没有sudo权限的，而Root用户又不能登入到图型桌面，所以需要将普通用户增加sudo,　方便使用时随时安装系统。
+
+apt-get install sudo
+
+例如我的用户名是holts 想要 sudo   登录到root
+visudo    进入sudo配置，找到“root ALL=(ALL:ALL) ALL”，在此行下追加一行，追加后结果如下：
+
+root ALL=(ALL:ALL) ALL
+holts ALL=(ALL:ALL) ALL
+
+这时如果装有桌面，按Alt+Ctrl+F7切回到图型界面，用普通用户holts登录，就可能用sudo了
+
+
+fc-list
+查看系统安装的字体，开源的dejavu字体，其中的dejavu mono非常适合编程使用,如果没有英文矢量字体dejavu.
+
+sudo apt-get install fonts-dejavu  fonts-dejavu-extra
+
+sudo apt install fonts-firacode fonts-hack fonts-roboto fonts-noto-color-emoji fonts-symbola
+
+安装英文点阵字体
+sudo apt install xfonts-terminus
+
+DroidSansFallback 字体是 Google Android内建的系统字体，支持繁体中文、简体中文、韩文、日文。支持4种文字的同时，DroidSansFallback.ttf 字体文件的体积仅有 3.04MB大小，效果类似于微软雅黑字体，而且是完全免费的。
+安装中文字体包
+sudo apt-get install fonts-droid-fallback
+
+桌面环境bspwm安装
+========================================================================
+
+Programs to install :
+WM :bspwm + sxhkd
+Terminal : terminator
+Editor : neovim
+Web browser : firefox-esr
+File explorer : ranger
+Media:
+Video player : mpv
+Image viewer : feh
+Music player : mpd + ncmpcpp + mpc
+Document viewer : mupdf
+Utilities : xbacklight, scrot, conky, libnotify-bin
+
+sudo apt-get install xorg terminator thunar
+sudo apt-get install bspwm sxhkd conky compton
+sudo apt-get install neovim feh mpd ncmpcpp mpc mupdf 
+
+sudo apt-get install xbacklight scrot libnotify-bin
+
+安装中文输入法
+========================================================================
+
+sudo apt-get install fcitx fcitx-table-wbpy 
+
+vim /etc/X11/Xsession.d/70im-config_launch  
+
+如果没有上面的文件则创建文件并添加以下内容：
+
+export LANG=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+export XMODIFIERS=@im=fcitx
+fcitx &
+
+重启后，进入桌面，从开始菜单Applications->Settings->Fcitx Configuration，或者屏的右上方如果有键盘的小图标，点图标在其右键菜单中选取configure，在input method 窗口中加入wbbipinyin, 就可以使用中文输入法了。
+
+如果桌面没有键盘图标，也可以在命令行执行：
+fcitx-config-gtk3
+
+在打开的配置窗，配置输入法增加中文输入模式（WBPINYING）, 默认 ctrl + space 切换输入法
+
+
+字体美化
+========================================================================
+
+解决终端字体重叠难看问题,终于找到了一些比较好看的终端字体，尤其是 droid sans mono 字体，简直爱死了
+
+sudo apt-get install fonts-inconsolata
+
+sudo apt-get install ttf-droid
+sudo apt-get install ttf-dejavu
+sudo apt-get install ttf-liberation
+
+安装好后就可以在终端->编译->配置文件->编辑里面选择字体和大小了。
+
+
+我们的字体美化依赖 Droid 系列字体，因此我们首先安装这个软件包： ttf-droid。 英文字体优先选择dejavu字体.
+
+
+有了这个字体，对于日常工作和生活而言已经非常足够了。如果你还需要更多中文字体的话，推荐可以安装“文泉驿正黑”，“文泉驿点阵宋体”等。文泉驿的安装包已经进入了 Debian/Ubuntu，直接安装 ttf-wqy-zenhei 就可以了。如果想直接使用点阵宋体的话，可以安装 xfonts-wqy。另外，还可以通过 ttf-wqy-microhei 安装文泉驿微米黑，那是一个 Droid 系列字体衍生出来的字体，效果也不错。装上这些字体后，应该就已经具备一个基本能用的中文环境了。
+
+
+配置文件的管理
+========================================================================
+
+参考教材https://dotfiles.github.io/
+https://www.atlassian.com/git/tutorials/dotfiles
+
+sudo apt install git
+
+用Git管理我的dotfile
+
+git init --bare $HOME/.cfg
+alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+config config status.showUntrackedFiles no
+
+echo "alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'" >> $HOME/.bashrc
+
+echo ".cfg" >> .gitignore
+git clone --bare <git-repo-url> $HOME/.cfg
+alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+config checkout
+
+mkdir -p .config-backup && \
+config checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | \
+xargs -I{} mv {} .config-backup/{}
+
+
+
+
+
+字体的美化
+========================================================================
+
+Debian9默认的字体渲染并不是很好。可以安装Infinality字体工具以改善字体渲染, 有現成的(http://tieba.baidu.com/p/5023690780) Debian 9 字体渲染 Use Infinality For Fonts Rendering 。
+
+Infinality的官方网站(https://github.com/Infinality/fontconfig-infinality/tree/master/infinality)现在并不接受公众访问。而且据我的了解，Infinality字体工具没有官方的deb包提供Debian用户安装。然而，launchpad网站的slow这位童鞋在维护Infinality PPA(https://launchpad.net/~no1wantdthisname/+archive/ubuntu/ppa)。我们可以用这个PPA在Debian8系统上安装Infinality。虽然launchpad是由ubuntu母公司canonical为ubuntu创建的，但我们同样可以在Debian系统上使用PPA安装软件包。只要配置好对应版本，解决依赖问题就行了。 
+
+在终端中执行下面的命令（一个一个执行每一行之后敲击回车）
+
+echo "deb http://ppa.launchpad.net/no1wantdthisname/openjdk-fontfix/ubuntu bionic main" | sudo tee /etc/apt/sources.list.d/infinality.list 
+echo "deb-src http://ppa.launchpad.net/no1wantdthisname/openjdk-fontfix/ubuntu bionic main" | sudo tee -a /etc/apt/sources.list.d/infinality.list
+
+我选择了ubuntu18.04 bionic 这个版本的Infinality，在Debian9系统上安装不存在依赖问题。
+
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E985B27B 
+这一步导入这个PPA的PGP公钥，以便下载完软件包后可以验证完整性。
+
+执行以下命令来升级你的系统并安装 Infinality 包
+
+sudo apt-get update 
+sudo apt-get upgrade 
+
+sudo apt-get install fontconfig-infinality 
+
+运行下面的命令，选择你喜欢的字体风格。
+
+sudo bash /etc/fonts/infinality/infctl.sh setstyle
+
+你可以看到，你可以使Debian9字体模拟infinality, linux, os x和windows字体的风格。这里选择的是第6个：Win7风格。但你可以尝试其他的字体风格。
+
+另外，你可以选择一个更加具体的字体风格。运行下面的命令
+
+sudo vim /etc/profile.d/infinality-settings.sh
+
+找到下面这一行文字
+
+USE_STYLE="DEFAULT"
+
+将DEFAULT更改为WINDOWS7
+
+重启你的计算机
+
+
+
+
+
+
+
+
+
+安装远程连接软件Rdesktop：
+sudo apt-get install rdesktop
+目标计算机如果是Windows，需要去掉“仅允许运行使用网络级别身份认证的远程桌面计算机的连接”
+使用方法：
+1.rdesktop -f 192.168.X.XXX    这是全屏的，退出全屏的快捷键是ctrl+alt+enter
+2.rdesktop -g 1366x768  192.168.X.XXX    这是指定分辨率的
+
+
+
+
+安装shadowsocks客户端
+========================================================================
+
+使用 simple-obfs 混淆时，请确认服务端同样开启了混淆功能。以下的所有命令，都是针对 Debian 9 Stretch，并在 root 用户下执行的。
+
+添加 stretch-backports：
+
+sh -c 'printf "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/stretch-backports.list'
+
+apt update
+
+安装 shadowsocks-libev 和 simple-obfs：
+
+apt -t stretch-backports install shadowsocks-libev simple-obfs -y
+
+
+编辑配置文件：
+
+vim /etc/shadowsocks-libev/config-obfs.json
+
+/etc/shadowsocks-libev/config-obfs.json
+
+{
+    "server":"服务器地址",
+    "server_port":端口,
+    "local_port":1080,
+    "password":"密码",
+    "timeout":60,
+    "method":"aes-256-gcm",
+    "mode":"tcp_and_udp",
+    "fast_open":false,
+    "plugin":"obfs-local",
+    "plugin_opts":"obfs=http;obfs-host=混淆用的域名"
+}
+
+
+激活服务，以便开机自动启动：
+
+systemctl enable shadowsocks-libev-local@config-obfs
+
+启动服务：
+
+systemctl start shadowsocks-libev-local@config-obfs
+
+查看服务状态：
+
+systemctl status shadowsocks-libev-local@config-obfs
+
+至此，对客户端的配置完成，代理服务在 localhost:1080 上。
+
+＝＝＝＝＝＝＝＝
+
+ShadowSocks客户器端linux版有python和libdev两种方式，首选安装python版的
+
+sudo apt-get install python-pip
+sudo pip install shadowsocks
+注意，如果执行的时候报错了，可能是你没有安装“setuptools”,安装一下即可。 
+
+用以上命令执行不成功，改成以下方式安装成功了
+sudo esay_install shadowsocks
+
+配置客户端，配置文件一般放到 /etc下面，为方便修改和维护我把它放在/home/holts/Shadowsocks/shadowsocks.json
+
+vi ./Shadowsocks/shadowsocks.json
+
+然后在shadowsocks.json里面添加配置信息，如：
+
+{
+  "server":"my_server_ip",
+  "local_address": "127.0.0.1",
+  "local_port":1080,
+  "server_port":my_server_port,
+  "password":"my_password",
+  "timeout":300,
+  "method":"aes-256-cfb"
+}
+
+配置文件的路径改成自己的，如：/etc/shadowsocks.json
+
+前端启动：sslocal -c /home/xx/Software/ShadowsocksConfig/shadowsocks.json；
+后端启动：sslocal -c /home/xx/Software/ShadowsocksConfig/shadowsocks.json -d start；
+后端停止：sslocal -c /home/xx/Software/ShadowsocksConfig/shadowsocks.json -d stop；
+重启(修改配置要重启才生效)：sslocal -c /home/xx/Software/ShadowsocksConfig/shadowsocks.json -d restart
+
+
+
+
+修改字体配置文件
+========================================================================
+
+和若干年前比起来，目前 Debian/Ubuntu 默认的字体配置效果已经非常好了，如果觉得已经满意了的话，完全就可以使用默认配置，不需要再做什么额外设置。如果想获得更好一些的效果的话，可以参考以下滇狐自己的字体配置文件。将以下内容写到存放到你的家目录下，命名为 .fonts.conf，就可以了。
+ 
+
+<?xmlversion='1.0'encoding='utf-8'?>
+<!DOCTYPE fontconfig SYSTEM 'fonts.dtd'>
+<fontconfig>
+<alias>
+<family>serif</family>
+<prefer>
+<family>DejaVu Serif</family>
+<family>Bitstream Vera Serif</family>
+<family>Evermore Song</family>
+<family>WenQuanYi Bitmap Song</family>
+<family>AR PL UMing CN</family>
+<family>AR PL ShanHeiSun Uni</family>
+<family>Droid Sans Fallback</family>
+<family>WenQuanYi Micro Hei</family>
+<family>WenQuanYi Zen Hei</family>
+</prefer>
+</alias>
+
+<alias>
+<family>sans-serif</family>
+<prefer>
+<family>DejaVu Sans</family>
+<family>Bitstream Vera Sans</family>
+<family>Evermore Song</family>
+<family>Droid Sans Fallback</family>
+<family>WenQuanYi Micro Hei</family>
+<family>WenQuanYi Bitmap Song</family>
+<family>WenQuanYi Zen Hei</family>
+<family>AR PL UMing CN</family>
+<family>AR PL ShanHeiSun Uni</family>
+</prefer>
+</alias>
+
+<alias>
+<family>monospace</family>
+<prefer>
+<family>DejaVu Sans Mono</family>
+<family>Bitstream Vera Sans Mono</family>
+<family>Evermore Song</family>
+<family>WenQuanYi Micro Hei Mono</family>
+<family>WenQuanYi Zen Hei Mono</family>
+<family>Droid Sans Fallback</family>
+<family>WenQuanYi Bitmap Song</family>
+<family>AR PL UMing CN</family>
+<family>AR PL ShanHeiSun Uni</family>
+</prefer>
+</alias>
+
+<!-- Default Alias -->
+<alias>
+<family>DejaVu Sans</family>
+<default>
+<family>sans-serif</family>
+</default>
+</alias>
+
+<!-- Generic font families -->
+<matchtarget="pattern">
+<testname="family"qual="any">
+<string>serif</string>
+</test>
+<editbinding="strong"mode="prepend"name="family">
+<string>DejaVu Serif</string>
+</edit>
+</match>
+<matchtarget="pattern">
+<testname="family"qual="any">
+<string>sans-serif</string>
+</test>
+<editbinding="strong"mode="prepend"name="family">
+<string>DejaVu Sans</string>
+</edit>
+</match>
+
+<matchtarget="pattern">
+<testname="family"qual="any">
+<string>monospace</string>
+</test>
+<editbinding="strong"mode="prepend"name="family">
+<string>DejaVu Sans Mono</string>
+</edit>
+</match>
+<!-- Anti-alias -->
+<matchtarget="font">
+<editname="embeddedbitmap">
+<bool>false</bool>
+</edit>
+</match>
+<!-- WenQuanYi Bitmap Song -->
+<selectfont>
+<acceptfont>
+<pattern>
+<pateltname="family">
+<string>WenQuanYi Bitmap Song</string>
+</patelt>
+</pattern>
+</acceptfont>
+</selectfont>
+<matchtarget="pattern">
+<testname="family"qual="any">
+<string>WenQuanYi Bitmap Song</string>
+</test>
+<testcompare="less"name="pixelsize"qual="any">
+<double>12</double>
+</test>
+<editmode="assign"name="family">
+<string>WenQuanYi Micro Hei</string>
+</edit>
+</match>
+<matchtarget="pattern">
+<testname="family"qual="any">
+<string>WenQuanYi Bitmap Song</string>
+</test>
+<testcompare="more"name="pixelsize"qual="any">
+<double>16</double>
+</test>
+<editmode="assign"name="family">
+<string>AR PL ShanHeiSun</string>
+</edit>
+</match>
+<!-- Alias -->
+<alias>
+<family>SimSun</family>
+<family>宋体</family>
+<accept>
+<family>Evermore Song</family>
+<family>WenQuanYi Bitmap Song</family>
+<family>AR PL ShanHeiSun Uni</family>
+</accept>
+<default>
+<family>serif</family>
+</default>
+</alias>
+<alias>
+<family>SimHei</family>
+<family>黑体</family>
+<accept>
+<family>WenQuanYi Micro Hei</family>
+<family>WenQuanYi Zen Hei</family>
+</accept>
+<default>
+<family>sans-serif</family>
+</default>
+</alias>
+<alias>
+<family>微软雅黑</family>
+<family>Microsoft YaHei</family>
+<accept>
+<family>WenQuanYi Micro Hei</family>
+<family>WenQuanYi Zen Hei</family>
+</accept>
+<default>
+<family>sans-serif</family>
+</default>
+</alias>
+<!-- End -->
+<matchtarget="font">
+<editmode="assign"name="rgba">
+<const>rgb</const>
+</edit>
+</match>
+<matchtarget="font">
+<editmode="assign"name="hinting">
+<bool>true</bool>
+</edit>
+</match>
+<matchtarget="font">
+<editmode="assign"name="hintstyle">
+<const>hintfull</const>
+</edit>
+</match>
+<matchtarget="font">
+<editmode="assign"name="antialias">
+<bool>true</bool>
+</edit>
+</match>
+<dir>~/.fonts</dir>
+
+</fontconfig>
+
+　　
+终端字体美化
+========================================================================
+
+解决终端字体重叠难看问题,终于找到了一些比较好看的终端字体，尤其是 droid sans mono 字体，简直爱死了
+
+sudo apt-get install fonts-inconsolata
+
+sudo apt-get install ttf-droid
+sudo apt-get install ttf-dejavu
+sudo apt-get install ttf-liberation
+
+sudo apt-get install xfonts-terminus
+
+安装好后就可以在终端->编译->配置文件->编辑里面选择字体和大小了。
+
+修改完字体配置后，中文的显示效果应该可以上很大一个层次。但是，为了得到更好的效果，我们还需要对具体应用程序里的字体进行更多配置。
+
+
+
+---------
+
+Debian8Infinality 美化
+
+https://www.linuxdashen.com/debian8%E5%AE%89%E8%A3%85infinality%E6%94%B9%E5%96%84%E5%AD%97%E4%BD%93%E6%B8%B2%E6%9F%93%EF%BC%8C%E5%AE%89%E8%A3%85ubuntu%E5%AD%97%E4%BD%93
+Debian8安装Infinality改善字体渲染，安装Ubuntu字体
+
+https://www.linuxdashen.com/debian8%E5%AE%89%E8%A3%85infinality%E6%94%B9%E5%96%84%E5%AD%97%E4%BD%93%E6%B8%B2%E6%9F%93%EF%BC%8C%E5%AE%89%E8%A3%85ubuntu%E5%AD%97%E4%BD%93
+
+https://linux.cn/article-3019-1.html
+
+https://launchpad.net/~no1wantdthisname/+archive/ubuntu/ppa
+
+
+
+
+conky中文显示及其他
+========================================================================
+
+最近将自己电脑上的linux mint换成了crunchbang linux ，周六没事也顺手玩了下conky 。现将遇到几个问题和自己做的一个配置做下总结。由于我的笔记本配置不行，所以花梢的东西都没加，只在conky上展示了一些最实用的东西。如果想找一些比较绚丽的效果的请尽早绕道。
+
+问题一、conky中文显示问题
+
+该问题，在很多国内用户配置时都可能遇到的问题。网上查到的最多的解决方法就是安装中文字体，不过当你装完文泉驿字体后，发现根本并没有解决问题。这里涉及到一个参数的配置。
+
+override_utf8_locale yes
+
+在~/.conkyrc文件中需要将上面的配置参数设置为yes 。配置完成后，可以在.conkyrc中增加如下的配置测试：
+
+${font Sans:size=11}杭州天气${font}
+
+配置完成后，再在桌面上查看时，可以发现中文字体乱码的问题已经解决了。造成该问题的原因是其默认使用的是iso8859-1编码格式，而通过上面的参数配置以后，就以utf8格式的编码方式展示了。这时候再将使用的字体按上面示例中的配置设置为文泉驿以后就可以正常显示了。
+
+问题二、移动conky展示位置
+
+在crunchbang的默认配置位置已经符合我的要求了，不过如果我想将其从右侧的位置移到左侧的话可以通过调整gap_x和gap_y的位置来实现，两者代表的是展示x坐标和y坐标的位置。我的默认配置为
+
+gap_x 12
+gap_y 48
+
+此处你可以试着将12换为120将48改为480看下效果。
+
+问题三、调整conky的高宽
+
+很多人遇到，最后一部分结果在conky上没有展示出来的问题就是该问题引起的。这里也有两个参数控制。例如，我安装好系统后的默认配置是：
+
+minimum_size 200 200
+maximum_width 240
+
+minimum_size参数设置的两个值分别是最小宽和高，后面的maximum_width设置的是最大宽度。而一般展示不出来的原因是minimum_size的配置参数需要调整。我调整后的结果是
+
+minimum_size 200 650
+maximum_width 220
+
+不过需要注意的是，该值修改后并不会立即生效，需要重启conky进程后生效。具体做法是
+
+#killall conky
+#conky -q
+
+注：在些处我未修改高的参数时，conky默认应该也有一个最大高的值，在我上面的默认配置中高的范围就在200－－默认最大值之间，具体这个值是按比例算出的还是固定的，我未进行细究，有兴趣的可以研究下。
+
+
+ 下面列出下我的配置，并对其中的部分的参数做下注释：
+
+##############################################
+# Settings
+##############################################
+background yes　　＃是否嵌入桌面
+use_xft yes  ＃自定义字体
+xftfont Liberation Sans:size=9
+xftalpha 1
+update_interval 1.0   ＃更新时间间隔，以秒为单位
+total_run_times 0
+own_window yes
+own_window_transparent yes
+own_window_type desktop
+#own_window_argb_visual yes
+own_window_hints undecorated,below,sticky,skip_taskbar,skip_pager
+double_buffer yes
+minimum_size 200 612
+maximum_width 240
+draw_shades no
+draw_outline no
+draw_borders no
+draw_graph_borders no
+#default_color 656667
+default_color 98c2c7 ＃默认背景色
+default_shade_color 000000
+default_outline_color 828282
+alignment top_right ＃默认位于右侧
+gap_x 12
+gap_y 56
+no_buffers yes
+uppercase no
+cpu_avg_samples 2
+#override_utf8_locale no
+override_utf8_locale yes
+##############################################
+#  Output
+##############################################
+TEXT
+S Y S T E M    I N F O
+${hr}
+#Host:$alignr$nodename
+Uptime:${color #db7093}$alignr$uptime${color}
+${color #78af78}Disk I/O: $alignr${color #db7093}${diskio}
+#read${diskiograph_read }      ＃磁盘IO图形展示部分（下同），这里我没有开启
+#write${diskiograph_write}
+${color #78af78}processes:${color #db7093}$processes${color} $alignr running:${color #db7093}$running_processes
+${color #78af78}RAM:$alignr$mem/$memmax${color #4169e1}--${color #db7093}$memperc%${color}
+${color #78af78}${membar}  ＃以进度条的方式显示内存使用情况，以下swap、cpu部分相同，不再单独注释
+Swap usage${color #4169e1}:${color #db7093}$alignr$swap/$swapmax
+${color #78af78}${swapbar}
+Disk usage${color #4169e1}:${color #db7093}$alignr${fs_used /}/${fs_size /}
+${color #78af78}${fs_bar 4 /}
+CPU usage${color #4169e1}:${color #db7093}$alignr${cpu cpu0}%
+${color #78af78}${cpubar}${color}
+${color #78af78}Wlan0 $alignr ${addr wlan0}  ＃无线ip及网络显示，后面的图形展示部分注释掉了       
+Download $alignr ${downspeed wlan0}/s
+Upload $alignr ${upspeed wlan0}/s${color}
+#${downspeedgraph wlan0}
+#${upspeedgraph wlan0}
+S H O R T C U T    K E Y S
+${hr}
+Alt+F2$alignr Run Dialog
+Alt+F3$alignr Alt Menu
+Super+Space$alignr Main Menu
+Super+Tab$alignr Client Menu
+Super+t$alignr Terminal
+Super+f$alignr File Manager
+Super+e$alignr Editor
+Super+m$alignr Media Player
+Super+w$alignr Web Browser
+Super+h$alignr Task Manager
+Super+l$alignr Lock Screen
+Super+v$alignr Volume Control
+Super+x$alignr Logout
+PrtSc$alignr Screenshot
+${font Sans:size=11}杭州天气${font}${hr 2}  ＃以下为天气展示部分
+${execi 600 curl -s --connect-timeout 30 "http://m.weather.com.cn/data/101210101.html" >/tmp/forcast }
+${font Sans:size=10}今日: ${execi 600 sed  's/^.*"weather1":"//' /tmp/forcast | sed 's/",".*$//' } ${execi 600 sed  's/^.*"temp1":"//' /tmp/forcast | sed 's/",".*$//' }${font}
+${font Sans:size=10}明日: ${execi 600 sed  's/^.*"weather2":"//' /tmp/forcast | sed 's/",".*$//' } ${execi 600 sed  's/^.*"temp2":"//' /tmp/forcast | sed 's/",".*$//' }${font}
+${font Sans:size=10}后日: ${execi 600 sed  's/^.*"weather3":"//' /tmp/forcast | sed 's/",".*$//' } ${execi 600 sed  's/^.*"temp3":"//' /tmp/forcast | sed 's/",".*$//' }${font}
+
+注：
+
+1、如果想获取空气湿度、风力等信息可以通过http://mobile.weather.com.cn/data/sk/101210101.html页面获取，这里最后的ID代表的是杭州，其他城市也可以通过http://mobile.weather.com.cn切换城市时获取到。
+
+2、想要增加gmail在线邮件数、RSS订阅展示等，可以参考以下的代码（也可以另写脚本调用）
+
+${color grey}Email
+${color lightgrey}INBOX.2011: ${imap_unseen **YOUR SERVER** **YOUR NAME** **YOUR PASSWORD"} new messages
+${color lightgrey}local     : ${new_mails **YOUR MBOX**} new messages
+$hr
+${color grey}RSS
+${color lightgrey}${rss http://gcc.gnu.org/git/?p=gcc.git;a=rss 1440 item_title 0}
+${color lightgrey}${rss http://gcc.gnu.org/git/?p=gcc.git;a=rss 1440 item_title 1}
+
+
+
+
+Crunchbang Debian Linux
+=====================
+   
+配置.vimrc
+
+卸载无用的软件：
+#apt-get remove --purge geany abiword nano
+#apt-get autoclean
+
+编辑右键菜单：
+#vim ~/.config/openbox/menu.xml
+#vim ~/.config/openbox/rc.xml
+分别将这两个文件中的geany替换成gvim，删除abiword。
+
+修改Grub，编辑：
+#vim /etc/default/grub
+
+GRUB_TIMEOUT="5" ##设置进入默认启动项的等候时间，改为2秒。
+GRUB_DISTRIBUTOR='echo Crunchbang' ##改为：'echo Debian'
+
+设置Grub背景图片：
+#vim /usr/share/desktop-base/grub_background.sh
+将：/usr/share/images/desktop-base/desktop-grub.png
+改为：/usr/share/images/desktop-base/grub-splash-crunchbang.png
+
+关机信息修改：
+#vim /etc/issue
+
+更新grub：update-grub
+
+Debian Linux有些不必要的服务默认开启状态，选择性关闭，提高系统性能，安装工具：
+#apt-get update
+#apt-get install sysv-rc-conf
+
+启动这个工具：sudo sysv-rc-conf
+用键盘的方向键移动，空格键选取，按Q键保存退出。
+
+Linux系统清理，安装：
+#apt-get install bleachbit
+
+重启ThinkPad，就是稳定地Debian Linux了。
+
+其它需要配置的就是安装iceweasel插件，打造自己喜欢的浏览器，配置vimperatorrc，foxyproxy，安装shadowsocks客户端等，再根据工作需要安装相关的东东就行了。
+
+ 
+
+openbox
+========================================================================
+
+安装xorg和openbox,客制最小化图形环境
+#sudo apt-get install x-window-system-core
+sudo apt-get install xorg
+sudo apt-get install openbox tint2 conky
+
+安装完成后，startx启动openbox
+
+## 改变分辨率
+
+默认安装完成以后分辨率有点高，由于是在虚拟机中安装，这么高的分辨率用起来非常不方便。这时候我们需要借助一个叫做xrandr的软件来帮助配置分辨率。
+
+xrandr -q						// 显示所有可用的分辨率
+xrandr -s 1						// 选中需要的分辨率 1为第一个
+
+## 安装基本软件
+
+wbar							// 一个简单好用的Dock
+wbar-config					// wbar的图形化管理工具
+obconf						// 图形化配置工具
+
+# tint2 // 一个任务栏软件，如果不喜欢wbar可以用来备选。
+
+## 设置随openbox一起运行的软件
+
+编辑 ~/.config/openbox/autostart.sh
+
+.xsession file:
+$exec openbox-session
+
+
+bl-welcome
+========================================================================
+
+首次进入桌面，会在自动打开终端执行bl-welcome,先按q退出，把以下163的数据源
+
+sudo apt-get install neovim
+
+由于bunsenlabs默认的文本编辑器是geany,很不习惯，按以下方式将它改为熟习的NVIM,
+在 Openbox Main Menu → Help & resource → Bunsen Help Files → About Bunsen
+Alternatives 有具体的设置说明。
+
+System -> Edit Debian Alternatives 
+将bl-text-editor的默认程序(40 /usr/bin/geany)替换为 40 /usr/bin/nvim 
+
+
+卸载无用的软件：
+sudo apt-get remove --purge geany geany-common nano
+sudo apt-get autoclean
+

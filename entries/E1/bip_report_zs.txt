@@ -24,6 +24,197 @@ ZS BIP Report
 .. contents:: 内容索引 Table of Contents
 .. section-numbering::
 
+stock aging
+========================================================================
+
+ select  Aera, grp, Itemnumber, Lot, Loc, PrimaryUOM
+  ,rtrim(f4101d.imdsc1) || (f4101d.imdsc2) as ItemDesc
+   ,Qty, Qty*councs/10000.00 as Amt, ExpiryDate, againg
+   , case when v_core.againg <= 180 then '1)Less than or equal to 6 months'
+    when v_core.againg > 180 and v_core.againg <= 365 then '2)7-12months'
+    when v_core.againg > 365 and v_core.againg <= 545 then '3)13-18months'
+    when v_core.againg > 545 and v_core.againg <= 730 then '4)19-24months'
+    when v_core.againg > 730 and v_core.againg <= 910 then '5)25-30months'
+    when v_core.againg > 910 and v_core.againg <= 1095 then '6)31-36months' 
+    else '7)Over 36months'    end   as ReceivedArea
+ 
+ from (
+   select case when limcu like '  ZZS%'  then 'ZS' when  limcu like '  ZBJ%'  then 'BJ' 
+       when limcu like '  ZGZ%'  then 'GZ' when limcu like '  ZSH%' then 'SH'  end as Aera,  
+    case when liglpt < 'IN98'  and liglpt not like 'WI%' then 'Finished Goods'
+       when  liglpt  like 'WI%' then 'Work in process'
+        when  liglpt like 'IN99%' then 'Materials' 
+          when  liglpt like 'IN98%' then 'Packages' end as Grp ,  
+        imlitm as Itemnumber, imuom1 as PrimaryUOM, 
+         lilotn as lot, lilocn as loc, lipqoh/100.00 as Qty
+         , case when iommej is null then 0 else
+           TO_NUMBER(jde.rpttools.NTOD(iommej - ibsld) - TO_DATE(sysdate)) end as againg
+         , case when iommej is null then NULL else jde.rpttools.NTOD(iommej) end as ExpiryDate 
+	    
+  from proddta.f41021 left join proddta.f4101 on liitm=f4101.imitm   
+       left join proddta.f4102 on liitm=ibitm and ibmcu='  ZZS0760210'
+        left join (select iolitm as ItemNo,iolotn as Lot,iommej
+                     from proddta.f4108  where iomcu='  ZZS0760210' )  v_zslot
+         on f4101.imlitm=v_zslot.itemno and lilotn=v_zslot.Lot
+     where (limcu  like '  ZSH%'  or limcu like '  ZBJ%'  or limcu like '  ZGZ%')
+       and lipqoh<>0  
+           
+       ) v_core
+left join proddta.f4101d on imlitm=itemnumber
+left join proddta.f4105 on colitm=itemnumber and comcu='  ZZS0760210'
+  and coledg='07'  
+ 
+ --where  len(itemnumber)<13
+ 
+
+
+ PL
+------------------------------------------------------------------------
+
+select grp, lineno, DL, sum(case when gblt='AA' then amt else 0.0 end) as PC,
+     sum(case when gblt='AA' then ytd else 0.0 end) as PY,
+     sum(case when gblt='BA' then amt else 0.0 end) as BPC,
+     sum(case when gblt='BA' then ytd else 0.0 end) as BPY,
+     sum(case when gblt='AA' then pamt else 0.0 end) as PPC,
+     sum(case when gblt='AA' then pytd else 0.0 end) as PPY
+   from (           
+    select case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy, mm, gblt,
+       case when yyyy = :p_yyyy then amt else 0 end as amt, 
+       case when yyyy = :p_yyyy then ytd else 0 end as ytd, 
+       case when yyyy = :p_yyyy-1 then amt else 0 end as pamt, 
+       case when yyyy = :p_yyyy-1 then ytd else 0 end as pytd, 
+       '' as grp, 
+      case when gmr025 in ('110.0','111.0','111.2','113.0','114.0','115.0') then '01' 
+        when gmr025 in ('120.0','121.0','121.2','122.0','122.1','122.2') then '02' 
+        when gmr025 in ('')	then '03' 
+        when gmr025 in ('200.0','200.1','200.2','200.3','242.0',
+           '201.0','202.0','203.2','204.0','205.0','206.0','207.0','203.1','208.0',
+           '209.0','210.0','211.0','213.0','214.0','215.0','216.0','224.4','218.0',
+           '219.0','220.0','221.0','222.0','223.0',
+           '212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1',
+           '217.0','228.0','229.0','230.0','231.0','233.0','232.0','234.0','235.0',
+           '236.0','226.0','202.2','227.0','228.1' ) then	'04'
+        when gmr025 in ('146.0','147.0','147.1') then	'05' 
+        when gmr025 in ('148.0','149.0','149.1') then '06' 
+        when gmr025 in ('150.0','150.1','151.0','185.0','152.0','153.0','153.1',
+           '154.0','155.0','156.0','157.0','158.0','160.0','197.1',
+           '161.0','162.0','163.0','164.0','165.0','166.0','166.1',
+           '173.0','198.2','187.1','167.0','168.0','169.0','170.0',
+           '171.0','172.0','174.0','175.0','176.0','177.0','177.1',
+           '196.0','180.0','145.0','182.0','182.1','182.3','182.4',
+           '143.0','144.0',  '159.0','186.0','187.0','188.0','189.0','190.0',
+           '191.0','193.0','194.0','195.0','197.0','181.0','178.0',
+           '179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7') then '07'  
+        when gmr025 in ('225.0') then '08' 
+        when gmr025 in ('') then '09'  
+        when gmr025 in ('116.0','116.1') then	'10' 
+        when gmr025 in ('117.0','118.0','118.2','119.0','224.3','224.31','238.0','198.1','118.1') then 	'11'
+        when gmr025 in ('') then '12'  
+        when gmr025 in ('237.0','237.1') then	'13' 
+        when gmr025 in ('') then 	'14'
+         else '' end as lineno,
+        
+      case when gmr025 in ('110.0','111.0','111.2','113.0','114.0','115.0') then 'NET SALES' 
+        when gmr025 in ('120.0','121.0','121.2','122.0','122.1','122.2') then  'COST OF SALES' 
+        when gmr025 in ('')	then 'GROSS PROFIT'
+        when gmr025 in ('200.0','200.1','200.2','200.3','242.0',
+           '201.0','202.0','203.2','204.0','205.0','206.0','207.0','203.1','208.0',
+           '209.0','210.0','211.0','213.0','214.0','215.0','216.0','224.4','218.0',
+           '219.0','220.0','221.0','222.0','223.0',
+           '212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1',
+           '217.0','228.0','229.0','230.0','231.0','233.0','232.0','234.0','235.0',
+           '236.0','226.0','202.2','227.0','228.1'  ) then 	'GENERAL ADMINISTRATION'
+        when gmr025 in ('146.0','147.0','147.1') then 'ADVERTISING'
+        when gmr025 in ('148.0','149.0','149.1')	then 'PROMOTION'
+        when gmr025 in ('150.0','150.1','151.0','185.0','152.0','153.0','153.1',
+           '154.0','155.0','156.0','157.0','158.0','160.0','197.1',
+           '161.0','162.0','163.0','164.0','165.0','166.0','166.1',
+           '173.0','198.2','187.1','167.0','168.0','169.0','170.0',
+           '171.0','172.0','174.0','175.0','176.0','177.0','177.1',
+           '196.0','180.0','145.0','182.0','182.1','182.3','182.4',
+           '143.0','144.0',  '159.0','186.0','187.0','188.0','189.0','190.0',
+           '191.0','193.0','194.0','195.0','197.0','181.0','178.0',
+           '179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7') then 	'SELLING'
+        when gmr025 in ('225.0')  then 	'R & D EXPENSES'
+        when gmr025 in ('') then 'TOTAL OPERATING EXPENSES'
+        when gmr025 in ('116.0','116.1') then 	'DISPOSAL OF FIXED ASSETS'
+        when gmr025 in ('117.0','118.0','118.2','119.0','224.3','224.31','238.0','198.1','118.1') then 	'OTHER EXPENSES / (INCOMES)'
+        when gmr025 in ('') then 	'INCOME BEFORE TAX'
+        when gmr025 in ('237.0','237.1') then 	'PROFIT TAX'
+        when gmr025 in ('') then 	'NET INCOME / (LOSS)'
+         else '' end as DL
+      from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA','BA' ) and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+           and   gmr025 in ('110.0','111.0','111.2','113.0','114.0','115.0',
+           '120.0','121.0','121.2','122.0','122.1','122.2',
+           '146.0','147.0','147.1',   '148.0','149.0','149.1',   '225.0',
+           '116.0','116.1',  '117.0','118.0','118.2','119.0','224.3','224.31','238.0','198.1','118.1',
+           '237.0','237.1',
+           
+           '200.0','200.1','200.2','200.3','242.0',
+           '201.0','202.0','203.2','204.0','205.0','206.0','207.0','203.1','208.0',
+           '209.0','210.0','211.0','213.0','214.0','215.0','216.0','224.4','218.0',
+           '219.0','220.0','221.0','222.0','223.0',
+           '212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1',
+           '217.0','228.0','229.0','230.0','231.0','233.0','232.0','234.0','235.0',
+           '236.0','226.0','202.2','227.0','228.1' ,
+           
+           '150.0','150.1','151.0','185.0','152.0','153.0','153.1',
+           '154.0','155.0','156.0','157.0','158.0','160.0','197.1',
+           '161.0','162.0','163.0','164.0','165.0','166.0','166.1',
+           '173.0','198.2','187.1','167.0','168.0','169.0','170.0',
+           '171.0','172.0','174.0','175.0','176.0','177.0','177.1',
+           '196.0','180.0','145.0','182.0','182.1','182.3','182.4',
+           '143.0','144.0',  '159.0','186.0','187.0','188.0','189.0','190.0',
+           '191.0','193.0','194.0','195.0','197.0','181.0','178.0',
+           '179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7'
+                )
+           
+        ) v_core  group by  grp,lineno,dl 
+
+order by grp, lineno
+
+Remark
+------------------------------------------------------------------------
+
+select grp, lineno, DL, sum(case when gblt='AA' then amt else 0.0 end) as PC,
+     sum(case when gblt='AA' then ytd else 0.0 end) as PY,
+     sum(case when gblt='BA' then amt else 0.0 end) as BPC,
+     sum(case when gblt='BA' then ytd else 0.0 end) as BPY,
+     sum(case when gblt='AA' then pamt else 0.0 end) as PPC,
+     sum(case when gblt='AA' then pytd else 0.0 end) as PPY
+   from (           
+    select case when yyyy = :p_yyyy - 1 then :p_yyyy else yyyy end as yyyy, mm, gblt,
+       case when yyyy = :p_yyyy then amt else 0 end as amt, 
+       case when yyyy = :p_yyyy then ytd else 0 end as ytd, 
+       case when yyyy = :p_yyyy-1 then amt else 0 end as pamt, 
+       case when yyyy = :p_yyyy-1 then ytd else 0 end as pytd, 
+       '' as grp, 
+      case when gmr025 in ('117.0') then '01'   when gmr025 in ('118.0','118.2') then '02' 
+        when gmr025 in ('119.0')	then '03'   when gmr025 in ('224.3','224.31') then	'04'
+        when gmr025 in ('238.0','198.1') then	'05'     when gmr025 in ('118.1' ) then '06'               
+         else '' end as lineno,
+        
+      case when gmr025 in ('117.0') then 'Interest Income' 
+        when gmr025 in ('118.0','118.2') then  'Other Income' 
+        when gmr025 in ('119.0')	then 'Other Expense'
+        when gmr025 in ('224.3','224.31') then 	'Scrape Expense'
+        when gmr025 in ('238.0','198.1') then 'Interest Expense'
+        when gmr025 in ('118.1' )	then 'Royalty Income'
+                else '' end as DL
+      from v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA','BA' ) and yyyy in (:p_yyyy, :p_yyyy - 1 ) and mm=:p_mm
+          and gbco in ('90000','91000','92000','93000')
+           and   gmr025 in ('117.0', '118.0','118.2',  '119.0', '224.3','224.31',
+              '238.0','198.1',  '118.1'          
+            )
+           
+           
+        ) v_core  group by  grp,lineno,dl 
+
+order by grp, lineno
+
 GA
 ------------------------------------------------------------------------
 
@@ -105,7 +296,9 @@ select grp, lineno, DL, sum(case when gblt='AA' then amt else 0.0 end) as PC,
         when gmr025 in ('167.0','168.0') then '14' when gmr025 in ('169.0') then '15'
         when gmr025 in ('170.0') then '16' when gmr025 in ('171.0','172.0') then '17'
         when gmr025 in ('174.0','175.0') then '18' when gmr025 in ('176.0','177.0','177.1') then '19'
-        when gmr025 in ('212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1') then '20' 
+        when gmr025 in ('159.0','186.0','187.0','188.0','189.0','190.0',
+            '191.0','193.0','194.0','195.0','197.0','181.0','178.0',
+            '179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7') then '20' 
         when gmr025 in ('196.0') then '21'
         when gmr025 in ('180.0') then '22' when gmr025 in ('') then '23'
         when gmr025 in ('145.0') then '24'
@@ -130,7 +323,9 @@ select grp, lineno, DL, sum(case when gblt='AA' then amt else 0.0 end) as PC,
         when gmr025 in ('171.0','172.0') then 	'Depreciation - Sales Office Equip.'
         when gmr025 in ('174.0','175.0') then 	'Bad Debts Reserve'
         when gmr025 in ('176.0','177.0','177.1') then 	'Free Goods'
-        when gmr025 in ('212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1') then 	'General Expenses'
+        when gmr025 in ('159.0','186.0','187.0','188.0','189.0','190.0',
+            '191.0','193.0','194.0','195.0','197.0','181.0','178.0',
+            '179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7') then 	'General Expenses'
         when gmr025 in ('196.0') then 	'Staff Quarter Expenses'
         when gmr025 in ('180.0') then 	'Entertainment'
         when gmr025 in ('') then 	'Import Duties进口税'
@@ -146,9 +341,11 @@ select grp, lineno, DL, sum(case when gblt='AA' then amt else 0.0 end) as PC,
             '161.0','162.0','163.0','164.0','165.0','166.0','166.1',
             '173.0','198.2','187.1','167.0','168.0','169.0','170.0',
             '171.0','172.0','174.0','175.0','176.0','177.0','177.1',
-            '212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1',
             '196.0','180.0','145.0','182.0','182.1','182.3','182.4',
-            '143.0','144.0'
+            '143.0','144.0',
+            '159.0','186.0','187.0','188.0','189.0','190.0',
+            '191.0','193.0','194.0','195.0','197.0','181.0','178.0',
+            '179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7'
             )
            
         ) v_core  group by  grp,lineno,dl 
@@ -624,7 +821,7 @@ select grp, yyyy, mm, gbobj, sum(pyc+ytd) as YTD, sum(lastamt) as LastAmt,
            ,112535,112536,112537,112538,112539,112504,112540,112542
            ,112544,112545,112546,112547,112556,112557,112558,112559
            ,112561,112563,112564,112565,112566,112567,112658,112569
-           ,112570
+           ,112570,112567,112568,112569,112571,112572
         )
      
     ) v_core  group by  grp, yyyy, mm, gbobj, LKDL01,GMDL01
@@ -781,17 +978,19 @@ select yyyy,mm,division, product,
   sum(case when grp = 'MAP' then salesamtytd else 0.0 end) as MAP, 
   sum(case when grp = 'THA' then salesamtytd else 0.0 end) as THA,
   sum(case when grp = 'USA' then salesamtytd else 0.0 end) as USA,
-  sum(case when grp in ('MAP','THA','USA') then salesamtytd else 0.0 end) as SubMap,
+  sum(case when grp = 'RUS' then salesamtytd else 0.0 end) as RUS,
+  sum(case when grp in ('MAP','THA','USA','RUS') then salesamtytd else 0.0 end) as SubMap,
   sum(case WHEN grp = 'OTH' then salesamtytd else 0.0 end) as OTH,
   sum(salesamtytd) as TotalAmt,
-  sum(case WHEN grp = 'IND' then cogsytd else 0.0 end) as PTcogs,
+   sum(case WHEN grp = 'IND' then cogsytd else 0.0 end) as PTcogs,
   sum(case when grp = 'JP' then cogsytd else 0.0 end) as JPcogs,
   sum(case when grp = 'VIE' then cogsytd else 0.0 end) as VIEcogs,
   sum(case when grp in ('IND','JP','VIE') then cogsytd else 0.0 end) as SubRTcogs,
   sum(case when grp = 'MAP' then cogsytd else 0.0 end) as MAPcogs, 
   sum(case when grp = 'THA' then cogsytd else 0.0 end) as THAcogs,
   sum(case when grp = 'USA' then cogsytd else 0.0 end) as USAcogs,
-  sum(case when grp in ('MAP','THA','USA') then cogsytd else 0.0 end) as SubMapcogs,
+  sum(case when grp = 'RUS' then cogsytd else 0.0 end) as RUScogs,
+  sum(case when grp in ('MAP','THA','USA','RUS') then cogsytd else 0.0 end) as SubMapcogs,
   sum(case WHEN grp = 'OTH' then cogsytd else 0.0 end) as OTHcogs,
   sum(cogsytd) as TotalCogs
  
@@ -825,10 +1024,11 @@ from (
        WHEN lkdl01 like '%护肤化妆%' THEN 'Happy Event' WHEN lkdl01 like '%50惠%' THEN 'Megumi' 
        else 'Raw Materials' end as Product, 
        
-       case when gbmcu like '%MAP' then 'MAP' WHEN gbmcu like '%0000' THEN 'OTH'
+       case when gbmcu like '%MAP' Then 'MAP' WHEN gbmcu like '%0000' THEN 'OTH'
         WHEN gbmcu like '%USA' THEN 'USA' WHEN gbmcu like '%THA' THEN 'THA'
          WHEN gbmcu like '%JPN' THEN 'JP' WHEN gbmcu like '%IND' THEN 'IND'
-          WHEN gbmcu like '%VIE' THEN 'VIE' else  'N/A' end as grp,
+          WHEN gbmcu like '%VIE' THEN 'VIE' when  gbmcu like '%RUS'  then 'RUS'
+             else  'N/A' end as grp,
          yyyy,mm,
        case when gbobj like '5_____' then amt else 0 end  SalesAmt, 
        case when gbobj like '5_____' then ytd else 0 end  SalesAmtYtd, 
@@ -846,7 +1046,6 @@ from (
     order by division,product,grp,yyyy,mm
 
 ) group by   yyyy,mm,division, product
-
 
 Analysis by product line
 ------------------------------------------------------------------------
