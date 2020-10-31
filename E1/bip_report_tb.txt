@@ -1,0 +1,968 @@
+﻿.. zs bip report sql
+
+========================================================================
+ZS BIP Report
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+建立临时表，通过存取过程生成报表记录，再通过函数的方式将临时表中的数据以光标的型式返回给前端的BIP，由于BIP只接受返回数据集，通过函数返回数据集，在BIP中调用比较方便.
+
+试算表
+------------------------------------------------------------------------
+
+使用PL报表的临时表t_pl_temp保存临时记录,程序保存于包rptpkgs,由于这个包之前用于PL，重新建包后，包体需重新缟绎过才能正常，不然影响原来的PL报表
+
+
+
+Create package
+------------------------------------------------------------------------
+
+create or replace 
+package rptpkgs authid current_user is 
+
+procedure p_list_report(i_userid in varchar,
+   i_yyyy in varchar,
+   i_mm in varchar,
+   o_rpt out sys_refcursor);
+
+function pl(i_userid in varchar,
+   i_yyyy in varchar,
+   i_mm in varchar)
+  return sys_refcursor;
+
+function period_rpt(i_rpt in varchar,
+   i_userid in varchar,
+   i_yyyy in varchar,
+   i_mm in varchar)
+  return sys_refcursor;
+  
+end rptpkgs;
+
+Create package body
+------------------------------------------------------------------------
+
+在原来的包体中，增加下面这个接口函数的实现部份
+
+function period_rpt(i_rpt varchar,i_userid varchar,i_yyyy varchar,i_mm varchar)
+  return sys_refcursor as
+  o_rpt sys_refcursor;
+begin
+  -- 根据ID删除之前插入的记录
+  --delete from menjdehhy.t_pl_temp temp where temp.id_pl_temp=i_userid;
+  --commit; 
+ 
+  -- 生成报表记录
+  if i_rpt='PL' then 
+    p_list_report(i_userid,i_yyyy,i_mm,o_rpt);
+  end if;
+
+  if i_rpt='TB' then 
+    crt_tb(i_userid,i_yyyy,i_mm); 
+  end if;
+
+  -- 查询刚刚插入的表记录
+  open o_rpt for
+  select lineno,dl,pc,py,bpc,bpy,ppc,ppy 
+      from menjdehhy.t_pl_temp
+     where id_pl_temp= i_userid
+      order by grp,lineno asc;
+      
+  return o_rpt;
+end period_rpt;
+
+procedure crt_tb(i_userid in varchar,
+  i_yyyy in varchar,
+  i_mm in varchar) as
+begin
+  -- 根据ID删除之前插入的记录
+  delete from menjdehhy.t_pl_temp temp where temp.id_pl_temp=i_userid;
+  commit; 
+ 
+  ins_tb(i_userid,i_yyyy,i_mm,'备用金','026.0','D','Y');
+  ins_tb(i_userid,i_yyyy,i_mm,'其他员工贷款','026.1','D','Y');
+  ins_tb(i_userid,i_yyyy,i_mm,'现金','027.0','D','Y');
+end crt_tb;
+
+
+procedure ins_tb(i_userid in varchar,
+  i_yyyy in varchar,
+  i_mm in varchar,
+  i_dl in varchar,
+  i_code in varchar,
+  i_dc in varchar,
+  i_pyc in varchar) as
+begin
+  insert into menjdehhy.t_pl_temp (id_pl_temp,grp,lineno,dl,pc,py,bpc,bpy,ppc,ppy)   
+  if i_dc='D' then 
+    select i_userid,'',rownumber,i_dl,sum(pyc+ytd),0,0,0,0,0
+        from  v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+         where gblt in ('AA') and yyyy in (i_yyyy) and mm=i_mm
+           and gbco in ('90000','91000','92000','93000')
+              and   gmr025 in (i_code)
+        group by i_userid,rownumber,i_dl;
+  end if;
+  if i_dc='C' then
+    select i_userid,'',rownumber,i_dl,0,sum(pyc+ytd),0,0,0,0
+        from  v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+         where gblt in ('AA') and yyyy in (i_yyyy) and mm=i_mm
+           and gbco in ('90000','91000','92000','93000')
+              and   gmr025 in (i_code)
+        group by i_userid,rownumber,i_dl;
+  end if;
+  commit;
+
+end ins_tb;
+
+运行调试
+------------------------------------------------------------------------
+
+declare 
+  i_rpt varchar2 (10);
+  i_userid varchar2 (4);
+  i_mm varchar2 (2);
+  v_return sys_refcursor;
+begin
+  i_rpt :='TB';
+  i_userid :='ITHHY';
+  i_yyyy :='2020';
+  i_mm :='07';
+
+  v_return :=rptpkgs.period_rpt(
+    i_rpt => i_rpt,
+    i_userid => i_userid,
+    i_yyyy => i_yyyy,
+    i_mm => i_mm
+    );
+end
+
+------------------------------------------------------------------------
+
+procedure p_list_report(i_userid in varchar,
+   i_yyyy in varchar,
+   i_mm in varchar,
+   o_rpt out sys_refcursor) as
+   PRAGMA AUTONOMOUS_TRANSACTION;
+begin   
+
+end p_list_report;
+
+
+现行程序
+------------------------------------------------------------------------
+
+select grp, lineno, DL, 
+    case when sum(pyc+ytd)>=0 then
+      case when lineno >= 2870 
+       then sum(ytd) else sum(pyc+ytd) end
+    else 0.0 end as D_PY,
+    
+    case when sum(pyc+ytd)>=0 then 0.0 
+    else  
+       case when lineno >=2870 then sum(ytd) 
+           else sum(pyc+ytd) end
+    end  as C_PY
+    from (           
+      select yyyy, mm, gblt, pyc, ytd, '' as grp, 
+      case when gmr025 in ('026.0') then '1000'  when gmr025 in ('026.1') then '1010' 
+        when gmr025 in ('027.0') then '1020' when gmr025 in ('028.02') then '1030'
+        when gmr025 in ('029.0') then '1040'  when gmr025 in ('030.0') then '1050'
+        when gmr025 in ('030.1') then '1060'  when gmr025 in ('032.0') then '1070' 
+        when gmr025 in ('033.0') then '1080'  when gmr025 in ('035.0') then '1090' 
+        when gmr025 in ('036.01') then '1100' when gmr025 in ('037.0') then '1110'
+        when gmr025 in ('039.0') then '1120'  when gmr025 in ('041.0') then '1130'
+        when gmr025 in ('044.0') then '1140'  when gmr025 in ('045.1') then '1150'
+        when gmr025 in ('046.0') then '1160'  when gmr025 in ('046.11') then '1170' 
+        when gmr025 in ('046.02') then '1180' when gmr025 in ('046.03') then '1190'
+        when gmr025 in ('046.04') then '1200'  when gmr025 in ('046.05') then '1210'
+        when gmr025 in ('046.06') then '1220'  when gmr025 in ('046.08') then '1230'
+        when gmr025 in ('046.09') then '1240'  when gmr025 in ('046.10') then '1250' 
+        when gmr025 in ('034.01') then '1260' when gmr025 in ('032.22') then '1270'
+        when gmr025 in ('028.03') then '1280'  when gmr025 in ('028.04') then '1290'
+        when gmr025 in ('028.05') then '1300'  when gmr025 in ('028.06') then '1310'
+        when gmr025 in ('028.07') then '1320'  when gmr025 in ('028.08') then '1330' 
+        when gmr025 in ('028.09') then '1340' when gmr025 in ('028.10') then '1350'
+        when gmr025 in ('037.01') then '1360'  when gmr025 in ('034.02') then '1370'
+        when gmr025 in ('034.03') then '1380'  when gmr025 in ('029.1') then '1390'  
+        when gmr025 in ('034.0') then '1400'  when gmr025 in ('034.04') then '1410' 
+        when gmr025 in ('034.05') then '1420' when gmr025 in ('035.04') then '1430'
+        when gmr025 in ('034.06') then '1440'  when gmr025 in ('034.07') then '1450'
+        when gmr025 in ('034.08') then '1460'  when gmr025 in ('034.10') then '1470'   
+        when gmr025 in ('035.03') then '1480'  when gmr025 in ('035.05') then '1490' 
+        when gmr025 in ('035.06') then '1500' when gmr025 in ('035.10') then '1510'
+        when gmr025 in ('036.03') then '1520'   when gmr025 in ('048.0') then '1530' 
+        when gmr025 in ('049.0') then '1540'  when gmr025 in ('049.1') then '1550'  
+        when gmr025 in ('049.2') then '1560'  when gmr025 in ('049.3') then '1570' 
+        when gmr025 in ('049.4') then '1580'   when gmr025 in ('049.5') then '1590' 
+        when gmr025 in ('049.6') then '1600' when gmr025 in ('049.7') then '1610'
+        when gmr025 in ('050.001') then '1620'  when gmr025 in ('050.004') then '1630'
+        when gmr025 in ('050.1') then '1640'  when gmr025 in ('051.0') then '1650'       
+        when gmr025 in ('052.0','053.0') then '1660'  when gmr025 in ('058.0') then '1670' 
+        when gmr025 in ('054.0','055.0') then '1680' when gmr025 in ('056.0','057.0') then '1690'
+        when gmr025 in ('059.1') then '1700'  when gmr025 in ('059.0') then '1710'
+        when gmr025 in ('059.2') then '1720'  when gmr025 in ('059.3') then '1730'       
+        when gmr025 in ('059.4') then '1740'  when gmr025 in ('059.5') then '1750' 
+        when gmr025 in ('059.6') then '1760' when gmr025 in ('059.7') then '1770'
+        when gmr025 in ('059.9') then '1780'  when gmr025 in ('060.0') then '1790'
+        when gmr025 in ('061.0') then '1800'  when gmr025 in ('062.0','062.1') then '1810'     
+        when gmr025 in ('063.0','063.1') then '1820'  when gmr025 in ('064.0') then '1830' 
+        when gmr025 in ('065.0') then '1840' when gmr025 in ('065.2') then '1860'
+        when gmr025 in ('066.0','066.1','066.2','066.3','066.4') then '1870'  when gmr025 in ('065.1') then '1910'
+        when gmr025 in ('095.0') then '1920'  when gmr025 in ('067.0') then '1930'     
+        when gmr025 in ('068.0') then '1940'  when gmr025 in ('069.0') then '1950' 
+        when gmr025 in ('069.1') then '1960' when gmr025 in ('069.2') then '1970'
+        when gmr025 in ('070.0') then '1980'  when gmr025 in ('071.0') then '1990'
+        when gmr025 in ('071.1') then '2000'  when gmr025 in ('071.2') then '2010'    
+        when gmr025 in ('072.0') then '2020'  when gmr025 in ('072.1') then '2030' 
+        when gmr025 in ('072.2') then '2040' when gmr025 in ('073.0') then '2050'
+        when gmr025 in ('074.0') then '2060'  when gmr025 in ('075.0') then '2070'
+        when gmr025 in ('075.1') then '2080'  when gmr025 in ('075.2') then '2090'      
+        when gmr025 in ('076.0') then '2140'  when gmr025 in ('077.0') then '2150' 
+        when gmr025 in ('078.0') then '2160' when gmr025 in ('078.1') then '2170'
+        when gmr025 in ('078.2') then '2180'  when gmr025 in ('079.0') then '2190'
+        when gmr025 in ('080.0') then '2200'  when gmr025 in ('080.1') then '2210' 
+        when gmr025 in ('080.2') then '2220'  when gmr025 in ('081.0') then '2230' 
+        when gmr025 in ('081.1') then '2240' when gmr025 in ('081.2') then '2250'
+        when gmr025 in ('082.0') then '2260'  when gmr025 in ('083.0') then '2270'
+        when gmr025 in ('084.0') then '2280'  when gmr025 in ('084.1') then '2290' 
+        when gmr025 in ('085.0') then '2300'  when gmr025 in ('085.1') then '2310' 
+        when gmr025 in ('085.2') then '2320' when gmr025 in ('094.4') then '2360'
+        when gmr025 in ('086.0') then '2370'  when gmr025 in ('094.2') then '2380'
+        when gmr025 in ('087.0') then '2390'  when gmr025 in ('087.1') then '2400' 
+        when gmr025 in ('088.0') then '2410'  when gmr025 in ('089.0') then '2420' 
+        when gmr025 in ('089.1') then '2430' when gmr025 in ('090.5') then '2440'
+        when gmr025 in ('090.0') then '2450'  when gmr025 in ('091.0') then '2460'
+        when gmr025 in ('091.1') then '2470'  when gmr025 in ('091.2') then '2480'   
+        when gmr025 in ('091.3') then '2490'  when gmr025 in ('091.4') then '2500' 
+        when gmr025 in ('091.5') then '2510' when gmr025 in ('091.6') then '2520'
+        when gmr025 in ('091.7') then '2530'  when gmr025 in ('099.1') then '2540'
+        when gmr025 in ('092.0') then '2550'  when gmr025 in ('093.0') then '2560' 
+        when gmr025 in ('093.1','094.0') then '2570'  when gmr025 in ('094.3') then '2580' 
+        when gmr025 in ('096.0') then '2590' when gmr025 in ('097.0') then '2600'
+        when gmr025 in ('097.01') then '2610'  when gmr025 in ('097.02') then '2620'
+        when gmr025 in ('097.03') then '2630'  when gmr025 in ('097.04') then '2640'       
+        when gmr025 in ('097.05') then '2650'  when gmr025 in ('097.06') then '2660' 
+        when gmr025 in ('097.07') then '2670' when gmr025 in ('097.08') then '2680'
+        when gmr025 in ('097.081') then '2690'  when gmr025 in ('097.091','097.092','097.093','097.094','097.095','097.096','097.097') then '2700'
+        when gmr025 in ('097.10') then '2710'  when gmr025 in ('098.0') then '2720'  
+        when gmr025 in ('099.0') then '2730'  when gmr025 in ('100.0') then '2740' 
+        when gmr025 in ('101.0') then '2750' when gmr025 in ('094.1') then '2760'
+        when gmr025 in ('102.0') then '2770'  when gmr025 in ('103.0') then '2780'
+        when gmr025 in ('103.2') then '2790'  when gmr025 in ('103.1') then '2800'      
+        when gmr025 in ('100.1') then '2810'  when gmr025 in ('100.2') then '2820' 
+        when gmr025 in ('104.0') then '2830' when gmr025 in ('105.0') then '2840'
+        when gmr025 in ('107.0') then '2860'  when gmr025 in ('108.0') then '2870'
+        when gmr025 in ('109.0') then '2880'  when gmr025 in ('110.0','111.0','111.1') then '2890'
+        when gmr025 in ('112.0','113.0','113.1') then '2900' when gmr025 in ('114.0','115.0','115.1') then '2910'
+        when gmr025 in ('111.2') then '2920' when gmr025 in ('116.0') then '2930'
+        when gmr025 in ('116.1') then '2940' when gmr025 in ('117.0') then '2950'
+        when gmr025 in ('118.0') then '2960' when gmr025 in ('118.2') then '2970'
+        when gmr025 in ('119.0') then '2990' when gmr025 in ('118.1') then '3000' 
+        when gmr025 in ('120.0','121.0') then '3010' when gmr025 in ('122.0') then '3020'
+        when gmr025 in ('122.1') then '3030'  when gmr025 in ('122.2') then '3040'
+        when gmr025 in ('122.3') then '3050' when gmr025 in ('121.2') then '3060'
+        when gmr025 in ('124.0','124.1','124.2','124.3','124.4','250.01') then '3080'
+        when gmr025 in ('125.0','125.1','125.2','125.3','125.4','250.32') then '3100'
+        when gmr025 in ('124.5','124.6','124.7','124.8','124.9','250.02') then '3110'
+        when gmr025 in ('125.5','125.6','125.7','125.8','125.9','250.03') then '3120'
+        when gmr025 in ('126.5','126.51','126.52','126.53','126.54','250.05') then '3130'
+        when gmr025 in ('126.6','126.61','126.62','126.63','126.64','250.06') then '3140'
+        when gmr025 in ('132.0','132.1','132.2','132.3','132.4','250.12') then '3150'
+        when gmr025 in ('133.0','133.1','133.2','133.3','133.4','250.13') then '3160'
+        when gmr025 in ('134.0','134.1','134.2','134.3','134.4','250.14') then '3170'
+        when gmr025 in ('129.0','129.1','129.2','129.3','129.4','250.09') then '3180'
+        when gmr025 in ('139.0','139.1','139.2','139.3','139.4','250.23') then '3190'
+        when gmr025 in ('141.0','141.1','141.2','141.3','141.4','250.25') then '3200'
+        when gmr025 in ('142.0','142.1','142.2','142.3','142.4','250.26') then '3210'
+        when gmr025 in ('138.4','138.5','138.6','138.7','138.71','250.21') then '3220'
+        when gmr025 in ('127.0','127.1','127.2','127.3','127.4','250.07') then '3230'
+        when gmr025 in ('128.0','128.1','128.2','128.3','128.4','250.08') then '3240'
+        when gmr025 in ('136.0','136.1','136.11','136.13','250.16') then '3250'
+        when gmr025 in ('137.0','137.1','137.11','137.12','137.13','250.18') then '3260'
+        when gmr025 in ('137.2','137.3','137.31','137.32','137.33','250.19') then '3270'
+        when gmr025 in ('138.0','138.1','138.2','138.04','138.3','250.20') then '3290'
+        when gmr025 in ('140.0','140.1','140.2','140.3','140.4','250.24') then '3300'
+        when gmr025 in ('142.41','142.42','142.43','142.44','142.45','250.27') then '3310'
+        when gmr025 in ('135.0','135.1','135.2','135.3','135.4','250.15') then '3320'
+        when gmr025 in ('136.2','136.3','136.31','136.32','136.33','250.17') then '3330'
+        when gmr025 in ('126.0','126.1','126.2','126.3','126.4','250.04') then '3340'
+        when gmr025 in ('130.0','130.1','130.2','130.3','130.4','250.10') then '3350'
+        when gmr025 in ('142.51','142.52','142.53','142.54','142.55','250.29') then '3360'
+        when gmr025 in ('138.80','138.81','138.82','138.83','138.84','250.22') then '3370'
+        when gmr025 in ('142.46','142.47','142.48','142.49','142.50','250.28') then '3380'
+        when gmr025 in ('142.61','142.62','142.63','142.64','142.65','250.30') then '3390'
+        when gmr025 in ('142.71','142.72','142.73','142.74','142.75','250.31') then '3400'
+        when gmr025 in ('143.0','144.0') then '3410' when gmr025 in ('145.0') then '3420'
+        when gmr025 in ('146.0','147.0','147.1') then '3430' when gmr025 in ('148.0','149.0','149.1') then '3440'
+        when gmr025 in ('150.0','151.0') then '3450' when gmr025 in ('150.1') then '3460'
+        when gmr025 in ('152.0','153.0','153.1') then '3470' when gmr025 in ('154.0') then '3490'
+        when gmr025 in ('155.0') then '3500' when gmr025 in ('156.0') then '3510'
+        when gmr025 in ('157.0') then '3520' when gmr025 in ('158.0') then '3530'
+        when gmr025 in ('159.0') then '3540' when gmr025 in ('160.0') then '3550'
+        when gmr025 in ('161.0','162.0') then '3560' when gmr025 in ('163.0','164.0') then '3570'
+        when gmr025 in ('165.0','166.0','166.1') then '3580' when gmr025 in ('198.2') then '3590'
+        when gmr025 in ('167.0','168.0') then '3600' when gmr025 in ('169.0') then '3610'
+        when gmr025 in ('170.0') then '3620' when gmr025 in ('171.0') then '3630'
+        when gmr025 in ('172.0') then '3650' when gmr025 in ('173.0') then '3660'
+        when gmr025 in ('174.0','175.0') then '3670' when gmr025 in ('176.0','177.0','177.1') then '3680'
+        when gmr025 in ('178.0','179.0','179.1','198.0') then '3700' when gmr025 in ('180.0') then '3710'
+        when gmr025 in ('181.0') then '3720' when gmr025 in ('182.0','182.1') then '3780'
+        when gmr025 in ('182.3','182.4') then '3790' when gmr025 in ('185.0') then '3810'
+        when gmr025 in ('186.0') then '3830' when gmr025 in ('187.0') then '3840'
+        when gmr025 in ('188.0') then '3850' when gmr025 in ('190.0') then '3860'
+        when gmr025 in ('191.0') then '3870' when gmr025 in ('197.1') then '3880'
+        when gmr025 in ('193.0') then '3890' when gmr025 in ('194.0') then '3900'
+        when gmr025 in ('195.0') then '3910' when gmr025 in ('196.0') then '3920'
+        when gmr025 in ('197.0') then '3930' when gmr025 in ('198.3') then '3940'
+        when gmr025 in ('198.4') then '3950' when gmr025 in ('198.5') then '3960'
+        when gmr025 in ('198.6') then '3970' when gmr025 in ('198.7') then '3980'
+        when gmr025 in ('189.0') then '4000' when gmr025 in ('200.0','200.1') then '4020'
+        when gmr025 in ('200.2','200.3') then '4030' when gmr025 in ('201.0') then '4040'
+        when gmr025 in ('202.0') then '4050' when gmr025 in ('203.1') then '4080'
+        when gmr025 in ('203.2') then '4090' when gmr025 in ('202.2') then '4100'
+        when gmr025 in ('204.0') then '4110' when gmr025 in ('205.0') then '4120'
+        when gmr025 in ('206.0') then '4130' when gmr025 in ('207.0') then '4140'
+        when gmr025 in ('208.0') then '4150' when gmr025 in ('209.0') then '4160'
+        when gmr025 in ('210.0') then '4170' when gmr025 in ('224.4') then '4180'
+        when gmr025 in ('211.0') then '4190' when gmr025 in ('212.0') then '4200'
+        when gmr025 in ('213.0') then '4210' when gmr025 in ('214.0') then '4220'
+        when gmr025 in ('215.0') then '4230' when gmr025 in ('216.0') then '4240'
+        when gmr025 in ('217.0') then '4250' when gmr025 in ('218.0') then '4260'
+        when gmr025 in ('219.0') then '4270' when gmr025 in ('220.0') then '4280'
+        when gmr025 in ('221.0') then '4290' when gmr025 in ('222.0') then '4300'
+        when gmr025 in ('223.0') then '4310' when gmr025 in ('224.0') then '4320'
+        when gmr025 in ('224.1') then '4330' when gmr025 in ('224.2') then '4340'
+        when gmr025 in ('224.5') then '4350' when gmr025 in ('224.6') then '4360'
+        when gmr025 in ('224.7') then '4370' when gmr025 in ('224.8') then '4380'
+        when gmr025 in ('224.9') then '4390' when gmr025 in ('208.1') then '4400'
+        when gmr025 in ('228.0') then '4410' when gmr025 in ('228.1') then '4420'
+        when gmr025 in ('229.0') then '4430' when gmr025 in ('230.0') then '4440'
+        when gmr025 in ('231.0') then '4450' when gmr025 in ('232.0') then '4460' 
+        when gmr025 in ('233.0') then '4470'  
+        
+        when gmr025 in ('234.0') then '4480' when gmr025 in ('235.0') then '4490'
+        when gmr025 in ('227.0') then '4500' when gmr025 in ('242.0') then '4510'
+        when gmr025 in ('236.0') then '4520' when gmr025 in ('225.0') then '4530'
+        when gmr025 in ('224.3') then '4540' when gmr025 in ('224.31') then '4550'
+        when gmr025 in ('226.0') then '4560' 
+        
+        when gmr025 in ('238.0') then '4570' 
+        when gmr025 in ('237.0') then '4580' when gmr025 in ('237.1') then '4590'
+        when gmr025 in ('239.0') then '4600'      else ' ' end as lineno,
+        
+      case when gmr025 in ('026.0') then '备用金'   when gmr025 in ('026.1') then '其他员工贷款'
+        when gmr025 in ('027.0') then '现金'   when gmr025 in ('028.02') then '三乡建行(工程保证金账户)'
+        when gmr025 in ('029.0') then '三乡农行工区分理处 (RMB)'  when gmr025 in ('030.0') then '深圳汇丰银行（港币帐户）'
+        when gmr025 in ('030.1') then '中山农行（港币帐户）'  when gmr025 in ('032.0') then '三乡中行（结算帐户）' 
+        when gmr025 in ('033.0') then '三乡中行（人民币）'  when gmr025 in ('035.0') then '三乡信社（人民币）' 
+        when gmr025 in ('036.01') then '三乡中行（代扣代缴帐户）' when gmr025 in ('037.0') then '深圳汇丰银行 (RMB)- 中山'
+        when gmr025 in ('039.0') then '广州中行 - 国贸 (RMB)'  when gmr025 in ('041.0') then '广州市商业银行'
+        when gmr025 in ('044.0') then '上海中国银行'  when gmr025 in ('045.1') then '工行南京西路支行'
+        when gmr025 in ('046.0') then '北京中行东安门分理处'  when gmr025 in ('046.11') then '北京工商银行王府井支行营业室' 
+        when gmr025 in ('046.02') then '三鄉中行（专用资金戶）' when gmr025 in ('046.03') then '三鄉中行（日元戶）'
+        when gmr025 in ('046.04') then '三鄉農行（日元戶）'  when gmr025 in ('046.05') then '三鄉中行（美元戶）'
+        when gmr025 in ('046.06') then '三鄉農行（美元戶）'  when gmr025 in ('046.08') then '中行收汇核查帐户-港币'
+        when gmr025 in ('046.09') then '中行收汇核查帐户-美元'  when gmr025 in ('046.10') then '中行收汇核查帐户-日元' 
+        when gmr025 in ('034.01') then '三乡中行（欧元帐户）' when gmr025 in ('三乡中行（定期帐户）') then '119'
+        when gmr025 in ('028.03') then '三乡建行(工程保证金账户－7653)'  when gmr025 in ('028.04') then '三乡建行(工程保证金账户-7660)'
+        when gmr025 in ('028.05') then '三乡中国建设银行-保证金8087'  when gmr025 in ('028.06') then '三乡中国建设银行－保证金-8924'
+        when gmr025 in ('028.07') then '三乡中国建设银行－住房公积金-9372'  when gmr025 in ('028.08') then '三乡中国建设银行－港币' 
+        when gmr025 in ('028.09') then '中国建设银行－港币收结汇－三乡' when gmr025 in ('028.10') then '中国建设银行－人民币定期－三乡'
+        when gmr025 in ('037.01') then '深圳汇丰银行－人民币定期－中山'  when gmr025 in ('034.02') then '三乡中国银行-7天通知存款专户'
+        when gmr025 in ('034.03') then '三乡中国银行－人民币定期-2902'  when gmr025 in ('029.1') then '三乡农行（三个月定期）'  
+        when gmr025 in ('034.0') then '三乡工商银行－人民币'  when gmr025 in ('034.04') then '三乡工商银行－人民币定期' 
+        when gmr025 in ('034.05') then '三乡中国银行－美元定期' when gmr025 in ('035.04') then '三乡中国银行－港元定期'
+        when gmr025 in ('034.06') then '三乡交通银行－人民币'  when gmr025 in ('034.07') then '三乡交通银行－人民币定期'
+        when gmr025 in ('034.08') then '广州三菱日联银行-人民币'  when gmr025 in ('034.10') then '广州三菱日联银行-美元结算帐户'   
+        when gmr025 in ('035.03') then '三乡招商银行-人民币'  when gmr025 in ('035.05') then '三乡农行-人民币-大额定期' 
+        when gmr025 in ('035.06') then '三乡交通银-人民币-七天定期' when gmr025 in ('035.10') then '三乡工商银行-人民币-七天定期'
+        when gmr025 in ('036.03') then '三乡交通银行-港币'
+        when gmr025 in ('048.0') then '应收帐款'  when gmr025 in ('049.0') then '应收联属往来 - 香港 - 货款'
+        when gmr025 in ('049.1') then '应收联属往来 - 日本- 货款'  when gmr025 in ('049.2') then '应收联属往来 - 泰國 - 货款'          
+        when gmr025 in ('049.3') then '应收联属往来 - 美國 - 货款'  when gmr025 in ('049.4') then '应收联属往来 - 印尼- 货款' 
+        when gmr025 in ('049.5') then '应收联属往来－越南－货款' when gmr025 in ('049.6') then '应收联属往来－上海子公司－货款'
+        when gmr025 in ('049.7') then '应收联属往来－俄罗斯－货款'
+        when gmr025 in ('050.001') then '其它应收款'  when gmr025 in ('050.004') then '预付帐款'
+        when gmr025 in ('050.1') then '应收利息'  when gmr025 in ('051.0') then '内部往来 '       
+        when gmr025 in ('052.0','053.0') then '     —广州'  when gmr025 in ('058.0') then '     —中山' 
+        when gmr025 in ('054.0','055.0') then '     —上海' when gmr025 in ('056.0','057.0') then '     —北京'
+        when gmr025 in ('059.1') then '     —乐敦'  when gmr025 in ('059.0') then '     —香港'
+        when gmr025 in ('059.2') then '泰國往来帐款'  when gmr025 in ('059.3') then '美国往来帐款'       
+        when gmr025 in ('059.4') then '英国往来帐款'  when gmr025 in ('059.5') then '印尼往来帐款' 
+        when gmr025 in ('059.6') then '越南往来帐款' when gmr025 in ('059.7') then '台湾往来帐款'
+        when gmr025 in ('059.9') then '应收联属往来－越南－其他'  when gmr025 in ('060.0') then '按金'
+        when gmr025 in ('061.0') then '待摊费用'  when gmr025 in ('062.0','062.1') then '包装物'     
+        when gmr025 in ('063.0','063.1') then '原材料'  when gmr025 in ('064.0') then '自制半成品' 
+        when gmr025 in ('065.0') then '产成品' when gmr025 in ('065.2') then '在途产品\在途材料'
+        when gmr025 in ('066.0','066.1','066.2','066.3','066.4') then '生产制造成本差异'  when gmr025 in ('065.1') then '产成品差异—中山'
+        when gmr025 in ('095.0') then '待处理财产损益-流动资产'  when gmr025 in ('067.0') then '厂房'     
+        when gmr025 in ('068.0') then '汽车'  when gmr025 in ('069.0') then '办公室家私、装修' 
+        when gmr025 in ('069.1') then '办公室家具' when gmr025 in ('069.2') then '办公室装修'
+        when gmr025 in ('070.0') then '办公室设备'  when gmr025 in ('071.0') then '生产机器设备'
+        when gmr025 in ('071.1') then '模具'  when gmr025 in ('071.2') then '其他生产工具'    
+        when gmr025 in ('072.0') then '仓库家私、装修'  when gmr025 in ('072.1') then '仓库家具' 
+        when gmr025 in ('072.2') then '仓库装修' when gmr025 in ('073.0') then '仓库设备'
+        when gmr025 in ('074.0') then '宿舍'  when gmr025 in ('075.0') then '宿舍设备'
+        when gmr025 in ('075.1') then '宿舍家具'  when gmr025 in ('075.2') then '宿舍装修'      
+        when gmr025 in ('076.0') then '—厂房'  when gmr025 in ('077.0') then '—汽车' 
+        when gmr025 in ('078.0') then '—办公室家私、装修' when gmr025 in ('078.1') then '—办公室家具'
+        when gmr025 in ('078.2') then '—办公室装修'  when gmr025 in ('079.0') then '—办公室设备'
+        when gmr025 in ('080.0') then '—生产机器设备'  when gmr025 in ('080.1') then '—模具' 
+        when gmr025 in ('080.2') then '—其他生产工具'  when gmr025 in ('081.0') then '—仓库家私、装修' 
+        when gmr025 in ('081.1') then '—仓库家具' when gmr025 in ('081.2') then '—仓库装修'
+        when gmr025 in ('082.0') then '—仓库设备'  when gmr025 in ('083.0') then '—宿舍'
+        when gmr025 in ('084.0') then '—场地使用权'  when gmr025 in ('084.1') then '—OXY商標權' 
+        when gmr025 in ('085.0') then '—宿舍家私、装修'  when gmr025 in ('085.1') then '—宿舍家具' 
+        when gmr025 in ('085.2') then '—宿舍装修' when gmr025 in ('094.4') then '固定资产减值准备'
+        when gmr025 in ('086.0') then '在建工程'  when gmr025 in ('094.2') then '递延税款'
+        when gmr025 in ('087.0') then '场地使用权'  when gmr025 in ('087.1') then '無形資產─OXY商標權' 
+        when gmr025 in ('088.0') then '开办费'  when gmr025 in ('089.0') then '开办费累计折旧' 
+        when gmr025 in ('089.1') then '长期股权投资' when gmr025 in ('090.5') then '短期借款'
+        when gmr025 in ('090.0') then '应付股息'  when gmr025 in ('091.0') then '应付联属往来－香港－货款'
+        when gmr025 in ('091.1') then '应付联属往来－日本－货款'  when gmr025 in ('091.2') then '应付联属往来－美国－货款'   
+        when gmr025 in ('091.3') then '应付联属往来－ANDS－货款'  when gmr025 in ('091.4') then '应付联属往来－越南-货款' 
+        when gmr025 in ('091.5') then '应付联属往来－英国－货款' when gmr025 in ('091.6') then '应付联属往来－韓国－货款'
+        when gmr025 in ('091.7') then '应付联属往来－印尼－货款'  when gmr025 in ('099.1') then '应付联属往来－上海子公司－货款'
+        when gmr025 in ('092.0') then '  —其它国家'  when gmr025 in ('093.0') then '预提费用' 
+        when gmr025 in ('093.1','094.0') then '应付税金—增值稅'  when gmr025 in ('094.3') then '悬挂帐' 
+        when gmr025 in ('096.0') then '坏帐储备' when gmr025 in ('097.0') then '其它应付款'
+        when gmr025 in ('097.01') then '应付联属往来－日本-商标权'  when gmr025 in ('097.02') then '应付联属往来－美国-商标权'
+        when gmr025 in ('097.03') then '应付联属往来－ANDS-商标权'  when gmr025 in ('097.04') then '应付联属往来－日本-费用'       
+        when gmr025 in ('097.05') then '应付联属往来－美国--费用'  when gmr025 in ('097.06') then '应付联属往来－香港-商标权' 
+        when gmr025 in ('097.07') then '应付联属往来－ANDS-费用' when gmr025 in ('097.08') then '应付联属往来－英国--费用'
+        when gmr025 in ('097.081') then '应付联属往来－香港－其它'  when gmr025 in ('097.091','097.092','097.093','097.094','097.095','097.096','097.097') then '预提职工薪酬'
+        when gmr025 in ('097.10') then '预提费用－花红'  when gmr025 in ('098.0') then '应付核数费'  
+        when gmr025 in ('099.0') then '应付工商统一税/消费税'  when gmr025 in ('100.0') then '存货变现损失准备' 
+        when gmr025 in ('101.0') then '预收货款' when gmr025 in ('094.1') then '货已收但没有退税证明 '
+        when gmr025 in ('102.0') then '福利基金'  when gmr025 in ('103.0') then '应交利得税'
+        when gmr025 in ('103.2') then '应交其他税费'  when gmr025 in ('103.1') then '应交商标权税'      
+        when gmr025 in ('100.1') then '销售退回准备'  when gmr025 in ('100.2') then '递延收益' 
+        when gmr025 in ('104.0') then '股本' when gmr025 in ('105.0') then '累计盈利'
+        when gmr025 in ('107.0') then '股息'  when gmr025 in ('108.0') then '储备基金'
+        when gmr025 in ('109.0') then '职工奖励及福利'  when gmr025 in ('110.0','111.0','111.1') then '销售收入'
+        when gmr025 in ('112.0','113.0','113.1') then '销售折扣' when gmr025 in ('114.0','115.0','115.1') then '销售退货'
+        when gmr025 in ('111.2') then '销售收入(原材料)'  when gmr025 in ('116.0') then '处理固定资产-损失'
+        when gmr025 in ('116.1') then '处理固定资产-收益'   when gmr025 in ('117.0') then '利息收入'
+        when gmr025 in ('118.0') then '其它收入'    when gmr025 in ('118.2') then '其他收益' 
+        when gmr025 in ('119.0') then '其它支出'  when gmr025 in ('118.1') then '商标权费收入' 
+       
+        when gmr025 in ('120.0','121.0') then '销售成本' when gmr025 in ('122.0') then '销售成本差异—广州'
+        when gmr025 in ('122.1') then '销售成本差异—上海' when gmr025 in ('122.2') then '销售成本差异—北京'
+        when gmr025 in ('122.3') then '销售成本差异—中山' when gmr025 in ('121.2') then '销售成本(原材料)'   
+        
+        when gmr025 in ('124.0','124.1','124.2','124.3','124.4','250.01') then '直接工资'
+        when gmr025 in ('125.0','125.1','125.2','125.3','125.4','250.32') then '间接工资'
+        when gmr025 in ('124.5','124.6','124.7','124.8','124.9','250.02') then '直接花红'
+        when gmr025 in ('125.5','125.6','125.7','125.8','125.9','250.03') then '间接花红'
+        when gmr025 in ('126.5','126.51','126.52','126.53','126.54','250.05') then '职工福利-直接'
+        when gmr025 in ('126.6','126.61','126.62','126.63','126.64','250.06') then '职工福利-间接'
+        when gmr025 in ('132.0','132.1','132.2','132.3','132.4','250.12') then '折旧—场地使用权'
+        when gmr025 in ('133.0','133.1','133.2','133.3','133.4','250.13') then '折旧—厂房'
+        when gmr025 in ('134.0','134.1','134.2','134.3','134.4','250.14') then '折旧—生产机器设备'
+        when gmr025 in ('129.0','129.1','129.2','129.3','129.4','250.09') then ' 修理费'
+        when gmr025 in ('139.0','139.1','139.2','139.3','139.4','250.23') then '废料'
+        when gmr025 in ('141.0','141.1','141.2','141.3','141.4','250.25') then '物料消耗'
+        when gmr025 in ('142.0','142.1','142.2','142.3','142.4','250.26') then '机器租赁费'
+        when gmr025 in ('138.4','138.5','138.6','138.7','138.71','250.21') then '退休金'
+        when gmr025 in ('127.0','127.1','127.2','127.3','127.4','250.07') then '水费'
+        when gmr025 in ('128.0','128.1','128.2','128.3','128.4','250.08') then '电费'
+        when gmr025 in ('136.0','136.1','136.11','136.13','250.16') then '入口税'
+        when gmr025 in ('137.0','137.1','137.11','137.12','137.13','250.18') then '装卸费'
+        when gmr025 in ('137.2','137.3','137.31','137.32','137.33','250.19') then '进口运输费'
+        when gmr025 in ('138.0','138.1','138.2','138.04','138.3','250.20') then '保费—生产机器设备'
+        when gmr025 in ('140.0','140.1','140.2','140.3','140.4','250.24') then '试验/检查'
+        when gmr025 in ('142.41','142.42','142.43','142.44','142.45','250.27') then '存货盘点亏/赚'
+        when gmr025 in ('135.0','135.1','135.2','135.3','135.4','250.15') then '零件费'
+        when gmr025 in ('136.2','136.3','136.31','136.32','136.33','250.17') then '进口报关费'
+        when gmr025 in ('126.0','126.1','126.2','126.3','126.4','250.04') then '燃料费'
+        when gmr025 in ('130.0','130.1','130.2','130.3','130.4','250.10') then '洗衣费'
+        when gmr025 in ('142.51','142.52','142.53','142.54','142.55','250.29') then '办公费用'
+        when gmr025 in ('138.80','138.81','138.82','138.83','138.84','250.22') then '医保费'
+        when gmr025 in ('142.46','142.47','142.48','142.49','142.50','250.28') then '生产费用(转入研发费)'
+        when gmr025 in ('142.61','142.62','142.63','142.64','142.65','250.30') then '住 房 公 积 金'
+        when gmr025 in ('142.71','142.72','142.73','142.74','142.75','250.31') then '劳 务 费'
+        when gmr025 in ('143.0','144.0') then '专利权费' when gmr025 in ('145.0') then '工商统一/消费税'
+        when gmr025 in ('146.0','147.0','147.1') then '广告费' when gmr025 in ('148.0','149.0','149.1') then '促销费'
+        when gmr025 in ('150.0','151.0') then '工资' when gmr025 in ('150.1') then '花红'
+        when gmr025 in ('152.0','153.0','153.1') then '佣金' when gmr025 in ('154.0') then '管理费'
+        when gmr025 in ('155.0') then '销售办公室水/电费' when gmr025 in ('156.0') then '办公室租赁费 '
+        when gmr025 in ('157.0') then '文具印刷费' when gmr025 in ('158.0') then '电话/图文传真机费'
+        when gmr025 in ('159.0') then '邮费' when gmr025 in ('160.0') then '差旅费'
+        when gmr025 in ('161.0','162.0') then '运输费' when gmr025 in ('163.0','164.0') then '存仓费'
+        when gmr025 in ('165.0','166.0','166.1') then '包装费' when gmr025 in ('198.2') then '货物保险费'
+        when gmr025 in ('167.0','168.0') then '出口报关费' when gmr025 in ('169.0') then '修理费'
+        when gmr025 in ('170.0') then '折旧—销售办公室家私' when gmr025 in ('171.0') then '折旧—销售办公室设备'
+        when gmr025 in ('172.0') then '折旧—汽车' when gmr025 in ('173.0') then '一般保险'
+        when gmr025 in ('174.0','175.0') then '坏帐预提' when gmr025 in ('176.0','177.0','177.1') then '样本'
+        when gmr025 in ('178.0','179.0','179.1','198.0') then '其它杂费' when gmr025 in ('180.0') then '业务应酬费'
+        when gmr025 in ('181.0') then '低值品摊销' when gmr025 in ('182.0','182.1') then '存货报废'
+        when gmr025 in ('182.3','182.4') then '存货报废—预计' when gmr025 in ('185.0') then ' 退 休 金'
+        when gmr025 in ('186.0') then '保险—生命' when gmr025 in ('187.0') then '保险—工伤'
+        when gmr025 in ('188.0') then ' 职工福利 ' when gmr025 in ('190.0') then ' 招 工 费'
+        when gmr025 in ('191.0') then ' 职 工 培 训 费' when gmr025 in ('197.1') then '汽车费用'
+        when gmr025 in ('193.0') then '专业费 / 法律核数费' when gmr025 in ('194.0') then ' 清 洁 费'
+        when gmr025 in ('195.0') then ' 电 脑 费' when gmr025 in ('196.0') then '职 工 宿 舍 费'
+        when gmr025 in ('197.0') then ' 银 行 费 用' when gmr025 in ('198.3') then '印花稅'
+        when gmr025 in ('198.4') then '堤围费' when gmr025 in ('198.5') then '教育附加'
+        when gmr025 in ('198.6') then '城建税' when gmr025 in ('198.7') then '车船使用税'
+        when gmr025 in ('189.0') then '住房公积金' when gmr025 in ('200.0','200.1') then '工 资'
+        when gmr025 in ('200.2','200.3') then '花 红' when gmr025 in ('201.0') then '退 休 金'
+        when gmr025 in ('202.0') then '保险 - 医疗补助费' when gmr025 in ('203.1') then '保险 - 汽车'
+        when gmr025 in ('203.2') then '保险 - 其他' when gmr025 in ('202.2') then '工伤陪偿'
+        when gmr025 in ('204.0') then '职工福利' when gmr025 in ('205.0') then '交 际 应 酬'
+        when gmr025 in ('206.0') then '招 工 费' when gmr025 in ('207.0') then '职 工 培 训 费'
+        when gmr025 in ('208.0') then '汽 车 费 用' when gmr025 in ('209.0') then '本地差费'
+        when gmr025 in ('210.0') then '外地差费' when gmr025 in ('224.4') then '办公租赁费'
+        when gmr025 in ('211.0') then '文具费 / 印刷费' when gmr025 in ('212.0') then '邮 费 '
+        when gmr025 in ('213.0') then '电 话 费' when gmr025 in ('214.0') then '传 真 费'
+        when gmr025 in ('215.0') then '长 途 电 话 费' when gmr025 in ('216.0') then '电费/水费'
+        when gmr025 in ('217.0') then '存 仓 费' when gmr025 in ('218.0') then '专业费/法律核数费'
+        when gmr025 in ('219.0') then '清 洁 费' when gmr025 in ('220.0') then '电 脑 费'
+        when gmr025 in ('221.0') then '修 理 费' when gmr025 in ('222.0') then '职 工 宿 舍 费'
+        when gmr025 in ('223.0') then '银行费用' when gmr025 in ('224.0') then '一般费用'
+        when gmr025 in ('224.1') then '书 刊 费' when gmr025 in ('224.2') then '印 花 稅'
+        when gmr025 in ('224.5') then '房 产 税' when gmr025 in ('224.6') then '堤 围 费'
+        when gmr025 in ('224.7') then '教 育 附 加' when gmr025 in ('224.8') then '城 建 税'
+        when gmr025 in ('224.9') then '环 保 税' when gmr025 in ('208.1') then '车 船 使 用 税'
+        when gmr025 in ('228.0') then '折旧 - 场地使用权' when gmr025 in ('228.1') then '折旧 - OXY商標權'
+        when gmr025 in ('229.0') then '折旧 - 厂房' when gmr025 in ('230.0') then '折旧 - 汽车'
+        when gmr025 in ('231.0') then '折旧 - 办公室家私/装修' when gmr025 in ('232.0') then '折旧 - 办公设备'
+        when gmr025 in ('233.0') then '折旧－仓库家具/装修' 
+     
+        when gmr025 in ('234.0') then '折旧 - 仓库设备' when gmr025 in ('235.0') then '折旧 - 职工宿舍'
+        when gmr025 in ('227.0') then '住 房 公积金' when gmr025 in ('242.0') then '劳务费'
+        when gmr025 in ('236.0') then '汇兑差额' when gmr025 in ('225.0') then '开发费用'
+        when gmr025 in ('224.3') then '材料报废' when gmr025 in ('224.31') then '材料报废-预计'
+        when gmr025 in ('226.0') then 'MAP费用' 
+        when gmr025 in ('238.0') then '利息支出'   when gmr025 in ('237.0') then '利得税金' 
+        when gmr025 in ('237.1') then '递延税款'    when gmr025 in ('239.0') then '资产减值损失'     
+         else ' ' end as DL
+      from  v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA') and yyyy in (:p_yyyy) and mm = :p_mm
+          and gbco in ('90000','91000','92000','93000')
+           and gmr025 in (
+            '026.0','026.1','027.0','028.02','029.0','030.0','030.1', 
+            '032.0','033.0','035.0','036.01','037.0','039.0','041.0',
+            '044.0','045.1','046.0','046.11','046.02','046.03','046.04',
+            '046.05','046.06','046.08','046.09','046.10','034.01','032.22',
+            '028.03','028.04','028.05','028.06','028.07','028.08','028.09',
+            '028.10','037.01','034.02','034.03','029.1','034.0','034.04',
+            '034.05','035.04','034.06','034.07','034.08','034.10','035.03',
+            '035.05','035.06','035.10','036.03','048.0','049.0','049.1','049.2',
+            '049.3','049.4','049.5','049.6','049.7','050.001','050.004','050.1',
+            '051.0','052.0','053.0','058.0','054.0','055.0','056.0','057.0','059.1','059.0','059.2',
+            '059.3','059.4','059.5','059.6','059.7','059.9','060.0','061.0','062.0','062.1',
+            '063.0','063.1','064.0','065.0','065.2','066.0','066.1','066.2','066.3','066.4','065.1','095.0','067.0','068.0',
+            '069.0','069.1','069.2','070.0','071.0','071.1','071.2',
+            '072.0','072.1','072.2','073.0','074.0','075.0','075.1',
+            '075.2','076.0','077.0','078.0','078.1','078.2','079.0',
+            '080.0','080.1','080.2','081.0','081.1','081.2','082.0',
+            '083.0','084.0','084.1',  '085.0','085.1','085.2',
+            '094.4','086.0','094.2','087.0','087.1','088.0',
+            '089.0','089.1','090.5','090.0','091.0','091.1','091.2','091.3',
+            '091.4','091.5','091.6','091.7',
+            '099.1','092.0','093.0','093.1','094.0','094.3','096.0','097.0',
+            '097.01','097.02','097.03','097.04','097.05',
+            '097.06','097.07','097.08','097.081','097.091','097.092','097.093','097.094','097.095','097.096','097.097',
+            '097.10','098.0','099.0',
+            '100.0','101.0','094.1','102.0','103.0','103.2','103.1','100.1',
+            '100.2','104.0','105.0','107.0','108.0','109.0',
+            '110.0','111.0','111.1','112.0','113.0','113.1',
+            '114.0','115.0','115.1','111.2','116.0','116.1',
+            '117.0','118.0','118.2','119.0','118.1',
+            '120.0','121.0','122.0','122.1','122.2','122.3','121.2',
+            '124.0','124.1','124.2','124.3','124.4','250.01',
+            '125.0','125.1','125.2','125.3','125.4','250.32',
+            '124.5','124.6','124.7','124.8','124.9','250.02',
+            '125.5','125.6','125.7','125.8','125.9','250.03',
+            '126.5','126.51','126.52','126.53','126.54','250.05',
+            '126.6','126.61','126.62','126.63','126.64','250.06',
+            '132.0','132.1','132.2','132.3','132.4','250.12',
+            '133.0','133.1','133.2','133.3','133.4','250.13',
+            '134.0','134.1','134.2','134.3','134.4','250.14',
+            '129.0','129.1','129.2','129.3','129.4','250.09',
+            '139.0','139.1','139.2','139.3','139.4','250.23',
+            '141.0','141.1','141.2','141.3','141.4','250.25',
+            '142.0','142.1','142.2','142.3','142.4','250.26',
+            '138.4','138.5','138.6','138.7','138.71','250.21',
+            '127.0','127.1','127.2','127.3','127.4','250.07',
+            '128.0','128.1','128.2','128.3','128.4','250.08',
+            '136.0','136.1','136.11','136.13','250.16',
+            '137.0','137.1','137.11','137.12','137.13','250.18',
+            '137.2','137.3','137.31','137.32','137.33','250.19',
+            '138.0','138.1','138.2','138.04','138.3','250.20',
+            '140.0','140.1','140.2','140.3','140.4','250.24',
+            '142.41','142.42','142.43','142.44','142.45','250.27',
+            '135.0','135.1','135.2','135.3','135.4','250.15',
+            '136.2','136.3','136.31','136.32','136.33','250.17',
+            '126.0','126.1','126.2','126.3','126.4','250.04',
+            '130.0','130.1','130.2','130.3','130.4','250.10',
+            '142.51','142.52','142.53','142.54','142.55','250.29',
+            '138.80','138.81','138.82','138.83','138.84','250.22',
+            '142.46','142.47','142.48','142.49','142.50','250.28',
+            '142.61','142.62','142.63','142.64','142.65','250.30',
+            '142.71','142.72','142.73','142.74','142.75','250.31',
+            '143.0','144.0','145.0','146.0','147.0','147.1',
+            '148.0','149.0','149.1','150.0','151.0', '150.1',
+            '152.0','153.0','153.1','154.0','155.0','156.0',
+            '157.0','158.0','159.0','160.0','161.0','162.0',
+            '163.0','164.0','165.0','166.0','166.1','198.2',
+            '167.0','168.0','169.0','170.0','171.0','172.0',
+            '173.0','174.0','175.0','176.0','177.0','177.1',
+            '178.0','179.0','179.1','198.0','180.0','181.0',
+            '182.0','182.1','182.3','182.4','185.0','186.0',
+            '187.0','188.0','190.0','191.0','197.1','193.0',
+            '194.0','195.0','196.0','197.0','198.3','198.4',
+            '198.5','198.6','198.7','189.0','200.0','200.1',
+            '200.2','200.3','201.0','202.0','203.1','203.2',
+            '202.2','204.0','205.0','206.0','207.0','208.0',
+            '209.0','210.0','224.4','211.0','212.0','213.0',
+            '214.0','215.0','216.0','217.0','218.0','219.0',
+            '220.0','221.0','222.0','223.0','224.0','224.1',
+            '224.2','224.5','224.6','224.7','224.8','224.9',
+            '208.1','228.0','228.1','229.0','230.0','231.0',
+            '232.0','233.0',
+            
+            '234.0','235.0','227.0','242.0','236.0','225.0','224.3',
+            '224.31','226.0','238.0','237.0','237.1','239.0'
+                )   
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1000' as lineno, '备用金'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1050' as lineno, '深圳汇丰银行（港币帐户）'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1060' as lineno, '中山农行（港币帐户）'  as dl from dual 
+   
+     union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1090' as lineno, '三乡信社（人民币）'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1130' as lineno, '广州市商业银行'  as dl from dual 
+    
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1170' as lineno, '北京工商银行王府井支行营业室'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1230' as lineno, '中行收汇核查帐户-港币'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1240' as lineno, '中行收汇核查帐户-美元'  as dl from dual 
+   
+     union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1250' as lineno, '中行收汇核查帐户-日元'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1270' as lineno, '三乡中行（定期帐户）'  as dl from dual    
+    
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1280' as lineno, '三乡建行(工程保证金账户－7653)'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1290' as lineno, '三乡建行(工程保证金账户-7660)'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1300' as lineno, '三乡中国建设银行-保证金8087'  as dl from dual 
+   
+     union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1360' as lineno, '深圳汇丰银行－人民币定期－中山'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1380' as lineno, '三乡中国银行－人民币定期-2902'  as dl from dual 
+    
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1580' as lineno, '应收联属往来 - 印尼- 货款'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1590' as lineno, '应收联属往来－越南－货款'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1650' as lineno, '内部往来 '  as dl from dual 
+   
+     union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1670' as lineno, '     —中山'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1730' as lineno, '美国往来帐款'  as dl from dual       
+    
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1740' as lineno, '英国往来帐款'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1780' as lineno, '应收联属往来－越南－其他'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1850' as lineno, '来料加工材料'  as dl from dual 
+   
+     union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1880' as lineno, '产成品差异—广州'  as dl from dual
+   
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1890' as lineno, '产成品差异—上海'  as dl from dual 
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1900' as lineno, '产成品差异—北京'  as dl from dual  
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '1920' as lineno, '待处理财产损益-流动资产'  as dl from dual 
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2020' as lineno, '仓库家私、装修'  as dl from dual    
+  
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2100' as lineno, '销售办公室设备'  as dl from dual 
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2110' as lineno, '销售办公室家私'  as dl from dual  
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2120' as lineno, '研发部设备'  as dl from dual 
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2130' as lineno, '累计折旧'  as dl from dual    
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2230' as lineno, '—仓库家私、装修'  as dl from dual   
+ 
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2300' as lineno, '—宿舍家私、装修'  as dl from dual   
+ 
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2330' as lineno, '—销售办公室设备'  as dl from dual    
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2340' as lineno, '—销售办公室家私'  as dl from dual   
+ 
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2350' as lineno, '    —  研发部设备'  as dl from dual       
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2440' as lineno, '短期借款'  as dl from dual    
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2500' as lineno, '应付联属往来－越南-货款'  as dl from dual      
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2510' as lineno, '应付联属往来－英国－货款'  as dl from dual       
+  
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2630' as lineno, '应付联属往来－ANDS-商标权'  as dl from dual      
+  
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2650' as lineno, '应付联属往来－美国--费用'  as dl from dual      
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2660' as lineno, '应付联属往来－香港-商标权'  as dl from dual 
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2680' as lineno, '应付联属往来－英国--费用'  as dl from dual        
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2730' as lineno, '应付工商统一税/消费税'  as dl from dual         
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2760' as lineno, '货已收但没有退税证明 '  as dl from dual      
+    
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2770' as lineno, '福利基金'  as dl from dual      
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2850' as lineno, '本年利润'  as dl from dual   
+    
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '2980' as lineno, '生产成本'  as dl from dual    
+    
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3070' as lineno, '直接材料'  as dl from dual      
+    
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3090' as lineno, '间接材料'  as dl from dual 
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3150' as lineno, '折旧—场地使用权'  as dl from dual       
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3260' as lineno, '装卸费'  as dl from dual 
+    
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3280' as lineno, '保费—场地和厂房'  as dl from dual       
+ 
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3420' as lineno, '工商统一/消费税'  as dl from dual
+  
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3480' as lineno, '佣金 - 其他'  as dl from dual
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3640' as lineno, '折旧—宿舍家私/设备折旧'  as dl from dual
+       
+     union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3690' as lineno, '装卸费'  as dl from dual
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3730' as lineno, '关税'  as dl from dual       
+ 
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3740' as lineno, '办公室家私/设备保险'  as dl from dual
+  
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3750' as lineno, '重新包装费用'  as dl from dual
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3760' as lineno, '存货变现损失准备'  as dl from dual
+       
+     union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3770' as lineno, '坏帐费用'  as dl from dual
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3800' as lineno, '存货报废—包材'  as dl from dual   
+  
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3820' as lineno, '保险—医疗补助费'  as dl from dual   
+  
+     union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3950' as lineno, '堤围费'  as dl from dual 
+   
+       union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '3990' as lineno, '书刊费'  as dl from dual 
+   
+          union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4010' as lineno, '利 息 支 出'  as dl from dual 
+       
+            union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4060' as lineno, '保险 - 生命'  as dl from dual 
+       
+           union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4070' as lineno, '保险 - 工 伤'  as dl from dual       
+       
+              union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4180' as lineno, '办公租赁费'  as dl from dual         
+       
+                union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4230' as lineno, '长 途 电 话 费'  as dl from dual            
+       
+                      union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4300' as lineno, '职 工 宿 舍 费'  as dl from dual     
+       
+                          union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4360' as lineno, '堤 围 费'  as dl from dual     
+       
+                              union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4420' as lineno, '折旧 - OXY商標權'  as dl from dual    
+       
+       
+                                union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4440' as lineno, '折旧 - 汽车'  as dl from dual       
+       
+    union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4480' as lineno, '折旧 - 仓库设备'  as dl from dual            
+       
+      union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4490' as lineno, '折旧 - 职工宿舍'  as dl from dual       
+       
+          union all            
+    select :p_yyyy as yyyy, :p_mm as mm, 'AA' as gblt, 0 as pyc,  0 as ytd, '' as grp, 
+       '4570' as lineno, '利息支出'  as dl from dual          
+       
+       
+        ) v_core  group by   grp, lineno, dl 
+            order by  grp, lineno

@@ -1,0 +1,835 @@
+﻿.. zs bip report sql
+
+========================================================================
+ZS BIP Report
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Examples of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2015/10/12 16:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+建立临时表，通过存取过程生成报表记录，再通过函数的方式将临时表中的数据以光标的型式返回给前端的BIP，由于BIP只接受返回数据集，通过函数返回数据集，在BIP中调用比较方便.
+
+Create temp table
+------------------------------------------------------------------------
+
+create or replace table t_pl_temp(
+id_pl_temp varchar2(20),
+grp varchar2(200),
+lineno number,
+dl varchar2(200),
+pc number,
+py number,
+bpc number,
+bpy number,
+ppc number,
+ppy number
+);
+
+create unique index t_pl_temp_pk on t_pl_temp (id_pl_temp,lineno);
+
+Create package
+------------------------------------------------------------------------
+
+create or replace 
+package rptpkgs authid current_user is 
+
+procedure p_list_report(i_userid in varchar,
+   i_yyyy in varchar,
+   i_mm in varchar,
+   o_rpt out sys_refcursor);
+
+function pl(i_userid in varchar,
+   i_yyyy in varchar,
+   i_mm in varchar)
+  return sys_refcursor;
+
+function period_rpt(i_rpt in varchar,
+   i_userid in varchar,
+   i_yyyy in varchar,
+   i_mm in varchar)
+  return sys_refcursor;
+  
+end rptpkgs;
+
+Create package body
+------------------------------------------------------------------------
+
+create or replace
+package body rptpkgs is
+
+procedure p_list_report(i_userid in varchar,
+   i_yyyy in varchar,
+   i_mm in varchar,
+   o_rpt out sys_refcursor) as
+   PRAGMA AUTONOMOUS_TRANSACTION;
+begin   
+  -- 根据ID删除之前插入的记录
+  delete from menjdehhy.t_pl_temp temp where temp.id_pl_temp=i_userid;
+  commit; 
+  
+  insert into menjdehhy.t_pl_temp (id_pl_temp,grp,lineno,dl,pc,py,bpc,bpy,ppc,ppy)
+  select i_userid, grp, lineno, DL, 
+     sum(case when gblt='AA' then amt else 0.0 end) as PC,
+     sum(case when gblt='AA' then ytd else 0.0 end) as PY,
+     sum(case when gblt='BA' then amt else 0.0 end) as BPC,
+     sum(case when gblt='BA' then ytd else 0.0 end) as BPY,
+     sum(case when gblt='AA' then pamt else 0.0 end) as PPC,
+     sum(case when gblt='AA' then pytd else 0.0 end) as PPY  
+    from (           
+      select case when yyyy = i_yyyy - 1 then i_yyyy else yyyy end as yyyy, mm, gblt,
+       case when yyyy = i_yyyy then amt else 0 end as amt, 
+       case when yyyy = i_yyyy then ytd else 0 end as ytd, 
+       case when yyyy = i_yyyy-1 then amt else 0 end as pamt, 
+       case when yyyy = i_yyyy-1 then ytd else 0 end as pytd, 
+       '' as grp, 
+      case when gmr025 in ('110.0','111.0','111.2','112.0','113.0','114.0','115.0') then '01' 
+        when gmr025 in ('120.0','121.0','121.1','121.2','122.0','122.1','122.2','122.3') then '02' 
+        when gmr025 in ('')	then '03' 
+        when gmr025 in ('200.0','200.1','200.2','200.3','242.0',
+           '201.0','202.0','203.2','204.0','205.0','206.0','207.0','203.1','208.0',
+           '209.0','210.0','211.0','213.0','214.0','215.0','216.0','224.4','218.0',
+           '219.0','220.0','221.0','222.0','223.0',
+           '212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1',
+           '217.0','228.0','229.0','230.0','231.0','233.0','232.0','234.0','235.0',
+           '236.0','226.0','202.2','227.0','228.1' ) then	'04'
+        when gmr025 in ('146.0','147.0','147.1') then	'05' 
+        when gmr025 in ('148.0','149.0','149.1') then '06' 
+        when gmr025 in ('150.0','150.1','151.0','185.0','152.0','153.0','153.1',
+           '154.0','155.0','156.0','157.0','158.0','160.0','197.1',
+           '161.0','162.0','163.0','164.0','165.0','166.0','166.1',
+           '173.0','198.2','187.1','167.0','168.0','169.0','170.0',
+           '171.0','172.0','174.0','175.0','176.0','177.0','177.1',
+           '196.0','180.0','145.0','182.0','182.1','182.3','182.4',
+           '143.0','144.0',  '159.0','186.0','187.0','188.0','189.0','190.0',
+           '191.0','193.0','194.0','195.0','197.0','181.0','178.0',
+           '179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7') then '07'  
+        when gmr025 in ('225.0') then '08' 
+        when gmr025 in ('') then '09'  
+        when gmr025 in ('116.0','116.1') then	'10' 
+        when gmr025 in ('117.0','118.0','118.2','119.0','224.3','224.31','238.0','239.0','198.1','118.1') then 	'11'
+        when gmr025 in ('') then '12'  
+        when gmr025 in ('237.0','237.1') then	'13' 
+        when gmr025 in ('') then 	'14'
+         else '' end as lineno,
+        
+      case when gmr025 in ('110.0','111.0','111.2','112.0','113.0','114.0','115.0') then 'NET SALES' 
+        when gmr025 in ('120.0','121.0','121.1','121.2','122.0','122.1','122.2','122.3') then  'COST OF SALES' 
+        when gmr025 in ('')	then 'GROSS PROFIT'
+        when gmr025 in ('200.0','200.1','200.2','200.3','242.0',
+           '201.0','202.0','203.2','204.0','205.0','206.0','207.0','203.1','208.0',
+           '209.0','210.0','211.0','213.0','214.0','215.0','216.0','224.4','218.0',
+           '219.0','220.0','221.0','222.0','223.0',
+           '212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1',
+           '217.0','228.0','229.0','230.0','231.0','233.0','232.0','234.0','235.0',
+           '236.0','226.0','202.2','227.0','228.1'  ) then 	'GENERAL ADMINISTRATION'
+        when gmr025 in ('146.0','147.0','147.1') then 'ADVERTISING'
+        when gmr025 in ('148.0','149.0','149.1')	then 'PROMOTION'
+        when gmr025 in ('150.0','150.1','151.0','185.0','152.0','153.0','153.1',
+           '154.0','155.0','156.0','157.0','158.0','160.0','197.1',
+           '161.0','162.0','163.0','164.0','165.0','166.0','166.1',
+           '173.0','198.2','187.1','167.0','168.0','169.0','170.0',
+           '171.0','172.0','174.0','175.0','176.0','177.0','177.1',
+           '196.0','180.0','145.0','182.0','182.1','182.3','182.4',
+           '143.0','144.0',  '159.0','186.0','187.0','188.0','189.0','190.0',
+           '191.0','193.0','194.0','195.0','197.0','181.0','178.0',
+           '179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7') then 	'SELLING'
+        when gmr025 in ('225.0')  then 	'R & D expense'
+        when gmr025 in ('') then 'TOTAL OPERATING EXPENSES'
+        when gmr025 in ('116.0','116.1') then 	'DISPOSAL OF FIXED ASSETS'
+        when gmr025 in ('117.0','118.0','118.2','119.0','224.3','224.31','238.0','239.0','198.1','118.1') then 	'OTHER EXPENSES / (INCOMES)'
+        when gmr025 in ('') then 	'INCOME BEFORE TAX'
+        when gmr025 in ('237.0','237.1') then 	'PROFIT TAX'
+        when gmr025 in ('') then 	'NET INCOME / (LOSS)'
+         else '' end as DL
+      from  v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+        where gblt in ('AA','BA' ) and yyyy in (i_yyyy, i_yyyy - 1 ) and mm=i_mm
+          and gbco in ('90000','91000','92000','93000')
+           and   gmr025 in ('110.0','111.0','111.2','112.0','113.0','114.0','115.0',
+           '120.0','121.0','121.1','121.2','122.0','122.1','122.2','122.3',
+           '146.0','147.0','147.1',   '148.0','149.0','149.1',   '225.0',
+           '116.0','116.1',  '117.0','118.0','118.2','119.0','224.3','224.31','238.0','239.0','198.1','118.1',
+           '237.0','237.1',
+           
+           '200.0','200.1','200.2','200.3','242.0',
+           '201.0','202.0','203.2','204.0','205.0','206.0','207.0','203.1','208.0',
+           '209.0','210.0','211.0','213.0','214.0','215.0','216.0','224.4','218.0',
+           '219.0','220.0','221.0','222.0','223.0',
+           '212.0','224.0','224.1','224.2','224.5','224.6','224.7','224.8','224.9','208.1',
+           '217.0','228.0','229.0','230.0','231.0','233.0','232.0','234.0','235.0',
+           '236.0','226.0','202.2','227.0','228.1' ,
+           
+           '150.0','150.1','151.0','185.0','152.0','153.0','153.1',
+           '154.0','155.0','156.0','157.0','158.0','160.0','197.1',
+           '161.0','162.0','163.0','164.0','165.0','166.0','166.1',
+           '173.0','198.2','187.1','167.0','168.0','169.0','170.0',
+           '171.0','172.0','174.0','175.0','176.0','177.0','177.1',
+           '196.0','180.0','145.0','182.0','182.1','182.3','182.4',
+           '143.0','144.0',  '159.0','186.0','187.0','188.0','189.0','190.0',
+           '191.0','193.0','194.0','195.0','197.0','181.0','178.0',
+           '179.0','179.1','198.0','198.3','198.4','198.5','198.6','198.7'
+                )           
+        ) v_core  group by i_userid, grp, lineno, dl 
+            order by  grp, lineno ;
+  commit;
+
+  update menjdehhy.t_pl_temp set pc=pc*(-1),py=py*(-1),bpc=bpc*(-1),
+        bpy=bpy*(-1),ppc=ppc*(-1),ppy=ppy*(-1)
+       where id_pl_temp=i_userid and lineno=1;
+  commit;
+
+  insert into menjdehhy.t_pl_temp (id_pl_temp,grp,lineno,dl,pc,py,bpc,bpy,ppc,ppy)   
+      select i_userid,'',3,'GROSS PROFIT',
+        sum(case when lineno=1 then pc else -pc end),
+        sum(case when lineno=1 then py else -py end),
+        sum(case when lineno=1 then bpc else -bpc end),
+        sum(case when lineno=1 then bpy else -bpy end),
+        sum(case when lineno=1 then ppc else -ppc end),
+        sum(case when lineno=1 then ppy else -ppy end)
+       from menjdehhy.t_pl_temp where id_pl_temp=i_userid and lineno in (1,2)
+         group by i_userid;
+  commit;
+
+  insert into menjdehhy.t_pl_temp (id_pl_temp,grp,lineno,dl,pc,py,bpc,bpy,ppc,ppy)   
+      select i_userid,'',9,'TOTAL OPERATING EXPENSES',
+        sum(pc),sum(py),sum(bpc),sum(bpy),sum(ppc),sum(ppy)
+       from menjdehhy.t_pl_temp where id_pl_temp=i_userid and lineno in (4,5,6,7,8)
+         group by i_userid;
+  commit;
+ 
+  insert into menjdehhy.t_pl_temp (id_pl_temp,grp,lineno,dl,pc,py,bpc,bpy,ppc,ppy)   
+      select i_userid,'',12,'INCOME BEFORE TAX',
+        sum(case when lineno=3 then pc else -pc end),
+        sum(case when lineno=3 then py else -py end),
+        sum(case when lineno=3 then bpc else -bpc end),
+        sum(case when lineno=3 then bpy else -bpy end),
+        sum(case when lineno=3 then ppc else -ppc end),
+        sum(case when lineno=3 then ppy else -ppy end)
+       from menjdehhy.t_pl_temp where id_pl_temp=i_userid and lineno in (3,9,10,11)
+         group by i_userid;
+  commit;
+ 
+  insert into menjdehhy.t_pl_temp (id_pl_temp,grp,lineno,dl,pc,py,bpc,bpy,ppc,ppy)   
+      select i_userid,'',14,'NET INCOME / (LOSS)',
+        sum(case when lineno=12 then pc else -pc end),
+        sum(case when lineno=12 then py else -py end),
+        sum(case when lineno=12 then bpc else -bpc end),
+        sum(case when lineno=12 then bpy else -bpy end),
+        sum(case when lineno=12 then ppc else -ppc end),
+        sum(case when lineno=12 then ppy else -ppy end)
+       from menjdehhy.t_pl_temp where id_pl_temp=i_userid and lineno in (12,13)
+         group by i_userid;
+  commit;
+  
+end p_list_report;
+
+function pl(i_userid varchar,i_yyyy varchar,i_mm varchar)
+  return sys_refcursor as
+  o_rpt sys_refcursor;
+begin
+  -- 生成报表记录
+  p_list_report(i_userid,i_yyyy,i_mm,o_rpt);
+    
+  -- 查询刚刚插入的表记录
+  open o_rpt for
+  select lineno,dl,pc,py,bpc,bpy,ppc,ppy 
+      from menjdehhy.t_pl_temp
+     where id_pl_temp= i_userid
+      order by grp,lineno asc;
+      
+  return o_rpt;
+end pl;
+
+procedure ins_tb(i_userid in varchar,
+  i_yyyy in varchar,
+  i_mm in varchar,
+  i_lineno in varchar,
+  i_dl in varchar,
+  i_code in varchar,
+  i_dc in varchar,
+  i_pyc in varchar) as
+  PRAGMA AUTONOMOUS_TRANSACTION;
+begin
+
+ /*
+      insert into menjdehhy.t_pl_temp (id_pl_temp,grp,lineno,dl,pc,py,bpc,bpy,ppc,ppy)   
+      select i_userid,'',i_lineno,i_dl,case when i_dc='D' then 
+           case when i_pyc='Y' then sum(pyc+ytd) else sum(ytd) end  else 0 end,
+         case when i_dc='C' then 
+           case when i_pyc='Y' then sum(pyc+ytd) else sum(ytd) end else 0 end,
+           0,0,0,0
+        from  v_f0902ytd left join proddta.f0901 on gmaid=gbaid
+         where gblt in ('AA') and yyyy in (i_yyyy) and mm=i_mm
+           and gbco in ('90000','91000','92000','93000')
+              and   trim(gmr025) in (
+       select regexp_substr(i_code,'[^,]+', 1, level) as tt from dual 
+       connect by regexp_substr(i_code, '[^,]+', 1, level) is not null )
+          group by i_userid,i_lineno,i_dl;
+ */
+
+      insert into menjdehhy.t_pl_temp (id_pl_temp,grp,lineno,dl,pc,py,bpc,bpy,ppc,ppy)   
+      select i_userid,'',i_lineno,i_dl,
+        case when i_dc='D' then 
+           case when i_pyc='Y' then sum(gbapyc/100) else 0 end +
+             sum(case when i_mm='01' then gban01/100 when i_mm='02' then (gban01+gban02)/100 
+              when i_mm='03' then (gban01+gban02+gban03)/100 when i_mm='04' then (gban01+gban02+gban03+gban04)/100 
+              when i_mm='05' then (gban01+gban02+gban03+gban04+gban05)/100 
+              when i_mm='06' then (gban01+gban02+gban03+gban04+gban05+gban06)/100 
+              when i_mm='07' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07)/100
+              when i_mm='08' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07+gban08)/100
+              when i_mm='09' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07+gban08+gban09)/100
+              when i_mm='10' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07+gban08+gban09+gban10)/100
+              when i_mm='11' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07+gban08+gban09+gban10+gban11)/100
+              when i_mm='12' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07+gban08+gban09+gban10+gban11+gban12)/100
+             else 0 end)   
+        else 0 end,
+        case when i_dc='C' then 
+           case when i_pyc='Y' then sum(gbapyc/100) else 0 end +
+             sum(case when i_mm='01' then gban01/100 when i_mm='02' then (gban01+gban02)/100 
+              when i_mm='03' then (gban01+gban02+gban03)/100 when i_mm='04' then (gban01+gban02+gban03+gban04)/100 
+              when i_mm='05' then (gban01+gban02+gban03+gban04+gban05)/100 
+              when i_mm='06' then (gban01+gban02+gban03+gban04+gban05+gban06)/100 
+              when i_mm='07' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07)/100
+              when i_mm='08' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07+gban08)/100
+              when i_mm='09' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07+gban08+gban09)/100
+              when i_mm='10' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07+gban08+gban09+gban10)/100
+              when i_mm='11' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07+gban08+gban09+gban10+gban11)/100
+              when i_mm='12' then (gban01+gban02+gban03+gban04+gban05+gban06+gban07+gban08+gban09+gban10+gban11+gban12)/100
+             else 0 end) 
+        else 0 end,      0,0,0,0
+        from  proddta.f0902 left join proddta.f0901 on gmaid=gbaid
+         where gblt='AA' and gbctry=substr(i_yyyy,1,2) and gbfy=substr(i_yyyy,3,2)
+           and gbco in ('90000','91000','92000','93000')
+              and   trim(gmr025) in (
+       select regexp_substr(i_code,'[^,]+', 1, level) as tt from dual 
+       connect by regexp_substr(i_code, '[^,]+', 1, level) is not null )
+          group by i_userid,i_lineno,i_dl;
+
+  commit;
+
+end ins_tb;
+
+
+procedure crt_tb(i_userid in varchar,
+  i_yyyy in varchar,
+  i_mm in varchar) as
+begin
+  -- 根据ID删除之前插入的记录
+  delete from menjdehhy.t_pl_temp temp where temp.id_pl_temp=i_userid;
+  commit; 
+ 
+  ins_tb(i_userid,i_yyyy,i_mm,'1000','备用金','''026.0''','D','Y');
+  ins_tb(i_userid,i_yyyy,i_mm,'1020','其他员工贷款','''026.1''','D','Y');
+  ins_tb(i_userid,i_yyyy,i_mm,'1030','现金','''027.0''','D','Y');
+
+    ins_tb(i_userid,i_yyyy,i_mm,'1040','三乡建行(工程保证金账户)', '028.02', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1050','三乡农行工区分理处 (RMB)', '029.0', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1060','深圳汇丰银行（港币帐户）', '030.0',  'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1070','中山农行（港币帐户）'  , '030.1', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1080','三乡中行（结算帐户）','032.0',  'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1090','三乡中行（人民币）','033.0', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1100','三乡信社（人民币）','035.0', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1110','三乡中行（代扣代缴帐户）','036.01',  'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1120','深圳汇丰银行 (RMB)- 中山','037.0', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1130','广州中行 - 国贸 (RMB)','039.0',  'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1140','广州市商业银行','041.0', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1150','上海中国银行','044.0', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1160','工行南京西路支行','045.1', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1170','北京中行东安门分理处','046.0', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1180','北京工商银行王府井支行营业室','046.11', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1190','三鄉中行（专用资金戶）','046.02', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1200','三鄉中行（日元戶）','046.03',  'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1210','三鄉農行（日元戶）','046.04',  'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1220','三鄉中行（美元戶）','046.05',  'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1230','三鄉農行（美元戶）','046.06', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1240','中行收汇核查帐户-港币','046.08', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1250','中行收汇核查帐户-美元','046.09',  'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1260','中行收汇核查帐户-日元','046.10',  'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1270','三乡中行（欧元帐户）','034.01',  'D','Y');
+		ins_tb(i_userid,i_yyyy,i_mm,'1280','三乡中行（定期帐户）','119', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1290','三乡建行(工程保证金账户－7653)','028.03',  'D','Y'); 
+		ins_tb(i_userid,i_yyyy,i_mm,'1300','三乡建行(工程保证金账户-7660)','028.04', 'D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1310','三乡中国建设银行-保证金8087','028.05',   'D','Y');
+		ins_tb(i_userid,i_yyyy,i_mm,'1320','三乡中国建设银行－保证金-8924','028.06','D','Y');
+        ins_tb(i_userid,i_yyyy,i_mm,'1330','三乡中国建设银行－住房公积金-9372','028.07','D','Y'); 
+		ins_tb(i_userid,i_yyyy,i_mm,'1340','三乡中国建设银行－港币','028.08','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'1350','中国建设银行－港币收结汇－三乡','028.09','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'1360','中国建设银行－人民币定期－三乡','028.10','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1370','深圳汇丰银行－人民币定期－中山','037.01','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1380','三乡中国银行-7天通知存款专户','034.02','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1390','三乡中国银行－人民币定期-2902','034.03','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1400','三乡农行（三个月定期）','029.1','D','Y');   
+        ins_tb(i_userid,i_yyyy,i_mm,'1410','三乡工商银行－人民币','034.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1420','三乡工商银行－人民币定期','034.04','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'1430','三乡中国银行－美元定期','034.05','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'1440','三乡中国银行－港元定期','035.04','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1450','三乡交通银行－人民币','034.06','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1460','三乡交通银行－人民币定期','034.07','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1470','广州三菱日联银行-人民币','034.08','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1480','广州三菱日联银行-美元结算帐户','034.10','D','Y');    
+        ins_tb(i_userid,i_yyyy,i_mm,'1490','三乡招商银行-人民币','035.03','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1500','三乡农行-人民币-大额定期','035.05','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'1510','三乡交通银-人民币-七天定期','035.06','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'1520','三乡工商银行-人民币-七天定期','035.10','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1530','三乡交通银行-港币','036.03','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1540','应收帐款','048.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1550','应收联属往来 - 香港 - 货款','049.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1560','应收联属往来 - 日本- 货款','049.1','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1570','应收联属往来 - 泰國 - 货款','049.2','D','Y');           
+        ins_tb(i_userid,i_yyyy,i_mm,'1580','应收联属往来 - 美國 - 货款','049.3','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1590','应收联属往来 - 印尼- 货款','049.4','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'1600','应收联属往来－越南－货款','049.5','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'1610','应收联属往来－上海子公司－货款','049.6','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1620','应收联属往来－俄罗斯－货款','049.7','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1630','其它应收款','050.001','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1640','预付帐款','050.004','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1650','应收利息','050.1','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1660','内部往来 ','051.0','D','Y');        
+        ins_tb(i_userid,i_yyyy,i_mm,'1670','     —广州','052.0,053.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1680','     —中山','058.0','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'1690','     —上海','054.0,055.0','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'1700','     —北京','056.0,057.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1710','     —乐敦','059.1','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1720','     —香港','059.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1730','泰國往来帐款','059.2','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1740','美国往来帐款','059.3','D','Y');        
+        ins_tb(i_userid,i_yyyy,i_mm,'1750','英国往来帐款','059.4','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1760','印尼往来帐款','059.5','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'1770','越南往来帐款','059.6','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'1780','台湾往来帐款','059.7','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1790','应收联属往来－越南－其他' ,'059.9','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'1800','按金','060.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1810','待摊费用','061.0','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'1820','包装物','062.0,062.1','D','Y');      
+        ins_tb(i_userid,i_yyyy,i_mm,'1830','原材料','063.0,063.1','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1840','自制半成品','064.0','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'1850','产成品','065.0','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'1860','在途产品\在途材料','065.2','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1870','生产制造成本差异','066.0,066.1,066.2,066.3,066.4','D','Y'); 
+		ins_tb(i_userid,i_yyyy,i_mm,'1880','产成品差异—中山','065.1','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1890','待处理财产损益-流动资产','095.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1900','厂房','067.0','D','Y');      
+        ins_tb(i_userid,i_yyyy,i_mm,'1910','汽车','068.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1920','办公室家私、装修','069.0','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'1930','办公室家具','069.1','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'1940','办公室装修','069.2','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1950','办公室设备','070.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1960','生产机器设备','071.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'1970','模具','071.1','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'1980','其他生产工具','071.2','D','Y');     
+        ins_tb(i_userid,i_yyyy,i_mm,'1990','仓库家私、装修','072.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2000','仓库家具','072.1','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2010','仓库装修','072.2','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2020','仓库设备','073.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2030','宿舍','074.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2040','宿舍设备','075.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2050','宿舍家具','075.1','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2060','宿舍装修','075.2','D','Y');       
+        ins_tb(i_userid,i_yyyy,i_mm,'2070','—厂房','076.0','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2080','—汽车','077.0','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2090','—办公室家私、装修','078.0','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2100','—办公室家具','078.1','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2110','—办公室装修','078.2','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2120','—办公室设备','079.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2130','—生产机器设备','080.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2140','—模具','080.1','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2150','—其他生产工具','080.2','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2160','—仓库家私、装修','081.0','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2170','—仓库家具','081.1','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2180','—仓库装修','081.2','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2190','—仓库设备','082.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2200','—宿舍','083.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2210','—场地使用权','084.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2220','—OXY商標權','084.1','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2230','—宿舍家私、装修','085.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2240','—宿舍家具','085.1','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2250','—宿舍装修','085.2','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2260','固定资产减值准备','094.4','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2270','在建工程','086.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2280','递延税款','094.2','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2290','场地使用权','087.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2300','無形資產─OXY商標權','087.1','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2310','开办费','088.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2320','开办费累计折旧','089.0','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2330','长期股权投资','089.1','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2340','短期借款','090.5','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2350','应付股息','090.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2360','应付联属往来－香港－货款','091.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2370','应付联属往来－日本－货款','091.1','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2380','应付联属往来－美国－货款','091.2','D','Y');    
+        ins_tb(i_userid,i_yyyy,i_mm,'2390','应付联属往来－ANDS－货款','091.3','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2400','应付联属往来－越南-货款','091.4','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2410','应付联属往来－英国－货款','091.5','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2420','应付联属往来－韓国－货款','091.6','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2430','应付联属往来－印尼－货款','091.7','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2440','应付联属往来－上海子公司－货款','099.1','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2450','  —其它国家','092.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2460','预提费用','093.0','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2470','应付税金—增值稅','093.1,094.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2480','悬挂帐','094.3','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2490','坏帐储备','096.0','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2500','其它应付款','097.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2510','应付联属往来－日本-商标权','097.01','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2520','应付联属往来－美国-商标权','097.02','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2530','应付联属往来－ANDS-商标权','097.03','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2540','应付联属往来－日本-费用','097.04','D','Y');        
+        ins_tb(i_userid,i_yyyy,i_mm,'2550','应付联属往来－美国--费用','097.05','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2560','应付联属往来－香港-商标权','097.06','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2570','应付联属往来－ANDS-费用','097.07','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2580','应付联属往来－英国--费用','097.08','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2590','应付联属往来－香港－其它','097.081','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2600','预提职工薪酬','097.091,097.092,097.093,097.094,097.095,097.096,097.097','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2610','预提费用－花红','097.10','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2620','应付核数费','098.0','D','Y');   
+        ins_tb(i_userid,i_yyyy,i_mm,'2630','应付工商统一税/消费税','099.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2640','存货变现损失准备','100.0','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2650','预收货款','101.0','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2660','货已收但没有退税证明 ','094.1','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2670','福利基金','102.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2680','应交利得税','103.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2690','应交其他税费','103.2','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2700','应交商标权税','103.1','D','Y');       
+        ins_tb(i_userid,i_yyyy,i_mm,'2710','销售退回准备','100.1','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2720','递延收益','100.2','D','Y');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2730','股本','104.0','D','Y');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2740','累计盈利','105.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2750','股息','107.0','D','Y');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2760','储备基金','108.0','D','Y'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2770','职工奖励及福利','109.0','D','N');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2780','销售收入','110.0,111.0,111.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2790','销售折扣','112.0,113.0,113.1','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2800','销售退货','114.0,115.0,115.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2810','销售收入(原材料)','111.2','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2820','处理固定资产-损失','116.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2830','处理固定资产-收益','116.1','D','N');    
+		ins_tb(i_userid,i_yyyy,i_mm,'2840','利息收入','117.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2850','其它收入','118.0','D','N');     
+		ins_tb(i_userid,i_yyyy,i_mm,'2860','其他收益','118.2','D','N');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2870','其它支出','119.0','D','N');   
+		ins_tb(i_userid,i_yyyy,i_mm,'2880','商标权费收入','118.1','D','N');  
+        ins_tb(i_userid,i_yyyy,i_mm,'2890','销售成本','120.0,121.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2900','销售成本差异—广州','122.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2910','销售成本差异—上海','122.1','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2920','销售成本差异—北京','122.2','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2930','销售成本差异—中山','122.3','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'2940','销售成本(原材料)','121.2','D','N');    
+        ins_tb(i_userid,i_yyyy,i_mm,'2950','直接工资','124.0,124.1,124.2,124.3,124.4,250.01','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2960','间接工资','125.0,125.1,125.2,125.3,125.4,250.32','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2970','直接花红','124.5,124.6,124.7,124.8,124.9,250.02','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2980','间接花红','125.5,125.6,125.7,125.8,125.9,250.03','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'2990','职工福利-直接','126.5,126.51,126.52,126.53,126.54,250.05','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3000','职工福利-间接','126.6,126.61,126.62,126.63,126.64,250.06','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3010','折旧—场地使用权','132.0,132.1,132.2,132.3,132.4,250.12','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3020','折旧—厂房','133.0,133.1,133.2,133.3,133.4,250.13','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3030','折旧—生产机器设备','134.0,134.1,134.2,134.3,134.4,250.14','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3040',' 修理费','129.0,129.1,129.2,129.3,129.4,250.09','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3050','废料','139.0,139.1,139.2,139.3,139.4,250.23','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3060','物料消耗','141.0,141.1,141.2,141.3,141.4,250.25','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3070','机器租赁费','142.0,142.1,142.2,142.3,142.4,250.26','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3080','退休金','138.4,138.5,138.6,138.7,138.71,250.21','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3090','水费','127.0,127.1,127.2,127.3,127.4,250.07','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3100','电费','128.0,128.1,128.2,128.3,128.4,250.08','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3110','入口税','136.0,136.1,136.11,136.13,250.16','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3120','装卸费','137.0,137.1,137.11,137.12,137.13,250.18','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3130','进口运输费','137.2,137.3,137.31,137.32,137.33,250.19','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3140','保费—生产机器设备','138.0,138.1,138.2,138.04,138.3,250.20','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3150','试验/检查','140.0,140.1,140.2,140.3,140.4,250.24','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3160','存货盘点亏/赚','142.41,142.42,142.43,142.44,142.45,250.27','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3170','零件费','135.0,135.1,135.2,135.3,135.4,250.15','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3180','进口报关费','136.2,136.3,136.31,136.32,136.33,250.17','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3190','燃料费','126.0,126.1,126.2,126.3,126.4,250.04','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3200','洗衣费','130.0,130.1,130.2,130.3,130.4,250.10','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3210','办公费用','142.51,142.52,142.53,142.54,142.55,250.29','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3220','医保费','138.80,138.81,138.82,138.83,138.84,250.22','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3230','生产费用(转入研发费)','142.46,142.47,142.48,142.49,142.50,250.28','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3240','住 房 公 积 金','142.61,142.62,142.63,142.64,142.65,250.30','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3250','劳 务 费','142.71,142.72,142.73,142.74,142.75,250.31','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3260','专利权费','143.0,144.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3270','工商统一/消费税','145.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3280','广告费','146.0,147.0,147.1','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3290','促销费','148.0,149.0,149.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3300','工资','150.0,151.0','D','N'); 
+		ins_tb(i_userid,i_yyyy,i_mm,'3310','花红','150.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3320','佣金','152.0,153.0,153.1','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3330','管理费','154.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3340','销售办公室水/电费','155.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3350','办公室租赁费 ','156.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3360','文具印刷费','157.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3370','电话/图文传真机费','158.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3380','邮费','159.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3390','差旅费','160.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3400','运输费','161.0,162.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3410','存仓费','163.0,164.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3420','包装费','165.0,166.0,166.1','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3430','货物保险费','198.2','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3440','出口报关费','167.0,168.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3450','修理费','169.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3460','折旧—销售办公室家私','170.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3470','折旧—销售办公室设备','171.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3480','折旧—汽车','172.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3490','一般保险','173.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3500','坏帐预提','174.0,175.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3510','样本','176.0,177.0,177.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3520','其它杂费','178.0,179.0,179.1,198.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3530','业务应酬费','180.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3540','低值品摊销','181.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3550','存货报废','182.0,182.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3560','存货报废—预计','182.3,182.4','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3570',' 退 休 金','185.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3580','保险—生命','186.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3590','保险—工伤','187.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3600',' 职工福利 ','188.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3610',' 招 工 费','190.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3620',' 职 工 培 训 费','191.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3630','汽车费用','197.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3640','专业费 / 法律核数费','193.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3650',' 清 洁 费','194.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3660',' 电 脑 费','195.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3670','职 工 宿 舍 费','196.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3680',' 银 行 费 用','197.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3690','印花稅','198.3','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3700','堤围费','198.4','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3710','教育附加','198.5','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3720','城建税','198.6','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3730','车船使用税','198.7','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3740','住房公积金','189.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3750','工 资','200.0,200.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3760','花 红','200.2,200.3','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3770','退 休 金','201.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3780','保险 - 医疗补助费','202.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3790','保险 - 汽车','203.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3800','保险 - 其他','203.2','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3810','工伤陪偿','202.2','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3820','职工福利','204.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3830','交 际 应 酬','205.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3840','招 工 费','206.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3850','职 工 培 训 费','207.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3860','汽 车 费 用','208.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3870','本地差费','209.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3880','外地差费','210.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3890','办公租赁费','224.4','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3900','文具费 / 印刷费','211.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3910','邮 费 ','212.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3920','电 话 费','213.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3930','传 真 费','214.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3940','长 途 电 话 费','215.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3950','电费/水费','216.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3960','存 仓 费','217.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3970','专业费/法律核数费','218.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'3980','清 洁 费','219.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'3990','电 脑 费','220.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4000','修 理 费','221.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4010','职 工 宿 舍 费','222.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4020','银行费用','223.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4030','一般费用','224.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4040','书 刊 费','224.1','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4050','印 花 稅','224.2','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4060','房 产 税','224.5','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4070','堤 围 费','224.6','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4080','教 育 附 加','224.7','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4090','城 建 税','224.8','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4100','环 保 税','224.9','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4110','车 船 使 用 税','208.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4120','折旧 - 场地使用权','228.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4130','折旧 - OXY商標權','228.1','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4140','折旧 - 厂房','229.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4150','折旧 - 汽车','230.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4160','折旧 - 办公室家私/装修','231.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4170','折旧 - 办公设备','232.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4180','折旧－仓库家具/装修','233.0','D','N');  
+        ins_tb(i_userid,i_yyyy,i_mm,'4190','折旧 - 仓库设备','234.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4200','折旧 - 职工宿舍','235.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4210','住 房 公积金','227.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4220','劳务费','242.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4230','汇兑差额','236.0','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4240','开发费用','225.0','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4250','材料报废','224.3','D','N');  
+		ins_tb(i_userid,i_yyyy,i_mm,'4260','材料报废-预计','224.31','D','N'); 
+        ins_tb(i_userid,i_yyyy,i_mm,'4270','MAP费用','226.0','D','N');  
+        ins_tb(i_userid,i_yyyy,i_mm,'4280','利息支出','238.0','D','N');    
+		ins_tb(i_userid,i_yyyy,i_mm,'4290','利得税金','237.0','D','N');  
+        ins_tb(i_userid,i_yyyy,i_mm,'4300','递延税款','237.1','D','N');     
+		ins_tb(i_userid,i_yyyy,i_mm,'4310','资产减值损失','239.0','D','N');      
+end crt_tb;
+
+
+function period_rpt(i_rpt varchar,i_userid varchar,i_yyyy varchar,i_mm varchar)
+  return sys_refcursor as
+  o_rpt sys_refcursor;
+begin
+  -- 根据ID删除之前插入的记录
+  --delete from menjdehhy.t_pl_temp temp where temp.id_pl_temp=i_userid;
+  --commit; 
+ 
+  -- 生成报表记录
+  if i_rpt='PL' then 
+    p_list_report(i_userid,i_yyyy,i_mm,o_rpt);
+  end if;
+
+  if i_rpt='TB' then 
+    crt_tb(i_userid,i_yyyy,i_mm); 
+  end if;
+
+  -- 查询刚刚插入的表记录
+  open o_rpt for
+  select lineno,dl,pc,py,bpc,bpy,ppc,ppy 
+      from menjdehhy.t_pl_temp
+     where id_pl_temp= i_userid
+      order by grp,lineno asc;
+      
+  return o_rpt;
+end period_rpt;
+
+
+end rptpkgs;
+
+
+调式运行
+------------------------------------------------------------------------
+
+declare 
+  i_rpt varchar2 (10);
+  i_userid varchar2 (10);
+  i_yyyy varchar2 (4);
+  i_mm varchar2 (2);
+  v_return sys_refcursor;
+begin
+  i_rpt :='TB';
+  i_userid :='ITHHY';
+  i_yyyy :='2020';
+  i_mm :='07';
+
+  v_return :=rptpkgs.period_rpt(
+    i_rpt => i_rpt,
+    i_userid => i_userid,
+    i_yyyy => i_yyyy,
+    i_mm => i_mm
+    );
+end;
+
+------------------------------------------------------------------------
+
+
+  select regexp_substr('027.0,028.0','[^,]+', 1, level) as tt from dual 
+  connect by regexp_substr('027.0,028.0', '[^,]+', 1, level) is not null 
+
+  SELECT regexp_replace('027.0,026.1,1', '([^,]{1,8})', '''\1''') FROM dual;
+
+------------------------------------------------------------------------
+
+create or replace function addSingleQuotes(
+v_oldStr VARCHAR2)
+
+return VARCHAR2
+
+--该函数将逗号分隔的字符串的每个字串两边加上单引号
+--如0001,0002,0003改为'0001','0002','0003'
+
+as
+
+oldStr VARCHAR2(4000):=v_oldStr;
+newStr VARCHAR2(4000):=null; --返回加单引号之后的值
+v_commaPos number(4); --逗号位置
+v_curItem VARCHAR2(4000):=''; --当前添加项(不包含单引号)
+
+begin
+
+loop
+exit when oldStr is null;
+v_commaPos := instr(oldStr,',');--v_startPos
+if(v_commaPos=0) then --没有找到
+v_curItem:=oldStr;
+oldStr:=null; --停止查找
+else
+v_curItem:=substr(oldStr,1,v_commaPos-1);
+--修改oldStr
+oldStr:=substr(oldStr,v_commaPos+1,length(oldStr)-length(v_curItem)-1);
+end if;
+
+--dbms_output.put_line('oldStr'||oldStr||'当前添加项:'||v_curItem||' 原来newStr:'||newStr);
+
+if(newStr is null) then
+newStr:=''''||trim(ltrim(v_curItem))||'''';
+else
+newStr:=newStr||','''||trim(ltrim(v_curItem))||'''';
+end if;
+
+end loop;
+
+return newStr;
+
+end;
+
+通过自建OBJ实现
+========================================================================
+
+这种方式本质上和第二种是相同的，不同之处是不用系统定义的动态光标，而是自己设计数据集OBJ.
+
+定义类型
+------------------------------------------------------------------------
+
+create or replace type rpt_pl force is object
+(
+  grp varchar2(200),
+  lineno number,
+  dl varchar2(200),
+  pc number,
+  py number,
+  bpc number,
+  bpy number,
+  ppc number,
+  ppy number
+);
+
+定义表类型
+------------------------------------------------------------------------
+
+create or replace type t_rpt_pl is table of rpt_pl
+
+定义包
+------------------------------------------------------------------------
+
+create or replace package rptpkgs is 
+
+function pl(i_userid in varchar,
+   i_yyyy in varchar,
+   i_mm in varchar)
+   return t_rpt_pl;
+
+end rptpkgs;
+
+定义包体
+------------------------------------------------------------------------
+
+create or replace package body rptpkgs is 
+
+function pl(i_userid varchar,i_yyyy varchar,i_mm varchar)
+  return t_rpt_pl as
+
+  m_table t_rpt_pl;
+
+  begin
+
+    return m_table;
+  end pl;
+
+end rptpkgs;
+
+

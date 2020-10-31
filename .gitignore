@@ -18,3 +18,7 @@ Desktop.ini
 
 launchConfigurations/
 __pycache__
+_build
+_static
+_templates
+

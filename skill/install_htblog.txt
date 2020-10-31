@@ -1,0 +1,134 @@
+﻿.. 这是关于htblog的安装说明
+
+========================================================================
+在Linux下搭建htblog
+========================================================================
+
+.. 在文档标题与副标之间的注释在章节标题后解析
+    Above is the document title, and below is the subtitle.
+   They are transformed from section titles after parsing.
+
+------------------------------------------------------------------------
+ 文档副标题 Title of Subtitle
+------------------------------------------------------------------------
+
+.. 文档信息栏 bibliographic fields (which also require a transform):
+
+:作者: holts 
+:Email: holts.he@gmail.com
+:版本: $Revision: 1.00 $ 
+:日期: $Date: 2020/10/30 13:28:00 $
+:声明: 不承担由此产生的一切不良后果 
+:版权: 此文档遵从开放原则，你可以自由的复制，修改，发布,发售，购买, 租借，销毁，改进；或是引用，摘录，合并，比较，分类等等, 总之你可以自由使用此文档.
+ 
+.. contents:: 内容索引 Table of Contents
+.. section-numbering::
+
+
+安装Apache2
+========================================================================
+
+sudo apt-get install apache2
+sudo apt-get install libapache2-mod-wsgi-py3
+
+sudo nvim /etc/apache2/sites-available/000-default.conf
+
+打开apache配置文件,所有static的请求映射到htblog项目的/static目录,在VirtualHost块中添加：
+
+Alias /static /mnt/e/website/htblog/static
+<Directory /mnt/e/website/htblog/static>
+    Require all granted
+</Directory>
+
+<Directory /mnt/e/website/htblog>
+    <Files index.wsgi>
+        Require all granted
+    </Files>
+</Directory>
+
+WSGIScriptAlias / /mnt/e/website/htblog/index.wsgi
+
+
+安装pyblosxom
+======================================================================== 
+
+git clone https://github.com/pyblosxom/pyblosxom.git pyblosxom
+cd pyblosxom
+git checkout python3
+python3 setup.py install
+
+sudo pip3 install docutils
+
+pyblosxom-cmd create htblog
+
+htblog
+│  blog.ini
+│  config.py
+│  pyblosxom.cgi
+│  
+├─entries
+│      firstpost.txt
+│      
+├─flavours
+│  ├─atom.flav
+│  │      content_type
+│  │      foot
+│  │      head
+│  │      story
+│  │      
+│  ├─error.flav
+│  │      content_type
+│  │      foot
+│  │      head
+│  │      story
+│  │      
+│  ├─html.flav
+│  │      content_type
+│  │      date_foot
+│  │      date_head
+│  │      foot
+│  │      head
+│  │      story
+│  │      
+│  ├─rss.flav
+│  │      content_type
+│  │      foot
+│  │      head
+│  │      story
+│  │      
+│  └─rss20.flav
+│          content_type
+│          foot
+│          head
+│          story
+│          
+└─plugins
+
+插件只使用核心插件，所以这里的plugins用不到，更改成static, 简单的设置下配制文件，注意名称和路径要和apache设置的对应.
+
+创建一个index.wsgi文件
+
+# This is the pyblosxom.wsgi script that powers the holts's blog.
+
+import sys
+
+def add_to_path(d):
+   if d not in sys.path:
+      sys.path.insert(0, d)
+
+# call add_to_path with the directory that your config.py lives in.
+add_to_path("/mnt/e/website/htblog/")
+
+# if you have Pyblosxom installed in a directory and NOT as a
+# Python library, then call add_to_path with the directory that
+# Pyblosxom lives in.  For example, if I untar'd
+# pyblosxom-1.5.tar.gz into /home/joe/, then add like this:
+# add_to_path("/home/joe/pyblosxom-1.5/")
+
+import Pyblosxom.pyblosxom
+application = Pyblosxom.pyblosxom.PyblosxomWSGIApp()
+
+
+
+通过http://localhost就可以访问网站了．
+
